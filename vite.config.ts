@@ -4,5 +4,6 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   base: './',
   build: { chunkSizeWarningLimit: 1500 },
-  test: { include: ['src/**/*.test.ts'] },
+  // the kit's dist uses extensionless relative imports: let Vite resolve them so a test may import src/lab.ts
+  test: { include: ['src/**/*.test.ts'], server: { deps: { inline: ['@onigam/lab-kit'] } } },
 });

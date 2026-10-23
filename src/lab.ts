@@ -1,7 +1,8 @@
 import { configureDrawings } from '@onigam/lab-kit/drawings';
 import { strL } from '@onigam/lab-kit/i18n';
-import { h, type AppContext, type LabDefinition } from '@onigam/lab-kit/ui';
+import { h, icon, ICONS, type AppContext, type LabDefinition } from '@onigam/lab-kit/ui';
 import { ASSEMBLY } from './data/assembly';
+import { CHAPTERS } from './data/chapters';
 import { INSTALL } from './data/install';
 import { PARTS } from './data/parts';
 import { num, t, type UiKey } from './i18n/ui';
@@ -33,6 +34,71 @@ function alarmLabel(sim: RamSim, key: AlarmKey): string {
   }
 }
 
+/** The "Sources" panel: notice, warnings, credits and links, chapters of the main video. */
+function about(ctx: AppContext<RamSim>): HTMLElement[] {
+  const fr = document.documentElement.lang !== 'en';
+  const link = (href: string, label: string) => h('a', { href, target: '_blank', rel: 'noopener noreferrer' }, label);
+  const li = (href: string, label: string, note: string) => h('li', {}, link(href, label), ' — ', note);
+  return [
+    h('div', { class: 'callout callout--tip' }, h('span', {}, t('disclaimer'))),
+    h('div', { class: 'callout callout--tip' }, h('span', {}, t('genericRam'))),
+    h('div', { class: 'callout callout--warn' }, icon(ICONS.warn, 16), h('span', {}, t('safety'))),
+    h('div', { class: 'callout callout--warn' }, icon(ICONS.warn, 16), h('span', {}, t('legal'))),
+    h(
+      'p',
+      {},
+      fr ? 'Source principale : ' : 'Main source: ',
+      link(
+        'https://www.youtube.com/watch?v=mc0gq5rObcM',
+        '« Création clapet de choc pour que notre bélier hydraulique ne s’arrête plus »',
+      ),
+      fr
+        ? ' — L’énergie partout (2024), qui remercie Didier Nebreda pour ses conseils sur les béliers. Aucune image de la vidéo n’est reprise.'
+        : ' — L’énergie partout (2024), who thanks Didier Nebreda for his advice on rams. No footage from the video is reused.',
+    ),
+    h('h3', { class: 'section-title' }, t('chapters')),
+    h(
+      'ul',
+      { class: 'chapters' },
+      ...CHAPTERS.map(([ts, f, e]) => h('li', {}, link(ctx.videoUrl(ts), ts), ' ', fr ? f : e)),
+    ),
+    h(
+      'ul',
+      { class: 'links' },
+      li(
+        'https://www.youtube.com/watch?v=_6331LAYAA0',
+        'Bernard Le Poder',
+        fr
+          ? 'un bélier de potager (5 m³ par jour à 15 m), trois clapets en 1″'
+          : 'a vegetable-garden ram (5 m³ a day at 15 m), three 1″ valves',
+      ),
+      li(
+        'https://www.youtube.com/watch?v=WMldjNyxNWk',
+        'Média24',
+        fr ? 'le principe, les pièces, l’invention' : 'the principle, the parts, the invention',
+      ),
+      li(
+        'https://content.ces.ncsu.edu/hydraulic-ram-pumps',
+        'NC State Extension',
+        fr
+          ? 'formule de refoulement, conduite motrice, tableau de dimensionnement'
+          : 'delivery formula, drive pipe, sizing table',
+      ),
+      li(
+        'https://fmc-nitk.vlabs.ac.in/exp/hydraulic-ram/theory.html',
+        'NITK virtual labs',
+        fr ? 'rendements d’Aubuisson et de Rankine' : 'D’Aubuisson and Rankine efficiencies',
+      ),
+      li(
+        fr ? 'https://fr.wikipedia.org/wiki/B%C3%A9lier_hydraulique' : 'https://en.wikipedia.org/wiki/Hydraulic_ram',
+        'Wikipedia',
+        fr ? 'histoire et ordres de grandeur' : 'history and orders of magnitude',
+      ),
+    ),
+    h('p', { class: 'hint' }, 'Three.js · TypeScript · Vite — MIT'),
+  ];
+}
+
 export const lab: LabDefinition<RamSim> = {
   id: 'ram-pump-lab',
   brand: { title: 'RAM PUMP LAB', tagline: strL('tagline'), icon: './favicon.svg' },
@@ -47,6 +113,7 @@ export const lab: LabDefinition<RamSim> = {
       module: createSiteScene(),
       cutaway: false,
       xrayNeedsSelection: true,
+      stepFrame: { padding: 1.5, minRadius: 4 },
       overview: {
         title: { fr: 'Le site : de la source au château d’eau', en: 'The site: from the spring to the water tower' },
         text: {
@@ -61,6 +128,9 @@ export const lab: LabDefinition<RamSim> = {
       label: strL('sceneRam'),
       module: createRamScene(),
       partPadding: 2.2,
+      stepFrame: { padding: 1.6, minRadius: 0.07 },
+      // the shells that X-ray makes transparent while nothing is selected, so the valves and the water show
+      xrayShell: (id) => ['ram', 'air-chamber', 'base-plate', 'waste-valve'].includes(id),
       overview: {
         title: { fr: 'Le bélier hydraulique', en: 'The hydraulic ram' },
         text: {
@@ -107,5 +177,5 @@ export const lab: LabDefinition<RamSim> = {
         severe: SEVERE_ALARMS.has(key),
       })),
   },
-  about: () => [h('div', { class: 'callout callout--tip' }, h('span', {}, t('disclaimer')))],
+  about,
 };
