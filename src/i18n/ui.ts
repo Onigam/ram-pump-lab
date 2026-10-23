@@ -5,7 +5,10 @@ import { getLang, registerStrings, tx, type CommonKey } from '@onigam/lab-kit/i1
 
 const LAB = {
   tagline: ['Explorer · Comprendre · Construire', 'Explore · Understand · Build'],
-  sceneDevice: ['Dispositif', 'Device'],
+  sceneSite: ['Le site', 'The site'],
+  sceneRam: ['Le bélier', 'The ram'],
+  goSite: ['Voir le site', 'See the site'],
+  goRam: ['Voir le bélier', 'See the ram'],
   plansIntro: [
     'Planches A3 générées à partir des cotes du modèle 3D.',
     'A3 sheets generated from the 3D model dimensions.',

@@ -1,15 +1,14 @@
 import { configureDrawings } from '@onigam/lab-kit/drawings';
 import { strL } from '@onigam/lab-kit/i18n';
 import { h, type AppContext, type LabDefinition } from '@onigam/lab-kit/ui';
-import { ASSEMBLY } from './data/guide';
-import { LESSONS } from './data/lessons';
+import { ASSEMBLY } from './data/assembly';
+import { INSTALL } from './data/install';
 import { PARTS } from './data/parts';
-import { SHEETS } from './drawings';
 import { num, t, type UiKey } from './i18n/ui';
 import { SimPanel } from './panels/sim';
 import { RamSim } from './sim/engine';
 import type { AlarmKey } from './sim/types';
-import { createDeviceScene } from './three/device';
+import { createRamScene, createSiteScene } from './three';
 
 // The lab described to the kit. Edit the content here and in src/data, src/three, src/sim, src/drawings;
 // the kit supplies the whole application frame (see BRIEF.md: the frame is locked).
@@ -38,29 +37,46 @@ export const lab: LabDefinition<RamSim> = {
   id: 'ram-pump-lab',
   brand: { title: 'RAM PUMP LAB', tagline: strL('tagline'), icon: './favicon.svg' },
   sim: new RamSim(),
-  defaultScene: 'device',
+  defaultScene: 'site',
+  video: { id: 'mc0gq5rObcM' },
   parts: PARTS,
   scenes: [
     {
-      id: 'device',
-      label: strL('sceneDevice'),
-      module: createDeviceScene(),
-      // text shown in the side panel while nothing is selected in this world
+      id: 'site',
+      label: strL('sceneSite'),
+      module: createSiteScene(),
+      cutaway: false,
+      xrayNeedsSelection: true,
       overview: {
-        title: { fr: 'Le dispositif', en: 'The device' },
+        title: { fr: 'Le site : de la source au château d’eau', en: 'The site: from the spring to the water tower' },
         text: {
-          fr: 'Un **volant** monté sur un **axe**, porté par un **socle** : cliquez une pièce pour l’étudier.',
-          en: 'A **wheel** on an **axle**, carried by a **base**: click a part to study it.',
+          fr: 'Une **source** et sa **réserve tampon**, une **conduite motrice** qui descend de 7,5 m, le **bélier** dans son regard et une **conduite de refoulement** qui remonte l’eau à 65 m, jusqu’au **château d’eau** et à la **maison**. Cliquez le regard pour ouvrir le bélier.',
+          en: 'A **spring** with its **buffer tank**, a **drive pipe** falling 7.5 m, the **ram** in its pit and a **delivery pipe** lifting the water 65 m to the **water tower** and the **house**. Click the pit to open the ram.',
         },
+        actions: [{ label: strL('goRam'), scene: 'ram', primary: true }],
+      },
+    },
+    {
+      id: 'ram',
+      label: strL('sceneRam'),
+      module: createRamScene(),
+      partPadding: 2.2,
+      overview: {
+        title: { fr: 'Le bélier hydraulique', en: 'The hydraulic ram' },
+        text: {
+          fr: 'Un **clapet de choc** qui claque, un **clapet anti-retour**, une **cloche à air** : l’eau de la conduite motrice, stoppée net, pousse une petite partie d’elle-même beaucoup plus haut. Lancez la simulation pour voir le cycle.',
+          en: 'A **waste valve** that slams shut, a **delivery check valve**, an **air chamber**: water in the drive pipe, stopped dead, pushes a small part of itself much higher. Run the simulation to watch the cycle.',
+        },
+        actions: [{ label: strL('goSite'), scene: 'site' }],
       },
     },
   ],
-  guides: { assembly: { scene: 'device', steps: ASSEMBLY } },
-  lessons: { items: LESSONS, intro: strL('lessonsIntro') },
-  plans: {
-    sheets: SHEETS,
-    groups: [{ id: 'device', label: strL('groupDevice') }],
-    intro: strL('plansIntro'),
+  partLinks: {
+    'ram-pit': { scene: 'ram', label: strL('goRam') },
+  },
+  guides: {
+    assembly: { scene: 'ram', steps: ASSEMBLY },
+    install: { scene: 'site', steps: INSTALL },
   },
   simPanel: (ctx: AppContext<RamSim>) => new SimPanel(ctx),
   strip: {
