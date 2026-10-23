@@ -62,3 +62,21 @@ factor of the moment) would fix both.
 
 - **What**: optional `framePadding?: number` on `SceneDef`, and `frameAll` using the current (exploded) bounds.
 - **Needed by**: ram pump lab (nice to have).
+
+## 7. Mobile: frame the subject above the bottom sheet
+
+On a 390×844 phone the bottom sheet covers the lower half of the 3D view and `Stage.frameAll` / `frameBox` centre the
+subject on the whole canvas, so the ram (and the site) sit half behind the sheet. Seen on this lab at the wave 2 checkpoint
+and on the template; Pelton Lab has the same behaviour.
+
+- **What**: when the sheet is shown, shift the projection centre up by half the sheet height (`camera.setViewOffset`) or pass
+  the visible rectangle to `frameBox`; re-frame when the sheet is expanded or collapsed.
+- **Why**: first impression on a phone, for every lab.
+- **Needed by**: all labs (lead's finding, wave 2).
+
+## 8. Parts catalogue: hide categories without parts
+
+The "Pièces" filter always shows the five categories, including "Électrique", which this lab has none of. Show only the
+categories that have at least one part in the lab.
+
+- **Needed by**: every lab that does not use all five categories (lead's finding, wave 2).
