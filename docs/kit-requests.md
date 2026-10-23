@@ -28,3 +28,37 @@ the visitor looking at the 3D view only sees "Stopped: tank empty" in the strip.
 
 `StripValue` has no `title`. Values such as "Rate: 109 strokes/min" or "Efficiency 45 %" would benefit from a one-line
 definition on hover (η D'Aubuisson = q·H/(Q·h)). Optional `title?: string` on `StripValue`.
+
+## 4. Generic landscape helpers (written locally by the 3D role, wave 2)
+
+The ram lab's site world needed a heightfield terrain with a cheap per-parameter rebuild, a value-noise `fbm`, instanced
+low-poly trees, pipes that stay a few pixels wide from far away (vertex displacement along the normal by the distance to the
+camera), travelling flow dots along a polyline (`FlowDots`, positions only, screen-size or world-size) and a `CutKit` for the
+section tool (clipping plane + 2D section caps). Pelton Lab has its own versions of the first three.
+
+- **What**: move `fbm` / `vnoise`, the tensor-grid terrain with linear-in-parameters rebuild, `instancedTrees`, the
+  min-pixel-width pipe material, `FlowDots` and `CutKit` into the kit (`@onigam/lab-kit/three`).
+- **Why**: every site world of the series (Pelton, ram, Piggott, bioclimatic house, …) rebuilds a landscape and draws pipes
+  and flows; the section tool is needed by every device world.
+- **Needed by**: Pelton Lab, ram pump lab, and the next labs with a landscape.
+
+## 5. Selecting an assembly should keep its nested parts solid in X-ray / isolate
+
+`PartRegistry.add` supports nesting (children registered before the parent), but `DisplayController` treats every id
+separately: with the `waste-valve` assembly selected, "Transparence" ghosts its own children (`valve-stem`, `valve-seat`,
+`stroke-nut`, …) and "Isoler" hides them, so the inside of the assembly cannot be seen. Optional `parent?: string` (or a
+helper `registry.family(id)`) on the registry entry, and `display.ts` keeping `id === selected || isDescendantOf(selected)` solid.
+
+- **What**: nested parts follow their ancestor's selection in X-ray and isolate (and in the label / outline logic).
+- **Why**: assemblies such as the ram's waste valve (8 catalogue ids inside one assembly) are the point of the lab.
+- **Needed by**: ram pump lab (the waste valve); any lab with a catalogue assembly.
+
+## 6. Guide framing: `frameAll` for a device world could take a padding hint
+
+`Stage.frameAll` frames the union of the visible parts at padding 0.82 from the home direction. The ram world's union includes
+a long drive-pipe stub and the delivery pipe stub, so the machine looks small and off-centre at the home view, and the exploded
+view (offsets up to 0.65 m) overflows the frame. A per-world `homePadding` and an explode-aware union (bounds with the explode
+factor of the moment) would fix both.
+
+- **What**: optional `framePadding?: number` on `SceneDef`, and `frameAll` using the current (exploded) bounds.
+- **Needed by**: ram pump lab (nice to have).
