@@ -13,7 +13,7 @@ sources are silent: it must be estimated and flagged, never invented.
   plus_ (19:57). It has the figures (fall, lift, flows, valve sizes, strokes per minute, daily volume), a real
   autonomy installation (a farm water supply) and a build story (an over-consuming ram fixed with a new waste valve made
   of plumbing parts). The roadmap named the two videos below first; they stay as secondary sources. **This replaces the
-  roadmap's implicit main video: please confirm.**
+  roadmap's implicit main video (confirmed by the owner, §8).**
 - **One version**, no V1/V2. The "before / after the new valve" story becomes simulation **presets** (valve n°3 / n°2 /
   n°1), not two versions (§6).
 - **Level**: Lite (2 worlds: the site and the ram; ≈ 25 parts; 3 drawings; 5 lessons).
@@ -171,13 +171,14 @@ parameter, not a different machine. No second version is needed; the kit has no 
 - **Notice**: independent educational reconstruction, not an official drawing or a product; credit and link S1–S6; no
   images or footage from the videos.
 
-## 8. Open questions for the owner
+## 8. Decisions of the owner (2026-10-23)
 
-1. Confirm **S1 (L'énergie partout) as the main source** instead of the Bernard Le Poder video (no captions, few figures).
-2. **Walton n°3 data**: do you have the manufacturer's sheet, or should the lab present a generic 1" ram (proposed)?
-3. Scope: two worlds (site + ram) as in §4, or only the ram plus a small stylised site?
-4. OK for the presets/scenarios of §5 as the lab's "story" (valve n°3 → n°1)?
-5. A second smaller ram (S2: 5 m³/day at 15 m) as an extra preset, or skip it?
+1. **Main source: S1** (L'énergie partout, _Création clapet de choc…_). Confirmed. S2 and S3 stay secondary.
+2. **Walton n°3 data**: none found; the lab presents a **generic 1" ram** and says so. Confirmed (keep the proposal).
+3. **Scope**: two worlds, `site` and `ram` (§4). Confirmed.
+4. **Story**: presets and scenarios of §5, from valve n°3 to valve n°1, as the lab's thread. Confirmed.
+5. **Second smaller ram (S2)**: **skipped for the Lite lab** (the owner kept the proposals; no extra preset). It can be added
+   later as an enrichment (5 m³/day at 15 m lift), only if its fall and pipe figures can be sourced.
 
 ## 9. Next steps (not started)
 
