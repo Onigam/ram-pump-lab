@@ -1,6 +1,6 @@
 {
-  "id": "lab-template",
-  "title": { "fr": "Lab Template", "en": "Lab Template" },
+  "id": "ram-pump-lab",
+  "title": { "fr": "Ram Pump Lab", "en": "Ram Pump Lab" },
   "tagline": { "fr": "Un lab à remplacer", "en": "A lab to replace" },
   "tags": [],
   "difficulty": 1,

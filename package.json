@@ -1,8 +1,8 @@
 {
-  "name": "lab-template",
+  "name": "ram-pump-lab",
   "private": true,
   "version": "0.1.0",
-  "description": "Template of an interactive 3D energy lab built on @onigam/lab-kit",
+  "description": "Interactive 3D lab of a hydraulic ram pump: how water alone lifts water",
   "type": "module",
   "scripts": {
     "dev": "vite",
