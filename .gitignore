@@ -4,3 +4,5 @@ dist
 *.log
 .vercel
 .env*.local
+# transcripts of third-party videos stay private
+docs/transcript*.md
