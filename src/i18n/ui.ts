@@ -162,6 +162,21 @@ const LAB = {
   alarm_headHigh: ['Refoulement trop haut', 'Delivery head too high'],
   alarm_waterLogged: ['Cloche noyée', 'Water-logged chamber'],
   alarm_snifterBlocked: ['Reniflard bouché', 'Snifter blocked'],
+
+  // ---- sources panel and guides (data role): wording shared by the notes of the lab
+  legal: [
+    'En France, prélever l’eau d’une source ou d’un cours d’eau est réglementé (droit d’eau, continuité écologique) : renseignez-vous auprès de la DDT (direction départementale des territoires) et de l’OFB (Office français de la biodiversité) avant tout projet. L’eau d’une source n’est pas garantie potable : faites-la analyser avant de la boire. Les règles diffèrent d’un pays à l’autre : renseignez-vous sur place.',
+    'In France, taking water from a spring or a stream is regulated (water rights, ecological continuity): check with the DDT (departmental land directorate) and the OFB (French biodiversity office) before any project. Spring water is not guaranteed potable: have it tested before drinking it. Rules differ from one country to another: check locally.',
+  ],
+  safety: [
+    'Un bélier ne coûte rien à faire tourner, mais ses coups atteignent plusieurs bars : conduite motrice rigide (acier, fonte), bélier ancré, manomètre côté refoulement, et jamais un doigt dans le clapet de choc quand il tourne.',
+    'A ram costs nothing to run, but its strokes reach several bar: a rigid drive pipe (steel, cast iron), an anchored ram, a pressure gauge on the delivery side, and never a finger in the waste valve while it runs.',
+  ],
+  genericRam: [
+    'Le bélier montré est un bélier générique de 1″, pas le Walton n°3 de la vidéo : aucune fiche du constructeur n’a été trouvée, donc les dimensions du corps sont des estimations. Seul le clapet de choc suit la vidéo.',
+    'The ram shown is a generic 1″ ram, not the Walton n°3 of the video: no maker data sheet was found, so the body dimensions are estimates. Only the waste valve follows the video.',
+  ],
+  chapters: ['Chapitres de la vidéo', 'Video chapters'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 registerStrings(LAB);
