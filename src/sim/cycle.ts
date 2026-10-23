@@ -1,0 +1,568 @@
+import {
+  AIR_FRACTION_LOGGED,
+  airCompliance,
+  area,
+  CD_DELIVERY,
+  CD_SNIFTER,
+  CD_WASTE,
+  DELIVERY_VALVE_AREA_RATIO,
+  deliveryDiameter,
+  etaDAubuisson,
+  etaRankine,
+  frictionOf,
+  G,
+  K_MINOR,
+  P_ATM,
+  P_VAPOUR,
+  POLYTROPIC,
+  RHO,
+  RHO_AIR,
+  ROUGHNESS,
+  SNIFTER_CRACK,
+  SNIFTER_DIAMETER,
+  toBar,
+  toLpm,
+  VALVES,
+  WAVE_SPEED,
+} from './physics';
+import type { Means, Phase, RamParams } from './types';
+
+// The stroke cycle of the ram, integrated in time (SI units inside).
+//
+// Model: a *lumped-parameter* version of the rigid-column theory, three nodes joined by orifices.
+//  1. Drive pipe: a rigid water column of inertance ρL/A (one velocity v), with Darcy friction and minor losses,
+//     driven by the fall ρgh.
+//  2. Ram body: a node of pressure p whose compliance C_b = A·L/(ρ·a²) is the elasticity of the pipe and the water.
+//     Together with the column it forms an LC circuit of characteristic impedance ρ·a/A: when the column is stopped
+//     suddenly it produces exactly the Joukowsky surge Δp = ρ·a·v (research K15), then rings and swings below the
+//     static pressure: that swing is the *recoil* that lets the waste valve fall open again.
+//  3. Air chamber: a node of compliance V_air/(n·p) feeding the delivery pipe through its wave impedance Z = ρ·a/A
+//     (what a stroke pulse sees during the first round trip of the pipe) plus the Darcy friction, against the static
+//     head ρgH.
+//  The waste valve is a poppet of mass m (bare valve + counterweight) on a stroke stop, closed by the pressure of the
+//  body acting on its seat area (the "drag exceeds the weight" of research §5). The curtain area π·d·z under it sets
+//  the pressure drop, so the valve closes by itself when the flow is fast enough. The check valve is an ideal
+//  one-way orifice; the snifter lets air in when the body pressure falls below its cracking pressure.
+//  Everything else (stroke rate, drive flow, delivery, efficiency, peaks) is an *outcome* of this circuit.
+//
+//  Numerics: backward Euler, one scalar monotone equation per step in the body pressure (solved bracketed), so the
+//  orifices cannot make it unstable. The step is a fraction of the ring period of the drive pipe.
+
+/** Everything the cycle model needs, in SI. Built from the user parameters by `buildConfig`. */
+export interface CycleConfig {
+  /** Fall, m. */
+  h: number;
+  /** Drive pipe length (≥ fall), m. */
+  length: number;
+  /** Drive pipe inner diameter, m, and section, m². */
+  diameter: number;
+  areaPipe: number;
+  /** Wave speed, m/s; roughness, m. */
+  waveSpeed: number;
+  roughness: number;
+  /** Static pressure of the delivery head at the ram, Pa. */
+  pStatic: number;
+  /** Delivery pipe: wave impedance Z = ρa/A_d (Pa·s/m³), inner diameter (m), length (m). */
+  zLine: number;
+  lineDiameter: number;
+  lineLength: number;
+  /** Waste valve: seat diameter (m), seat area (m²), stroke (m), moving mass (kg). */
+  seatDiameter: number;
+  seatArea: number;
+  stroke: number;
+  mass: number;
+  /** Delivery check valve flow area, m². */
+  deliveryArea: number;
+  /** Air chamber volume (m³) and snifter state. */
+  chamberVolume: number;
+  snifterOk: boolean;
+  /** Compliance of the ram body (pipe + water), m³/Pa. */
+  bodyCompliance: number;
+  /** Sum of the minor loss coefficients of the drive pipe. */
+  kMinor: number;
+  /** Largest integration step, s. */
+  dtMax: number;
+}
+
+export function buildConfig(p: RamParams): CycleConfig {
+  const valve = VALVES[p.valve];
+  const diameter = p.driveDiameter / 1000;
+  const areaPipe = area(diameter);
+  const waveSpeed = WAVE_SPEED[p.pipeMaterial];
+  const length = Math.max(p.driveLength, p.fall * 1.05);
+  const lineDiameter = deliveryDiameter(p.driveDiameter);
+  // delivery pipe is plastic whatever the drive pipe is: wave speed of HDPE
+  const zLine = (RHO * WAVE_SPEED.hdpe) / area(lineDiameter);
+  const bodyCompliance = (areaPipe * length) / (RHO * waveSpeed * waveSpeed);
+  // ring period of the drive pipe 2πL/a, about 300 steps per period, never above 0.2 ms
+  const ring = (2 * Math.PI * length) / waveSpeed;
+  return {
+    h: p.fall,
+    length,
+    diameter,
+    areaPipe,
+    waveSpeed,
+    roughness: ROUGHNESS[p.pipeMaterial],
+    pStatic: RHO * G * p.deliveryHead,
+    zLine,
+    lineDiameter,
+    lineLength: p.deliveryLength,
+    seatDiameter: valve.seat,
+    seatArea: area(valve.seat),
+    stroke: Math.max(1e-4, p.stroke / 1000),
+    mass: valve.bareMass + p.counterweight / 1000,
+    deliveryArea: areaPipe * DELIVERY_VALVE_AREA_RATIO,
+    chamberVolume: p.chamberVolume / 1000,
+    snifterOk: !p.snifterBlocked,
+    bodyCompliance,
+    kMinor: K_MINOR,
+    dtMax: Math.min(2e-4, Math.max(2e-5, ring / 300)),
+  };
+}
+
+/**
+ * Resistance of the delivery pipe seen from the air chamber, Pa·s/m³: its wave impedance Z = ρa/A (what a stroke pulse
+ * meets during the first round trip) plus the Darcy friction at the flow `qOut` (m³/s).
+ */
+export function lineResistance(cfg: CycleConfig, qOut: number): number {
+  const d = cfg.lineDiameter;
+  const a = area(d);
+  const v = Math.max(Math.abs(qOut) / a, 0.01);
+  const friction = (frictionOf(v, d, 1.5e-6) * (cfg.lineLength / d) * RHO * v) / (2 * a);
+  return cfg.zLine + friction;
+}
+
+/** One stroke, closure to closure. Volumes in m³, times in s, pressures in Pa gauge. */
+export interface CycleRecord {
+  period: number;
+  /** Net water taken from the drive pipe, ∫A·v dt. */
+  drive: number;
+  /** Water through the check valve. */
+  delivered: number;
+  vMax: number;
+  pMax: number;
+  pMin: number;
+  /** Speed of the valve when it hit the seat, m/s. */
+  impact: number;
+  /** Time spent in each phase: accel, close, deliver, recoil. */
+  phases: [number, number, number, number];
+  pChamber: number;
+}
+
+const PHASE_INDEX: Record<string, number> = { accel: 0, close: 1, deliver: 2, recoil: 3 };
+const DELIVER_ON = 2e-5; // m³/s: 1.2 L/min through the check valve counts as "delivering"
+
+export class RamCycle {
+  cfg: CycleConfig;
+  /** Time since the creation of the cycle, s. */
+  t = 0;
+  /** Velocity of the drive pipe column, m/s (+ towards the ram). */
+  v = 0;
+  /** Pressure of the ram body, Pa gauge. */
+  p = 0;
+  /** Pressure of the air chamber, Pa gauge. */
+  pa: number;
+  /** Waste valve lift, m (0 = on its seat), and speed, m/s (+ opening). */
+  z: number;
+  zd = 0;
+  /** Volume of the water-vapour cavity at the body, m³ (column separation). */
+  cavity = 0;
+  phase: Phase = 'accel';
+  /** Air share of the chamber (fraction of its volume at working pressure). */
+  airFraction: number;
+  strokeCount = 0;
+  /** Delivery valve opening, 0..1 (visual lag). */
+  deliveryValve = 0;
+  // instantaneous flows of the last step, m³/s
+  qDrive = 0;
+  qWaste = 0;
+  qDeliver = 0;
+  qOut = 0;
+  qSnifter = 0;
+  // running record of the stroke in progress
+  private acc = this.newAcc();
+  /** Strokes finished so far (last 32 kept). */
+  readonly cycles: CycleRecord[] = [];
+  /** Time since the last closure, s. */
+  sinceClosure = 0;
+  /** Highest body pressure of the last finished stroke, Pa. */
+  lastPeak = 0;
+
+  constructor(cfg: CycleConfig, airFraction: number) {
+    this.cfg = cfg;
+    this.airFraction = airFraction;
+    this.pa = cfg.pStatic;
+    this.z = cfg.stroke;
+  }
+
+  /** Swap the parameters while running (live editing). The state carries over. */
+  setConfig(cfg: CycleConfig): void {
+    const dStatic = cfg.pStatic - this.cfg.pStatic;
+    this.cfg = cfg;
+    this.pa += dStatic; // the chamber follows the new head through the delivery pipe within seconds; start close
+    this.z = Math.min(this.z, cfg.stroke);
+  }
+
+  private newAcc() {
+    return {
+      drive: 0,
+      delivered: 0,
+      vMax: -Infinity,
+      pMax: -Infinity,
+      pMin: Infinity,
+      impact: 0,
+      phases: [0, 0, 0, 0] as [number, number, number, number],
+      pChamber: 0,
+      time: 0,
+    };
+  }
+
+  /** Reset the dynamic state to the standstill before the first stroke (valve open on its stop, pipe full). */
+  rest(): void {
+    this.v = 0;
+    this.p = 0;
+    this.pa = this.cfg.pStatic;
+    this.z = this.cfg.stroke;
+    this.zd = 0;
+    this.cavity = 0;
+    this.phase = 'accel';
+    this.qDrive = this.qWaste = this.qDeliver = this.qOut = this.qSnifter = 0;
+    this.deliveryValve = 0;
+    this.sinceClosure = 0;
+    this.acc = this.newAcc();
+  }
+
+  /** Air volume of the chamber at its present pressure, m³. */
+  airVolume(): number {
+    const c = this.cfg;
+    const nominalAbs = c.pStatic + P_ATM;
+    const abs = Math.max(this.pa + P_ATM, 1e4);
+    return (
+      Math.max(this.airFraction, AIR_FRACTION_LOGGED) * c.chamberVolume * Math.pow(nominalAbs / abs, 1 / POLYTROPIC)
+    );
+  }
+
+  /**
+   * Advance by dt (≤ cfg.dtMax). Returns true when the waste valve has just closed on its seat (a new stroke starts).
+   */
+  step(dt: number): boolean {
+    const c = this.cfg;
+    const A = c.areaPipe;
+    const v0 = this.v;
+    const p0 = this.p;
+    const z0 = this.z;
+
+    // --- friction of the drive pipe: Darcy λ at the present velocity, lagged by one step
+    const lambda = frictionOf(v0, c.diameter, c.roughness);
+    const kLoss = (lambda * c.length) / c.diameter + c.kMinor;
+    const fricDen = 1 + (dt * kLoss * Math.abs(v0)) / (2 * c.length);
+    const accel0 = (G * c.h) / c.length;
+
+    // --- waste valve curtain area
+    const aGap = Math.min(Math.PI * c.seatDiameter * z0, c.seatArea);
+    const kWaste = CD_WASTE * aGap;
+    const aSnif = c.snifterOk ? (Math.PI * SNIFTER_DIAMETER * SNIFTER_DIAMETER) / 4 : 0;
+
+    // --- chamber, eliminated analytically: pa' = alpha + beta * Qd
+    const paAbs = this.pa + P_ATM;
+    const cAir = airCompliance(this.airVolume(), paAbs);
+    const rLine = lineResistance(c, this.qOut);
+    const beta = 1 / (cAir / dt + 1 / rLine);
+    const alpha = beta * ((cAir * this.pa) / dt + c.pStatic / rLine);
+    const kd = CD_DELIVERY * c.deliveryArea * Math.sqrt(2 / RHO);
+    const kd2 = kd * kd;
+
+    // body-pressure residual: storage − inflow + outflows (monotone increasing in x)
+    let vNew = v0;
+    let qw = 0;
+    let qs = 0;
+    let qd = 0;
+    const residual = (x: number): number => {
+      vNew = (v0 + dt * (accel0 - x / (RHO * c.length))) / fricDen;
+      const qin = A * vNew;
+      qw = x >= 0 ? kWaste * Math.sqrt((2 * x) / RHO) : -kWaste * Math.sqrt((-2 * x) / RHO_AIR);
+      qs = aSnif > 0 && x < -SNIFTER_CRACK ? -CD_SNIFTER * aSnif * Math.sqrt((2 * (-x - SNIFTER_CRACK)) / RHO_AIR) : 0;
+      qd = x > alpha ? 0.5 * (-kd2 * beta + Math.sqrt(kd2 * kd2 * beta * beta + 4 * kd2 * (x - alpha))) : 0;
+      return (c.bodyCompliance * (x - p0)) / dt - qin + qw + qd + qs;
+    };
+
+    let x: number;
+    const fLow = residual(P_VAPOUR);
+    if (fLow >= 0 || this.cavity > 0) {
+      // the water cannot go below its vapour pressure: a cavity opens (column separation) and closes again later
+      x = P_VAPOUR;
+      this.cavity = Math.max(0, this.cavity + fLow * dt);
+    } else {
+      x = solveMonotone(residual, p0, P_VAPOUR);
+      residual(x);
+    }
+
+    // --- chamber and delivery pipe
+    const paNew = alpha + beta * qd;
+    const qOut = (paNew - c.pStatic) / rLine;
+
+    // --- waste valve: weight against the pressure on the seat
+    const weight = c.mass * G;
+    const net = weight - x * c.seatArea; // > 0 opens, < 0 closes
+    let closed = false;
+    if (z0 <= 0 && net <= 0) {
+      this.z = 0;
+      this.zd = 0;
+    } else {
+      this.zd += (dt * net) / c.mass;
+      this.z = z0 + dt * this.zd;
+      if (this.z <= 0) {
+        this.acc.impact = Math.max(this.acc.impact, -this.zd);
+        this.z = 0;
+        this.zd = 0;
+        closed = z0 > 0;
+      } else if (this.z >= c.stroke) {
+        this.z = c.stroke;
+        this.zd = 0;
+      }
+    }
+
+    // --- commit
+    this.v = vNew;
+    this.p = x;
+    this.pa = paNew;
+    this.qDrive = A * vNew;
+    this.qWaste = qw > 0 ? qw : 0;
+    this.qDeliver = qd;
+    this.qOut = qOut;
+    this.qSnifter = qs < 0 ? -qs : 0;
+    this.t += dt;
+    this.sinceClosure += dt;
+
+    // delivery valve visual: opens in ~6 ms, closes in ~12 ms
+    const target = qd > DELIVER_ON ? 1 : 0;
+    const tau = target > this.deliveryValve ? 0.006 : 0.012;
+    this.deliveryValve += (target - this.deliveryValve) * (1 - Math.exp(-dt / tau));
+
+    // --- phase machine
+    if (closed) {
+      this.phase = 'close';
+    } else {
+      switch (this.phase) {
+        case 'accel':
+          if (this.zd < 0 || this.z <= 0) this.phase = 'close';
+          break;
+        case 'close':
+          if (qd > DELIVER_ON) this.phase = 'deliver';
+          else if (this.z <= 0 && vNew < 0) this.phase = 'recoil';
+          break;
+        case 'deliver':
+          if (qd < DELIVER_ON * 0.5) this.phase = 'recoil';
+          break;
+        case 'recoil':
+          if (this.z > 0.5 * c.stroke && vNew >= 0) this.phase = 'accel';
+          break;
+        default:
+          break;
+      }
+    }
+
+    // --- record of the stroke in progress
+    const a = this.acc;
+    a.drive += this.qDrive * dt;
+    a.delivered += qd * dt;
+    a.vMax = Math.max(a.vMax, vNew);
+    a.pMax = Math.max(a.pMax, x);
+    a.pMin = Math.min(a.pMin, x);
+    a.pChamber += this.pa * dt;
+    a.time += dt;
+    const k = PHASE_INDEX[this.phase];
+    if (k !== undefined) a.phases[k] += dt;
+
+    if (closed) {
+      this.strokeCount += 1;
+      // the stroke that has just ended is recorded, except the very first (it starts from rest)
+      if (this.strokeCount > 1) {
+        this.cycles.push({
+          period: a.time,
+          drive: a.drive,
+          delivered: a.delivered,
+          vMax: a.vMax,
+          pMax: a.pMax,
+          pMin: a.pMin,
+          impact: a.impact,
+          phases: a.phases,
+          pChamber: a.pChamber / Math.max(a.time, 1e-9),
+        });
+        if (this.cycles.length > 32) this.cycles.shift();
+        this.lastPeak = a.pMax;
+      }
+      this.acc = this.newAcc();
+      this.sinceClosure = 0;
+    }
+    return closed;
+  }
+}
+
+/** Root of an increasing function: expand a bracket around `start`, then Illinois. `floor` is a known lower bound. */
+function solveMonotone(f: (x: number) => number, start: number, floor: number): number {
+  let xa = Math.max(start, floor);
+  let fa = f(xa);
+  if (fa === 0) return xa;
+  let xb: number;
+  let fb: number;
+  let step = 2000;
+  if (fa < 0) {
+    xb = xa + step;
+    fb = f(xb);
+    for (let i = 0; fb < 0 && i < 60; i++) {
+      xa = xb;
+      fa = fb;
+      step *= 3;
+      xb = xa + step;
+      fb = f(xb);
+    }
+  } else {
+    xb = Math.max(floor, xa - step);
+    fb = f(xb);
+    for (let i = 0; fb > 0 && xb > floor && i < 60; i++) {
+      xa = xb;
+      fa = fb;
+      step *= 3;
+      xb = Math.max(floor, xa - step);
+      fb = f(xb);
+    }
+    // xa is the upper end (fa > 0), xb the lower end (fb < 0 or at the floor)
+    [xa, xb] = [xb, xa];
+    [fa, fb] = [fb, fa];
+  }
+  // now fa <= 0 <= fb with xa < xb
+  let side = 0;
+  for (let i = 0; i < 80; i++) {
+    const xm = fb - fa !== 0 ? (xa * fb - xb * fa) / (fb - fa) : 0.5 * (xa + xb);
+    const fm = f(xm);
+    if (Math.abs(fm) < 1e-12 || xb - xa < 2) return xm;
+    if (fm < 0) {
+      xa = xm;
+      fa = fm;
+      if (side === -1) fb *= 0.5;
+      side = -1;
+    } else {
+      xb = xm;
+      fb = fm;
+      if (side === 1) fa *= 0.5;
+      side = 1;
+    }
+  }
+  return 0.5 * (xa + xb);
+}
+
+/**
+ * Integrate the cycle from rest until it is periodic and return its averages. `warm` strokes are discarded, the next
+ * `measure` are averaged. A valve that never closes, or closes and never reopens, is reported as such.
+ *
+ * The air chamber charges slowly (time constant Z·C, several seconds) towards ρgH + R·q. To avoid integrating for
+ * ten seconds, the chamber pressure is set to that equilibrium at every closure from the delivery of the last stroke
+ * (it converges in two or three strokes; a chamber with no air has no memory, so nothing changes for it).
+ */
+export function solveSteady(
+  cfg: CycleConfig,
+  airFraction: number,
+  deliveryHead: number,
+  opts: { warm?: number; measure?: number; tMax?: number } = {},
+): Means {
+  const warm = opts.warm ?? 3;
+  const measure = opts.measure ?? 4;
+  const tMax = opts.tMax ?? 30;
+  const cyc = new RamCycle(cfg, airFraction);
+  const dt = cfg.dtMax;
+  let vMark = -1;
+  let tMark = 0;
+  while (cyc.t < tMax && cyc.cycles.length < warm + measure) {
+    const closed = cyc.step(dt);
+    if (closed && cyc.cycles.length > 0) {
+      const r = cyc.cycles[cyc.cycles.length - 1];
+      const q = r.delivered / r.period;
+      cyc.pa = cfg.pStatic + lineResistance(cfg, q) * q;
+    }
+    if (cyc.strokeCount > 0 && cyc.sinceClosure > 3) break; // closed and never reopened
+    if (cyc.strokeCount === 0 && cyc.t - tMark >= 0.5) {
+      // never closes: the column has reached its terminal velocity with the valve wide open
+      if (cyc.t > 1 && Math.abs(cyc.v - vMark) < 0.002) break;
+      vMark = cyc.v;
+      tMark = cyc.t;
+    }
+  }
+  return summarise(cyc, cfg, deliveryHead, warm);
+}
+
+function emptyMeans(): Means {
+  return {
+    strokesPerMin: 0,
+    driveFlow: 0,
+    wasteFlow: 0,
+    deliveredFlow: 0,
+    deliveredPerStroke: 0,
+    etaD: 0,
+    etaR: 0,
+    closingVelocity: 0,
+    peakPressure: 0,
+    minPressure: 0,
+    impactSpeed: 0,
+    chamberPressure: 0,
+    valveStaysOpen: false,
+    valveStuckShut: false,
+    phaseShare: [1, 0, 0, 0],
+  };
+}
+
+function summarise(cyc: RamCycle, cfg: CycleConfig, deliveryHead: number, warm: number): Means {
+  const m = emptyMeans();
+  const rec = cyc.cycles.slice(Math.min(warm, Math.max(0, cyc.cycles.length - 2)));
+  if (rec.length < 2) {
+    // no periodic regime: either the valve never closed, or it closed and stayed shut
+    if (cyc.strokeCount === 0) {
+      m.valveStaysOpen = true;
+      m.driveFlow = toLpm(cfg.areaPipe * cyc.v);
+      m.wasteFlow = m.driveFlow;
+      m.closingVelocity = cyc.v;
+    } else {
+      m.valveStuckShut = true;
+      m.closingVelocity = cyc.cycles.length ? cyc.cycles[cyc.cycles.length - 1].vMax : 0;
+    }
+    return m;
+  }
+  const n = rec.length;
+  let tSum = 0;
+  let drive = 0;
+  let deliv = 0;
+  let vMax = 0;
+  let pMax = 0;
+  let pMin = 0;
+  let impact = 0;
+  let pCh = 0;
+  const ph: [number, number, number, number] = [0, 0, 0, 0];
+  for (const r of rec) {
+    tSum += r.period;
+    drive += r.drive;
+    deliv += r.delivered;
+    vMax += r.vMax;
+    pMax += r.pMax;
+    pMin += r.pMin;
+    impact += r.impact;
+    pCh += r.pChamber;
+    for (let i = 0; i < 4; i++) ph[i] += r.phases[i];
+  }
+  const bigQ = toLpm(drive / tSum);
+  const q = toLpm(deliv / tSum);
+  m.strokesPerMin = (60 * n) / tSum;
+  m.driveFlow = bigQ;
+  m.deliveredFlow = q;
+  m.wasteFlow = Math.max(0, bigQ - q);
+  m.deliveredPerStroke = (deliv / n) * 1e6;
+  const h = cfg.h;
+  m.etaD = etaDAubuisson(q, bigQ, deliveryHead, h);
+  m.etaR = etaRankine(q, bigQ, deliveryHead, h);
+  m.closingVelocity = vMax / n;
+  m.peakPressure = toBar(pMax / n);
+  m.minPressure = toBar(pMin / n);
+  m.impactSpeed = impact / n;
+  m.chamberPressure = toBar(pCh / n);
+  m.phaseShare = [ph[0] / tSum, ph[1] / tSum, ph[2] / tSum, ph[3] / tSum];
+  return m;
+}

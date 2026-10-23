@@ -1,7 +1,7 @@
 import { group, mesh, MAT, PartRegistry } from '@onigam/lab-kit/three';
 import type { Hotspot, SceneModule } from '@onigam/lab-kit/three';
 import * as THREE from 'three';
-import type { DemoState } from '../sim/engine';
+import type { RamState } from '../sim/types';
 
 // One 3D world: a flywheel on a base. Replace it with the lab's device. Rules the kit relies on:
 //  - every selectable part is registered with `registry.add(id, object, explodeOffset)`; the id must
@@ -12,7 +12,7 @@ import type { DemoState } from '../sim/engine';
 /** Dimensions in metres (the single source of truth for the 3D model and the drawings). */
 export const D = { baseW: 0.5, baseD: 0.3, baseH: 0.03, axisY: 0.22, wheelR: 0.16, wheelT: 0.03, axleR: 0.012 };
 
-export function createDeviceScene(): SceneModule<DemoState> {
+export function createDeviceScene(): SceneModule<RamState> {
   const scene = new THREE.Scene();
   scene.name = 'device';
   scene.background = new THREE.Color(0xece6da);
@@ -79,7 +79,8 @@ export function createDeviceScene(): SceneModule<DemoState> {
     minDistance: 0.25,
     maxDistance: 4,
     update(state) {
-      wheel.rotation.x = state.angle;
+      // demo only: the wheel advances by a tenth of a turn at every stroke, smoothly through the stroke
+      wheel.rotation.x = (((state.strokeCount + state.cycleProgress) * Math.PI) / 5) % (Math.PI * 2);
     },
   };
 }
