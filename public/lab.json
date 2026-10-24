@@ -1,9 +1,15 @@
 {
   "id": "ram-pump-lab",
-  "title": { "fr": "Labo du bélier", "en": "Ram Pump Lab" },
-  "tagline": { "fr": "Un lab à remplacer", "en": "A lab to replace" },
-  "tags": [],
-  "difficulty": 1,
-  "minutes": 10,
+  "title": {
+    "fr": "Labo du bélier hydraulique",
+    "en": "Hydraulic Ram Lab"
+  },
+  "tagline": {
+    "fr": "Pomper l’eau sans électricité ni carburant",
+    "en": "Pumping water with no electricity or fuel"
+  },
+  "tags": ["water", "hydraulics", "off-grid"],
+  "difficulty": 2,
+  "minutes": 20,
   "energyProfile": null
 }

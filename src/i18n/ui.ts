@@ -4,7 +4,7 @@ import { getLang, registerStrings, tx, type CommonKey } from '@onigam/lab-kit/i1
 // guides) live in the kit; add here only what is specific to this lab.
 
 const LAB = {
-  tagline: ['Explorer · Comprendre · Construire', 'Explore · Understand · Build'],
+  tagline: ['Pomper l’eau sans électricité ni carburant', 'Pumping water with no electricity or fuel'],
   sceneSite: ['Le site', 'The site'],
   sceneRam: ['Le bélier', 'The ram'],
   goSite: ['Voir le site', 'See the site'],

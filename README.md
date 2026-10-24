@@ -1,6 +1,6 @@
-# Ram Pump Lab
+# Hydraulic Ram Lab
 
-Interactive 3D lab of a hydraulic ram pump: how water alone lifts water
+Interactive 3D lab of a hydraulic ram: how falling water lifts water, with no electricity or fuel.
 
 **▶ https://ram-pump-lab.vercel.app**
 
@@ -24,6 +24,6 @@ deploys to Vercel.
 
 ## Français
 
-Labo du bélier (Ram Pump Lab) : lab 3D interactif construit sur le socle [lab-kit](https://github.com/Onigam/lab-kit). Lire `BRIEF.md`
+Labo du bélier hydraulique (Hydraulic Ram Lab) : lab 3D interactif construit sur le socle [lab-kit](https://github.com/Onigam/lab-kit). Lire `BRIEF.md`
 d'abord, puis remplir `docs/research.md`. `npm install` puis `npm run dev` pour lancer en local ; chaque push sur
 `main` déploie sur Vercel.

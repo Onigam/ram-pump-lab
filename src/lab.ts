@@ -14,7 +14,7 @@ import { createRamScene, createSiteScene } from './three';
 // The lab described to the kit. Edit the content here and in src/data, src/three, src/sim, src/drawings;
 // the kit supplies the whole application frame (see BRIEF.md: the frame is locked).
 
-configureDrawings({ project: { fr: 'LABO DU BÉLIER — bélier hydraulique', en: 'RAM PUMP LAB — hydraulic ram' } });
+configureDrawings({ project: { fr: 'LABO DU BÉLIER HYDRAULIQUE', en: 'HYDRAULIC RAM LAB' } });
 
 const SEVERE_ALARMS = new Set<AlarmKey>(['stalledTank', 'stalledStuck', 'noDelivery', 'valveOpen']);
 
@@ -101,7 +101,11 @@ function about(ctx: AppContext<RamSim>): HTMLElement[] {
 
 export const lab: LabDefinition<RamSim> = {
   id: 'ram-pump-lab',
-  brand: { title: { fr: 'LABO DU BÉLIER', en: 'RAM PUMP LAB' }, tagline: strL('tagline'), icon: './favicon.svg' },
+  brand: {
+    title: { fr: 'LABO DU BÉLIER HYDRAULIQUE', en: 'HYDRAULIC RAM LAB' },
+    tagline: strL('tagline'),
+    icon: './favicon.svg',
+  },
   sim: new RamSim(),
   defaultScene: 'site',
   video: { id: 'mc0gq5rObcM' },
@@ -115,10 +119,10 @@ export const lab: LabDefinition<RamSim> = {
       xrayNeedsSelection: true,
       stepFrame: { padding: 1.5, minRadius: 4 },
       overview: {
-        title: { fr: 'Le site : de la source au château d’eau', en: 'The site: from the spring to the water tower' },
+        title: { fr: 'Un bélier hydraulique, à quoi ça sert ?', en: 'What is a hydraulic ram for?' },
         text: {
-          fr: 'Une **source** et sa **réserve tampon**, une **conduite motrice** qui descend de 7,5 m, le **bélier** dans son regard et une **conduite de refoulement** qui remonte l’eau à 65 m, jusqu’au **château d’eau** et à la **maison**. Cliquez le regard pour ouvrir le bélier.',
-          en: 'A **spring** with its **buffer tank**, a **drive pipe** falling 7.5 m, the **ram** in its pit and a **delivery pipe** lifting the water 65 m to the **water tower** and the **house**. Click the pit to open the ram.',
+          fr: 'Un **bélier hydraulique** remonte l’eau d’une source jusqu’à une maison ou un potager situés bien plus haut, **sans électricité, sans carburant et sans moteur** : l’énergie vient de la chute de l’eau elle-même. Ici, l’installation d’une ferme : 7,5 m de chute, 65 m de dénivelé à remonter, environ 500 L d’eau par jour.\n\nSur cette page : le **site** et le **bélier** en 3D (éclaté, coupe, flux, rayons X), le **montage** pièce par pièce, le guide d’**installation**, la **simulation** (clapet, course, débit de la source, hauteur) et le **catalogue** des pièces, avec ses **sources**.',
+          en: 'A **hydraulic ram** lifts spring water to a house or a vegetable garden much higher up, **with no electricity, no fuel and no motor**: the energy comes from the falling water itself. Here, a farm installation: 7.5 m of fall, 65 m of lift, about 500 L of water a day.\n\nOn this page: the **site** and the **ram** in 3D (explode, section, flows, X-ray), the part-by-part **assembly**, the **installation** guide, the **simulation** (valve, stroke, spring flow, head) and the **parts catalogue**, with its **sources**.',
         },
         actions: [{ label: strL('goRam'), scene: 'ram', primary: true }],
       },
