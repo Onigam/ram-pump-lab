@@ -14,7 +14,7 @@ import { createRamScene, createSiteScene } from './three';
 // The lab described to the kit. Edit the content here and in src/data, src/three, src/sim, src/drawings;
 // the kit supplies the whole application frame (see BRIEF.md: the frame is locked).
 
-configureDrawings({ project: { fr: 'RAM PUMP LAB — dispositif', en: 'RAM PUMP LAB — device' } });
+configureDrawings({ project: { fr: 'LABO DU BÉLIER — bélier hydraulique', en: 'RAM PUMP LAB — hydraulic ram' } });
 
 const SEVERE_ALARMS = new Set<AlarmKey>(['stalledTank', 'stalledStuck', 'noDelivery', 'valveOpen']);
 
@@ -101,7 +101,7 @@ function about(ctx: AppContext<RamSim>): HTMLElement[] {
 
 export const lab: LabDefinition<RamSim> = {
   id: 'ram-pump-lab',
-  brand: { title: 'RAM PUMP LAB', tagline: strL('tagline'), icon: './favicon.svg' },
+  brand: { title: { fr: 'LABO DU BÉLIER', en: 'RAM PUMP LAB' }, tagline: strL('tagline'), icon: './favicon.svg' },
   sim: new RamSim(),
   defaultScene: 'site',
   video: { id: 'mc0gq5rObcM' },

@@ -24,6 +24,6 @@ deploys to Vercel.
 
 ## Français
 
-Ram Pump Lab : lab 3D interactif construit sur le socle [lab-kit](https://github.com/Onigam/lab-kit). Lire `BRIEF.md`
+Labo du bélier (Ram Pump Lab) : lab 3D interactif construit sur le socle [lab-kit](https://github.com/Onigam/lab-kit). Lire `BRIEF.md`
 d'abord, puis remplir `docs/research.md`. `npm install` puis `npm run dev` pour lancer en local ; chaque push sur
 `main` déploie sur Vercel.
