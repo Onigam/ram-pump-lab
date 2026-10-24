@@ -425,8 +425,8 @@ export const LESSONS: Lesson[] = [
         ],
         answer: 0,
         explain: lx(
-          'Sans coussin d’air, chaque coup rencontre directement la conduite de refoulement : la pointe passe de {peak1} bar à plus de 7 bar et le refoulé baisse d’environ {wlDropPct} % dans le modèle. Trop d’air ne ferait pas cogner plus fort, et un contrepoids plus léger changerait le rythme, pas la dureté des coups. Regardez la cloche et le reniflard avant de toucher au clapet de choc.',
-          'With no air cushion every stroke meets the delivery pipe head-on: the peak goes from {peak1} bar to over 7 bar and the delivery drops by about {wlDropPct}% in the model. Too much air would not make it knock harder, and a lighter counterweight would change the rhythm, not the harshness of the strokes. Look at the chamber and the snifter before touching the waste valve.',
+          'Sans coussin d’air, chaque coup rencontre directement la conduite de refoulement : la pointe passe de {peak1} bar à plus de 7 bar et le refoulé baisse d’environ {wlDropPct} % dans le modèle. Trop d’air ne ferait pas cogner plus fort, et un contrepoids plus léger ferait au contraire frapper moins fort (le clapet se ferme sur une eau plus lente, le choc ρ·a·v est plus faible) tout en accélérant le rythme. Regardez la cloche et le reniflard avant de toucher au clapet de choc.',
+          'With no air cushion every stroke meets the delivery pipe head-on: the peak goes from {peak1} bar to over 7 bar and the delivery drops by about {wlDropPct}% in the model. Too much air would not make it knock harder, and a lighter counterweight would on the contrary make it strike less hard (the valve closes on slower water, so the surge ρ·a·v is smaller) while speeding up the rhythm. Look at the chamber and the snifter before touching the waste valve.',
         ),
       },
     ],

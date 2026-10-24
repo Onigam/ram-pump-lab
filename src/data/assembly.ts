@@ -76,8 +76,8 @@ export const ASSEMBLY: GuideStep[] = [
     id: 'reducer',
     title: l('Visser la réduction 26×34 → 15×21', 'Screw on the 26×34 → 15×21 reducer'),
     text: l(
-      `Vissez la **réduction** dans le manchon, avec du ruban PTFE sur le filetage mâle. Elle passe du 26×34 au 15×21 : c’est ce dernier diamètre qui donne la taille du clapet (15×21 pour le n°1, 20×27 pour le n°2, 26×34 pour le n°3). Son cône intérieur est un entonnoir qui resserre l’eau vers la portée, et le volume qu’elle forme avec le manchon loge la tête et ses ailettes. Serrez-la à fond : elle ne devra plus bouger.`,
-      `Screw the **reducer** into the socket, with PTFE tape on the male thread. It goes from 26×34 to 15×21: that last diameter gives the valve size (15×21 for the n°1, 20×27 for the n°2, 26×34 for the n°3). Its inner cone is a funnel that narrows the water toward the seat, and the volume it forms with the socket houses the head and its fins. Tighten it fully: it must not move again.`,
+      `Vissez la **réduction** dans le manchon, avec du ruban PTFE sur le filetage mâle. Elle passe du 26×34 au 15×21 : c’est ce dernier diamètre qui donne la taille du clapet : 15×21 pour le n°1 (dans la vidéo, le n°2 est un 20×27 et le n°3 d’origine un 26×34). Son cône intérieur est un entonnoir qui resserre l’eau vers la portée, et le volume qu’elle forme avec le manchon loge la tête et ses ailettes. Serrez-la à fond : elle ne devra plus bouger.`,
+      `Screw the **reducer** into the socket, with PTFE tape on the male thread. It goes from 26×34 to 15×21: that last diameter gives the valve size: 15×21 for the n°1 (in the video the n°2 is a 20×27 and the original n°3 a 26×34). Its inner cone is a funnel that narrows the water toward the seat, and the volume it forms with the socket houses the head and its fins. Tighten it fully: it must not move again.`,
     ),
     parts: ['valve-reducer'],
     tools: [l('Clés à tube', 'Pipe wrenches'), l('Ruban PTFE', 'PTFE tape')],

@@ -337,8 +337,8 @@ function traces(p: View, tr_: StrokeTrace, ins: Instant[]): void {
     T * 0.63,
     1.0,
     l(
-      'K15 : vitesse minimale de fermeture 0,5–0,65 m/s (dérivé)',
-      'K15: minimum closing velocity 0.5–0.65 m/s (derived)',
+      'Vitesse minimale de fermeture 0,5–0,65 m/s (dérivé dans la recherche)',
+      'Minimum closing velocity 0.5–0.65 m/s (derived in the research notes)',
     ),
     { size: 1.5, color: INK_2, dy: 0 },
   );
@@ -490,7 +490,7 @@ function hammer(p: View): void {
   p.text(
     [x + 24, y + 69.2],
     cat(
-      l('(vidéo K15 : 0,5–0,65 m/s) ; le modèle ferme à ', '(video K15: 0.5–0.65 m/s); the model closes at '),
+      l('(dérivé : 0,5–0,65 m/s) ; le modèle ferme à ', '(derived: 0.5–0.65 m/s); the model closes at '),
       nf(st.closingVelocity, 2),
     ),
     { size: 1.5, color: INK_2, baseline: 'middle' },

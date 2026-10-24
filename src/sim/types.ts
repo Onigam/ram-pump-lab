@@ -23,7 +23,7 @@ export type Phase = 'accel' | 'close' | 'deliver' | 'recoil' | 'stalled';
 export type CyclePhase = Exclude<Phase, 'stalled'>;
 export type Status = 'running' | 'stalled';
 /**
- * Why the ram stopped: `tank` = the buffer tank ran dry and air got into the drive pipe (K8, the video's problem);
+ * Why the ram stopped: `tank` = the buffer tank ran dry, so no water comes down the drive pipe (K8, the video's problem);
  * `stuck` = the waste valve stays shut because the recoil is too weak to reopen it (a delivery head barely above the
  * fall). A ram whose stroke nut is turned in too far does not stop: it keeps striking and delivers nothing (alarm
  * `noDelivery`, transcript 13:13). `gate` = the gate valve of the drive pipe was closed by hand; `hand` = the waste

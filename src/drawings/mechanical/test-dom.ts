@@ -104,7 +104,9 @@ export function textBoxes(svg: string): TextBox[] {
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
         .replace(/&amp;/g, '&')
-        .replace(/&quot;/g, '"'),
+        .replace(/&quot;/g, '"')
+        // the kit sets fixed spaces (typography): compare with plain ones
+        .replace(/[\u00a0\u202f]/g, ' '),
     });
   }
   return out;

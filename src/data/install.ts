@@ -120,8 +120,8 @@ export const INSTALL: GuideStep[] = [
       'Keep the valve closed until the drive pipe is laid and anchored, then open it slowly. When running it stays fully open: the flow is not adjusted with it.',
     ),
     warning: l(
-      'De l’air dans la conduite motrice arrête le bélier (dans le modèle, c’est ce qui arrive quand la cuve se vide, le cas du clapet n°3 de la vidéo) : la crépine doit rester sous l’eau, même cuve presque vide.',
-      'Air in the drive pipe stops the ram (in the model that is what happens when the tank empties, the video’s n°3 valve case): the screen must stay under water, even with the tank nearly empty.',
+      'De l’air dans la conduite motrice peut arrêter un bélier (pratique courante, ni montrée dans la vidéo ni simulée) : la crépine doit rester sous l’eau, même cuve presque vide.',
+      'Air in the drive pipe can stop a ram (common practice, neither shown in the video nor simulated): the screen must stay under water, even with the tank nearly empty.',
     ),
     duration: '2 h',
   },

@@ -285,7 +285,7 @@ describe('RP-D06 bill of materials', () => {
     for (const lang of ['fr', 'en'] as const) {
       const blob = texts(lang, 'bom').join(' ');
       expect(blob).toMatch(lang === 'fr' ? /couple de serrage/ : /tightening torque/);
-      expect(blob).toMatch(lang === 'fr' ? /Walton n°3/ : /Walton n°3/);
+      expect(blob).toMatch(lang === 'fr' ? /Walton n° ?3/ : /Walton n° ?3/);
       expect(blob).not.toMatch(/\d\s?N·m|\bNm\b/);
     }
   });
@@ -302,7 +302,7 @@ describe('every sheet that draws the ram says that it is generic and that the di
   it('RP-D01, RP-D05 and RP-D06 name the Walton n°3', () => {
     for (const id of ['general-arrangement', 'chamber-section', 'bom']) {
       for (const lang of ['fr', 'en'] as const)
-        expect(texts(lang, id).join(' '), `${id} ${lang}`).toContain('Walton n°3');
+        expect(texts(lang, id).join(' '), `${id} ${lang}`).toMatch(/Walton n° ?3/);
     }
   });
 });

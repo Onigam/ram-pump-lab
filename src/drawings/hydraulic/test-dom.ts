@@ -173,7 +173,8 @@ export function textBoxes(svg: FakeElement): TextBox[] {
           bold: c.attrs.get('font-weight') === '700',
           mono: (c.attrs.get('font-family') ?? '').includes('Mono'),
           rotated: Math.abs(((angle + 180) % 180) - 0) > 0.5 && Math.abs(((angle + 180) % 180) - 180) > 0.5,
-          content: c.textContent,
+          // the kit sets fixed spaces (typography): compare with plain ones
+          content: c.textContent.replace(/[\u00a0\u202f]/g, ' '),
         });
       } else walk(c, multiply(m, own));
     }

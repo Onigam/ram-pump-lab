@@ -2,7 +2,7 @@
   "name": "ram-pump-lab",
   "private": true,
   "version": "0.1.0",
-  "description": "Interactive 3D lab of a hydraulic ram pump: how water alone lifts water",
+  "description": "Interactive 3D lab of a hydraulic ram: how falling water lifts water, with no electricity or fuel",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,7 +16,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@onigam/lab-kit": "github:Onigam/lab-kit#v0.1.6",
+    "@onigam/lab-kit": "github:Onigam/lab-kit#v0.1.7",
     "three": "^0.186.1"
   },
   "devDependencies": {

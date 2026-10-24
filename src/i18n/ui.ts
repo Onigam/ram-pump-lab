@@ -62,8 +62,8 @@ const LAB = {
   ],
   statusEmptyIn: ['Réserve vide dans', 'Tank empty in'],
   statusStalledTank: [
-    'Arrêté : la réserve s’est vidée et l’air est entré dans la conduite. Il faut le remettre en marche à la main.',
-    'Stopped: the tank ran dry and air got into the drive pipe. It has to be restarted by hand.',
+    'Arrêté : la réserve s’est vidée, plus d’eau ne descend dans la conduite. Dans la vidéo, le bélier devait alors être relancé à la main.',
+    'Stopped: the tank ran dry and no more water comes down the pipe. In the video the ram then had to be restarted by hand.',
   ],
   statusStalledStuck: [
     'Arrêté : le clapet de choc reste fermé, le recul est trop faible pour le rouvrir (refoulement trop proche de la chute).',
