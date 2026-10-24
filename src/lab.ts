@@ -19,7 +19,15 @@ import { createCatchmentScene, createRamScene, createSiteScene, createValveScene
 
 configureDrawings({ project: { fr: 'LABO DU BÉLIER HYDRAULIQUE', en: 'HYDRAULIC RAM LAB' } });
 
-const SEVERE_ALARMS = new Set<AlarmKey>(['stalledTank', 'stalledStuck', 'noDelivery', 'valveOpen']);
+const SEVERE_ALARMS = new Set<AlarmKey>([
+  'stalledTank',
+  'stalledStuck',
+  'noDelivery',
+  'valveOpen',
+  'softPipe',
+  'gateClosed',
+  'heldShut',
+]);
 
 /** Text of an alarm chip, with the figure that triggers it when there is one. */
 function alarmLabel(sim: RamSim, key: AlarmKey): string {
@@ -93,6 +101,20 @@ function about(ctx: AppContext<RamSim>): HTMLElement[] {
         fr ? 'rendements d’Aubuisson et de Rankine' : 'D’Aubuisson and Rankine efficiencies',
       ),
       li(
+        'https://sswm.info/sites/default/files/reference_attachments/PRACTICAL%20ACTION%204000%20Hydraulic%20Ram%20Pumps.pdf',
+        'Practical Action',
+        fr
+          ? 'fiche technique : crépine, massif de fondation, clapet noyé, réserve (copie hébergée par SSWM)'
+          : 'technical brief: strainer, foundation, drowned valve, tank (copy hosted by SSWM)',
+      ),
+      li(
+        'https://sswm.info/index.php/node/4546',
+        'Oxfam',
+        fr
+          ? 'fiche technique « Protection de source » : regard, trop-plein, vidange, vanne de sortie'
+          : 'technical brief “Spring protection”: spring box, overflow, washout, outlet gate valve',
+      ),
+      li(
         fr ? 'https://fr.wikipedia.org/wiki/B%C3%A9lier_hydraulique' : 'https://en.wikipedia.org/wiki/Hydraulic_ram',
         'Wikipedia',
         fr ? 'histoire et ordres de grandeur' : 'history and orders of magnitude',
@@ -124,8 +146,8 @@ export const lab: LabDefinition<RamSim> = {
       overview: {
         title: { fr: 'Un bélier hydraulique, à quoi ça sert ?', en: 'What is a hydraulic ram for?' },
         text: {
-          fr: 'Un **bélier hydraulique** remonte l’eau d’une source jusqu’à une maison ou un potager situés bien plus haut, **sans électricité, sans carburant et sans moteur** : l’énergie vient de la chute de l’eau elle-même. Ici, l’installation d’une ferme : 7,5 m de chute, 65 m de dénivelé à remonter, environ 500 L d’eau par jour.\n\nSur cette page : le **site** et le **bélier** en 3D (éclaté, coupe, flux, rayons X), le **montage** pièce par pièce, le guide d’**installation**, la **simulation** (clapet, course, débit de la source, hauteur) et le **catalogue** des pièces, avec ses **sources**.',
-          en: 'A **hydraulic ram** lifts spring water to a house or a vegetable garden much higher up, **with no electricity, no fuel and no motor**: the energy comes from the falling water itself. Here, a farm installation: 7.5 m of fall, 65 m of lift, about 500 L of water a day.\n\nOn this page: the **site** and the **ram** in 3D (explode, section, flows, X-ray), the part-by-part **assembly**, the **installation** guide, the **simulation** (valve, stroke, spring flow, head) and the **parts catalogue**, with its **sources**.',
+          fr: `Un **bélier hydraulique** remonte l’eau d’une source jusqu’à une maison ou un potager situés bien plus haut, **sans électricité, sans carburant et sans moteur** : l’énergie vient de la chute de l’eau elle-même. Ici, l’installation d’une ferme : 7,5 m de chute, 65 m de dénivelé à remonter, environ 500 L d’eau par jour.\n\nSur cette page : quatre mondes en 3D (le **site**, le **captage**, le **bélier** et son **clapet de choc**, avec éclaté, coupe, flux et rayons X), le **montage** et l’**installation** pas à pas, la **simulation** (réglages, scénarios, cycle au ralenti, dimensionnement), ${SHEETS.length} **plans** A3, ${LESSONS.length} **leçons** avec quiz, le **catalogue** de ${PARTS.length} pièces et les **sources**.`,
+          en: `A **hydraulic ram** lifts spring water to a house or a vegetable garden much higher up, **with no electricity, no fuel and no motor**: the energy comes from the falling water itself. Here, a farm installation: 7.5 m of fall, 65 m of lift, about 500 L of water a day.\n\nOn this page: four 3D worlds (the **site**, the **catchment**, the **ram** and its **waste valve**, with explode, section, flows and X-ray), step-by-step **assembly** and **installation**, the **simulation** (settings, scenarios, the cycle in slow motion, sizing), ${SHEETS.length} A3 **drawings**, ${LESSONS.length} **lessons** with a quiz, the **catalogue** of ${PARTS.length} parts and the **sources**.`,
         },
         actions: [
           { label: strL('goRam'), scene: 'ram', primary: true },
@@ -138,6 +160,9 @@ export const lab: LabDefinition<RamSim> = {
       label: strL('sceneCatchment'),
       module: createCatchmentScene(),
       partPadding: 2.2,
+      stepFrame: { padding: 1.5, minRadius: 0.3 },
+      // the shells that X-ray makes transparent while nothing is selected, so the water and the pipes show
+      xrayShell: (id) => ['tank-shell', 'tank-lid', 'spring-box'].includes(id),
       overview: {
         title: { fr: 'Le captage et la réserve tampon', en: 'The spring box and the buffer tank' },
         text: {
@@ -154,7 +179,7 @@ export const lab: LabDefinition<RamSim> = {
       partPadding: 2.2,
       stepFrame: { padding: 1.6, minRadius: 0.07 },
       // the shells that X-ray makes transparent while nothing is selected, so the valves and the water show
-      xrayShell: (id) => ['ram', 'air-chamber', 'base-plate', 'waste-valve'].includes(id),
+      xrayShell: (id) => ['ram', 'air-chamber', 'waste-valve'].includes(id),
       overview: {
         title: { fr: 'Le bélier hydraulique', en: 'The hydraulic ram' },
         text: {
@@ -172,7 +197,10 @@ export const lab: LabDefinition<RamSim> = {
       label: strL('sceneValve'),
       module: createValveScene(),
       partPadding: 2.2,
-      stepFrame: { padding: 1.6, minRadius: 0.04 },
+      stepFrame: { padding: 1.6, minRadius: 0.03 },
+      // the housings that X-ray makes transparent while nothing is selected, so the seat and the head show
+      xrayShell: (id) =>
+        ['base-plate', 'valve-socket', 'valve-reducer', 'valve-nipple', 'valve-sleeve', 'valve-guide'].includes(id),
       overview: {
         title: { fr: 'Le clapet de choc', en: 'The waste valve' },
         text: {
