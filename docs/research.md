@@ -184,3 +184,36 @@ parameter, not a different machine. No second version is needed; the kit has no 
 
 Wave 1 physics (tests first, from §2) → wave 2 3D ‖ data (ids of §4) → wave 3 drawings ‖ lessons → wave 4 QA →
 checkpoint with the owner. The lead asks the owner's approval before launching a team (token cost).
+
+## 10. Owner feedback after wave 2 (2026-10-24) and the enrichment plan (to validate)
+
+**Feedback**: (1) the title "Labo du bélier" is too vague: it must say "hydraulique" and the page must say what the device is for
+and what it offers (done: title, tagline, landing text, `lab.json`); (2) more detail per device, like Pelton Lab; (3) more
+specialised agents; (4) more ways to look at and understand the device, like Pelton; (5) a learning part.
+
+**Gap with Pelton Lab (measured on the repos)**
+
+|                          | Pelton Lab                                                                     | Ram lab now         |
+| ------------------------ | ------------------------------------------------------------------------------ | ------------------- |
+| Worlds                   | 4 (site, intake, turbine, power room), the detailed ones reached from the site | 2 (site, ram)       |
+| Parts                    | 67                                                                             | 25                  |
+| Assembly / install steps | 19 / 10                                                                        | 13 / 7              |
+| Lessons / quiz questions | 14 / 28                                                                        | 0 / 0 (mode hidden) |
+| Drawing sheets           | 10+ A3 sheets                                                                  | 0 (mode hidden)     |
+| Lab-specific interaction | magnifier on the intake screen, a "test the trip" button on a part, scenarios  | scenarios only      |
+
+**Proposal (Pelton level), by specialised role, all against ids frozen first in a cadrage v2 (lead)**
+
+1. 3D, valve world: the video's waste valve at workshop scale (its ≈ 10 parts re-homed from the ram world, reached from the
+   `waste-valve` part), exploded build, section of the conical seat, fits and dimensions overlaid.
+2. 3D, catchment world: spring box, buffer tank (the one that empties in 10 h), strainer, overflow, drive-pipe inlet.
+3. Data: sheets and guides for the new worlds; every part gets "what goes wrong / how to check".
+4. Simulation and learning tools: the cycle step by step (the four phases, frozen on demand, with the pressure and velocity
+   traces), a sizing calculator (drive pipe, flow, head), more scenarios, "test" buttons on parts (slam the valve, drown the chamber).
+5. Lessons: 12 to 14 lessons with 2 quiz questions each, linked to a scenario or a part (principle, water hammer, the four
+   phases, waste valve, air chamber, snifter, check valve, sizing, efficiencies, why valve n°3 over-consumed, tuning the stroke,
+   why the ram stops, siting and law, building safely).
+6. Drawings, mechanical: general arrangement, waste valve exploded and sectioned, cone seat detail with fits, bill of materials.
+7. Drawings, hydraulic: site layout and profile (7.5 m fall, 65 m lift), principle diagram, cycle diagram with traces, sizing chart.
+8. Reviewers (read-only, report only): facts (every figure in the texts against research and the model), language (FR/EN),
+   pedagogy (level, order, quiz), then QA (visual regression at 3 widths, performance on a phone, floating parts).
