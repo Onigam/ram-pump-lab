@@ -1,4 +1,4 @@
-import type { PresetId, RamParams, ScenarioId, ValveId } from './types';
+import type { CyclePhase, PresetId, RamParams, ScenarioId, ValveId } from './types';
 
 // The lab's story and its knobs. Presets reproduce the three waste valves of the video (research §5); scenarios are
 // small scripted situations used by the lessons. Every number below is either REPORTED (video, K-number), DERIVED
@@ -86,8 +86,24 @@ export interface ScenarioSetup {
   events: ScheduledEvent[];
 }
 
+/** Drive pipe material of the `plastic-pipe` scenario: PVC (500 m/s, `WAVE_SPEED`), the stiffer of the two plastics of the model. */
+export const PLASTIC_PIPE = 'pvc' as const;
+/**
+ * Counterweight of the `heavy-weight` scenario, g: twice the 360 g of the n°1 preset (a round change, not tuned). The
+ * model gives, against 360 g: 75 instead of 109 strokes/min, 15.5 instead of 6.7 L/min taken (twice the spring),
+ * 788 instead of 500 L/day, η_D 0.31 instead of 0.45 (docs/physics.md §5).
+ */
+export const HEAVY_WEIGHT = 720;
+
 /** Interval between two turns of the stroke nut in the "stroke-nut" scenario, simulated seconds. */
 export const NUT_INTERVAL = 10 * 60;
+
+/** Time scale a scenario needs to show something within a minute of watching (the others play at the pace chosen). */
+export const SCENARIO_PACE: Partial<Record<ScenarioId, number>> = {
+  'source-drop': 600,
+  'stroke-nut': 600,
+  'snifter-blocked': 3600,
+};
 
 export function scenarioSetup(id: ScenarioId): ScenarioSetup {
   const setup = scenarioBase(id);
@@ -121,6 +137,14 @@ function scenarioBase(id: ScenarioId): ScenarioSetup {
       return { params: { ...presetParams('valve-1'), deliveryHead: 100 }, events: [] };
     case 'snifter-blocked':
       return { params: { ...presetParams('valve-1'), snifterBlocked: true }, events: [] };
+    case 'plastic-pipe':
+      // the drive pipe is PVC: wave speed 500 m/s instead of 900 (WAVE_SPEED). For the same closing velocity the surge
+      // ρ·a·v is 44 % lower, below the 5.6 bar the check valve needs at H = 65 m: the ram strikes and delivers nothing.
+      // A model result for an ASSUMED wave speed, not a reported figure (docs/physics.md §5)
+      return { params: { ...presetParams('valve-1'), pipeMaterial: PLASTIC_PIPE }, events: [] };
+    case 'heavy-weight':
+      // the n°1 valve with twice its counterweight (360 → 720 g): see HEAVY_WEIGHT
+      return { params: { ...presetParams('valve-1'), counterweight: HEAVY_WEIGHT }, events: [] };
     default:
       // an id the lab does not know (a lesson typo): the plain n°1 preset
       return { params: presetParams('valve-1'), events: [] };
@@ -135,4 +159,8 @@ export const SCENARIO_IDS: ScenarioId[] = [
   'short-pipe',
   'high-lift',
   'snifter-blocked',
+  'plastic-pipe',
+  'heavy-weight',
 ];
+/** The four phases of a stroke, in order (the cycle can be frozen at any of them). */
+export const CYCLE_PHASES: CyclePhase[] = ['accel', 'close', 'deliver', 'recoil'];

@@ -7,18 +7,29 @@ export type ValveId = 1 | 2 | 3;
 export type PipeMaterial = 'steel' | 'pvc' | 'hdpe';
 
 export type PresetId = 'valve-3' | 'valve-2' | 'valve-1';
-export type ScenarioId = 'source-drop' | 'stroke-nut' | 'water-logged' | 'short-pipe' | 'high-lift' | 'snifter-blocked';
+export type ScenarioId =
+  | 'source-drop'
+  | 'stroke-nut'
+  | 'water-logged'
+  | 'short-pipe'
+  | 'high-lift'
+  | 'snifter-blocked'
+  | 'plastic-pipe'
+  | 'heavy-weight';
 
 /** Where the stroke cycle is. `stalled` = the ram is not cycling at all (see `RamState.stallReason`). */
 export type Phase = 'accel' | 'close' | 'deliver' | 'recoil' | 'stalled';
+/** The four phases of one stroke, in the order they follow each other (the cycle can be frozen at any of them). */
+export type CyclePhase = Exclude<Phase, 'stalled'>;
 export type Status = 'running' | 'stalled';
 /**
  * Why the ram stopped: `tank` = the buffer tank ran dry and air got into the drive pipe (K8, the video's problem);
  * `stuck` = the waste valve stays shut because the recoil is too weak to reopen it (a delivery head barely above the
  * fall). A ram whose stroke nut is turned in too far does not stop: it keeps striking and delivers nothing (alarm
- * `noDelivery`, transcript 13:13).
+ * `noDelivery`, transcript 13:13). `gate` = the gate valve of the drive pipe was closed by hand; `hand` = the waste
+ * valve is held shut by hand (both are part actions, see src/sim/actions.ts).
  */
-export type StallReason = 'none' | 'tank' | 'stuck';
+export type StallReason = 'none' | 'tank' | 'stuck' | 'gate' | 'hand';
 
 export type AlarmKey =
   | 'stalledTank'
@@ -29,7 +40,12 @@ export type AlarmKey =
   | 'pipeShort'
   | 'headHigh'
   | 'waterLogged'
-  | 'snifterBlocked';
+  | 'snifterBlocked'
+  /** The pipe is too soft: its surge ρ·a·v is below the head, although a rigid pipe (steel) would have been enough. */
+  | 'softPipe'
+  | 'gateClosed'
+  | 'heldShut'
+  | 'drainOpen';
 
 /** Everything the user can edit live (all through `RamSim.set`). Ranges are in presets.ts (`RANGES`). */
 export interface RamParams {
@@ -149,6 +165,13 @@ export interface RamState {
   chamberPressure: number;
   /** Air chamber: fraction of its height filled by air (top part), 0..1. The rest is water. */
   airLevel: number;
+  /**
+   * The phase the cycle is frozen at (`RamSim.holdPhase` / `stepPhase`), or null while it runs. While it is set, every
+   * field of this "stroke cycle" block (valves, flows, pressures, phase) stays exactly the same from frame to frame.
+   */
+  phaseHeld: CyclePhase | null;
+  /** Seconds of cycle time spent in the present phase so far (model time, already slowed by slowMo), s. */
+  phaseTime: number;
 
   // ---- cycle averages (what the strip and the charts show)
   strokesPerMin: number;
@@ -172,6 +195,8 @@ export interface RamState {
   surgeBar: number;
   /** Wave speed of the drive pipe, m/s. */
   waveSpeed: number;
+  /** Surge the check valve needs to open: ρ·g·(H − h), the delivery head minus the static head of the drive pipe, bar. */
+  surgeNeededBar: number;
 
   // ---- slow quantities (integrate mean rates × dt × timeScale)
   status: Status;
@@ -193,6 +218,16 @@ export interface RamState {
   /** Time left before the tank is empty at the present deficit, hours (Infinity when it never empties). */
   hoursToEmpty: number;
 
+  // ---- hand interventions (part actions: src/sim/actions.ts). The 3D can show the gate, the held valve, the drain.
+  /** The gate valve at the start of the drive pipe (`drive-gate-valve`) is open. False = closed by hand, the ram is stopped. */
+  gateOpen: boolean;
+  /** The waste valve is held shut by hand (the ram is stopped). */
+  valveHeldShut: boolean;
+  /** The drain of the buffer tank (`tank-drain`) is open. */
+  tankDrainOpen: boolean;
+  /** Flow leaving the tank by the open drain, L/min (0 when closed or when the tank is already empty). */
+  tankDrainFlow: number;
+
   // ---- site (copies of the parameters, so the 3D scene reads only the state)
   fall: number;
   driveLength: number;
@@ -208,4 +243,28 @@ export interface RamState {
   valve: ValveId;
 
   alarms: AlarmKey[];
+}
+
+/**
+ * One whole stroke of the periodic regime, from the start of the acceleration to the start of the next one, sampled at
+ * regular instants (see `RamSim.strokeTrace`). It is what the "cycle" section of the panel draws. Computed by a copy of
+ * the cycle model, so it never touches the live run.
+ */
+export interface StrokeTrace {
+  /** Milliseconds since the start of the acceleration, increasing. */
+  t: number[];
+  /** Body pressure, bar gauge. */
+  pressure: number[];
+  /** Drive pipe velocity, m/s. */
+  velocity: number[];
+  /** Waste valve opening 0..1. */
+  valve: number[];
+  /** Phase index at each sample: 0 accel, 1 close, 2 deliver, 3 recoil. */
+  phase: number[];
+  /** Start of each phase inside the window, ms; -1 when the phase does not occur (no delivery, for instance). */
+  start: [number, number, number, number];
+  /** Length of each phase, ms; 0 when it does not occur. */
+  length: [number, number, number, number];
+  /** Length of the whole stroke, ms. */
+  period: number;
 }

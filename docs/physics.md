@@ -12,7 +12,9 @@ calibrated or assumed constant is a named constant with a comment in `physics.ts
 
 Files: `types.ts` (parameters and state, with units), `physics.ts` (constants and pure formulas), `cycle.ts` (the stroke
 model and its steady-state solver), `presets.ts` (ranges, presets, scenarios), `engine.ts` (`RamSim implements LabSim`),
-tests next to the code.
+`sizing.ts` (the sizing calculator, pure, §10), `actions.ts` (the "test" buttons of the part sheets, without any DOM, §9),
+tests next to the code. Wave 3 added §5.1–5.2 (two scenarios), §8 (the cycle step by step), §9 (hand interventions and part
+actions) and §10 (the sizing calculator).
 
 ## 1. The model
 
@@ -175,9 +177,12 @@ All values are already slowed by `slowMo`: do not slow them again with `view.slo
 | `strokeCount`, `cycleProgress` 0..1                                                                               | counter of valve closures; progress through the stroke (0 at a closure)                                                                          |
 | `strokesPerMin`, `driveFlow`, `wasteFlow`, `deliveredFlow`, `deliveredPerDay`, `etaD`, `etaR`                     | cycle averages (0 when stalled)                                                                                                                  |
 | `closingVelocity`, `minClosingVelocity`, `surgeBar`, `waveSpeed`                                                  | K15: velocity at which the valve closes, the minimum that opens the check valve, ρ·a·v, a                                                        |
-| `status`, `stallReason`, `alarms`                                                                                 | `running`/`stalled`; `tank`/`stuck`/`none`; the alarm keys                                                                                       |
+| `status`, `stallReason`, `alarms`                                                                                 | `running`/`stalled`; `tank`/`stuck`/`gate`/`hand`/`none`; the alarm keys (wave 3: `softPipe`, `gateClosed`, `heldShut`, `drainOpen`)             |
 | `tankLitres`, `tankLevel` 0..1, `hoursToEmpty`                                                                    | buffer tank (level for the 3D tank)                                                                                                              |
 | `airFraction`                                                                                                     | air share of the chamber (drops with a blocked snifter)                                                                                          |
+| `phaseHeld`, `phaseTime`                                                                                          | wave 3: the phase the cycle is frozen at (`null` while it runs), seconds spent in the present phase (§8)                                         |
+| `surgeNeededBar`                                                                                                  | wave 3: ρ·g·(H − h), bar: the surge the check valve needs to open (what `surgeBar` has to reach)                                                 |
+| `gateOpen`, `valveHeldShut`, `tankDrainOpen`, `tankDrainFlow`                                                     | wave 3: hand interventions (§9): the gate valve of the drive pipe, the waste valve held shut, the tank drain, the flow it loses (L/min)          |
 | `simTime`, `day`, `hour`                                                                                          | simulated clock (the run starts at 08:00)                                                                                                        |
 | `fall`, `driveLength`, `driveDiameter`, `deliveryHead`, `stroke`, `valve`, `liftRatio` (H/h), `lengthRatio` (L/h) | copies of the site                                                                                                                               |
 
@@ -190,17 +195,74 @@ feed the panel's charts; `sim.sweep(patch)` solves the averages for other parame
 
 ## 5. Presets and scenarios
 
-| id                | What                                                                                                                        |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `valve-3`         | the ram as installed: Q = 17 L/min, tank empty after 10 h, ram stops (K8)                                                   |
-| `valve-2`         | the intermediate test: Q = 11 L/min, still too much, tank empty after 27 h (K9)                                             |
-| `valve-1`         | the new valve: 109 strokes/min, Q = 6.7 L/min (below the 7.5 of the spring, so it never stops), 500 L/day (K10, K11)        |
-| `source-drop`     | valve n°3, spring 10 L/min, falls to 7.5 L/min after 1 h (K6)                                                               |
-| `stroke-nut`      | valve n°1, the nut is turned in by 0.1 mm every 10 simulated minutes: consumption falls, delivery stops near 1.5 mm (13:13) |
-| `water-logged`    | valve n°1, no air in the chamber: peaks 7.2 bar instead of 6.5, delivery −40 %                                              |
-| `short-pipe`      | valve n°1, L = 8 m (L/h = 1.1): 259 strokes/min, η_D 0.42 instead of 0.45, uses more than the spring                        |
-| `high-lift`       | valve n°1, H = 100 m (H/h = 13): the surge cannot open the check valve, nothing is delivered                                |
-| `snifter-blocked` | valve n°1: the air share falls with τ = 6 h; after ≈ 15 simulated hours the chamber is water-logged                         |
+| id                | What                                                                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `valve-3`         | the ram as installed: Q = 17 L/min, tank empty after 10 h, ram stops (K8)                                                       |
+| `valve-2`         | the intermediate test: Q = 11 L/min, still too much, tank empty after 27 h (K9)                                                 |
+| `valve-1`         | the new valve: 109 strokes/min, Q = 6.7 L/min (below the 7.5 of the spring, so it never stops), 500 L/day (K10, K11)            |
+| `source-drop`     | valve n°3, spring 10 L/min, falls to 7.5 L/min after 1 h (K6)                                                                   |
+| `stroke-nut`      | valve n°1, the nut is turned in by 0.1 mm every 10 simulated minutes: consumption falls, delivery stops near 1.5 mm (13:13)     |
+| `water-logged`    | valve n°1, no air in the chamber: peaks 7.2 bar instead of 6.5, delivery −40 %                                                  |
+| `short-pipe`      | valve n°1, L = 8 m (L/h = 1.1): 259 strokes/min, η_D 0.42 instead of 0.45, uses more than the spring                            |
+| `high-lift`       | valve n°1, H = 100 m (H/h = 13): the surge cannot open the check valve, nothing is delivered                                    |
+| `snifter-blocked` | valve n°1: the air share falls with τ = 6 h; after ≈ 15 simulated hours the chamber is water-logged                             |
+| `plastic-pipe`    | valve n°1, PVC drive pipe (500 m/s): surge 4.4 bar against 5.6 needed, nothing delivered, 3.2 L/min used (§5.1)                 |
+| `heavy-weight`    | valve n°1, counterweight 720 g instead of 360: 75 strokes/min, 15.5 L/min, 788 L/day, η_D 0.31, the tank empties in 12 h (§5.2) |
+
+### 5.1 `plastic-pipe`: a drive pipe that is too soft
+
+The n°1 valve with a PVC drive pipe (`WAVE_SPEED.pvc` = 500 m/s instead of 900), nothing else changed. The valve closes just
+as fast (closing velocity 0.89 m/s against 0.87: it is a property of the valve, its weight and its stroke), but the surge
+**ρ·a·v is 44 % lower: 4.4 bar, where the check valve needs ρ·g·(H − h) = 5.6 bar** (K15: the minimum closing velocity is
+now 1.13 m/s instead of 0.63). The body pressure peaks at 5.1 bar, below the 6.4 bar of the delivery head: the check valve
+never opens, there is no `deliver` phase, the ram strikes (91 strokes/min) and delivers nothing. It takes 3.2 L/min, about half
+of steel's 6.7 (a model result: the rate falls to 91 and each stroke passes less water).
+
+| Drive pipe (valve n°1, h = 7.5 m) | a (m/s) | strokes/min | Q (L/min) | peak (bar) | delivered at H = 65 m | highest head that still delivers |
+| --------------------------------- | ------- | ----------- | --------- | ---------- | --------------------- | -------------------------------- |
+| steel                             | 900     | 109         | 6.7       | 6.5        | 500 L/day             | ≈ 85 m (H/h = 11.3)              |
+| PVC (the scenario)                | 500     | 91          | 3.2       | 5.1        | 0                     | ≈ 50 m (H/h = 6.7)               |
+| polyethylene                      | 350     | 82          | 3.0       | 3.8        | 0                     | ≈ 35 m (H/h = 4.7)               |
+
+**The alarms make the cause visible.** `noDelivery` says what happens; the new `softPipe` says why: the closing velocity is
+enough for a rigid pipe (≥ the 0.63 m/s that steel needs at this site) but not for this one. The panel then writes the
+numbers (wave speed, surge, surge needed, closing velocity) and the cycle card of the frozen `close` phase says that the
+check valve will not open. Putting steel back (the material select) restores 500 L/day and clears both alarms, which is the
+lesson. With PVC, a lower head works (730 L/day at H = 40 m, η_D 0.46), and a much heavier counterweight partly makes up for
+the soft pipe (80 L/day at 920 g, but for 17 L/min, twice the spring: not a recommendation).
+
+**Honesty.** The sources give no figure for plastic: the video and the press article only say that plastic is discouraged
+(research §7, S7), and no wave-speed or pressure was found for a plastic drive pipe. Everything above is **a model result for an
+assumed wave speed**. 500 m/s is the Korteweg estimate for a PVC-U 32 × 3 mm (K = 2.2 GPa, E = 3 GPa gives ≈ 550 m/s), rounded
+down; polyethylene takes the kit's 350 m/s. The lumped circuit's steel value (900) was calibrated _below_ the real steel pipe
+(≈ 1 400, §3) so that one constant serves the surge and the recoil timing; the plastic values are not scaled the same way,
+so the model's plastic/steel ratio (0.56) is higher than the real one (≈ 0.4): **if anything the model is kind to plastic**.
+The mechanism (a low wave speed gives a low ρ·a·v, K15) is physics; the exact head at which a PVC ram gives up is not.
+
+### 5.2 `heavy-weight`: a heavier counterweight
+
+The n°1 valve with **720 g instead of 360 g** (a round change, not tuned: `HEAVY_WEIGHT` = twice the preset). The model
+gives:
+
+| Counterweight | strokes/min | closing speed (m/s) | per stroke (mL) | Q (L/min) | delivered (L/day) | η_D  | tank empty in |
+| ------------- | ----------- | ------------------- | --------------- | --------- | ----------------- | ---- | ------------- |
+| 360 g (video) | 109         | 0.87                | 3.2             | 6.7       | 500               | 0.45 | never         |
+| 540 g         | 92          | 1.01                | 5.3             | 10.7      | 708               | 0.40 | 30 h          |
+| **720 g**     | **75**      | **1.12**            | **7.3**         | **15.5**  | **788**           | 0.31 | 12 h          |
+| 800 g         | 66          | 1.16                | 8.0             | 18.4      | 768               | 0.25 | 9 h           |
+| 900 g         | 42          | 1.22                | 9.0             | 26.8      | 549               | 0.12 | 5 h           |
+| 1 000 g       | 0           | 1.22                | –               | 41.9      | 0                 | 0    | 3 h           |
+
+Slower rhythm, harder strokes (a faster closing, so more water per stroke), more water used, more delivered **to a point**:
+the consumption, the closing velocity and the stroke volume rise with the weight, the rhythm and the efficiency fall, but the
+**delivery is not monotonic**: it peaks near 720 g (788 L/day, +58 % against the video's valve; 768 at 800 g) and falls beyond; at 1 000 g the
+drag can no longer close the valve and the water just runs out (`valveStaysOpen`). The extra delivery is _borrowed_: at 720 g
+the ram takes twice the spring's 7.5 L/min and the 5 700 L tank is empty after 12 h (the video's n°3 story, K8, in
+miniature). That is the tuning lesson next to `stroke-nut`: shortening the stroke and lightening the weight both cut the
+water, down to a ram that no longer delivers (below ≈ 130 g). Nothing was tuned to make this nicer: the weights of the table
+are the model's raw output, and the peak position depends on the calibrated bare mass and discharge coefficients (§3), so
+"about 720 g" is a statement about the model, not about a real valve. The panel's "curves against the counterweight"
+chart draws the two curves.
 
 ## 6. Key figures → tests → results
 
@@ -232,6 +294,12 @@ midnight rollover; monotone behaviours (bigger H/h → less delivery; smaller st
 stops pumping; water-logged → harsher peaks and less delivery); every scenario and its alarms; clamping of `set`; no
 non-finite value under random live edits. `physics.test.ts` checks the arithmetic of the derived figures by hand.
 
+Wave 3 tests (all in `src/sim`): `scenarios.test.ts` (what each of the two new scenarios must show, with tolerances: the
+cause, the numbers of §5.1 and §5.2, the non-monotonic delivery, the alarms), `cycle-steps.test.ts` (each phase is reached
+and held, the held state does not move, the order of the phases, the fields the 3D reads in each phase, edits while frozen,
+the stroke trace), `actions.test.ts` (each part test and its effect on the state), `sizing.test.ts` (S4 table 2 and its unit
+conversions, the length and ratio rules, K18, and the K8 ↔ K21 sanity check against the simulation).
+
 ## 7. Known limits of the model
 
 - **Single-mode lumped circuit**, not a full wave solution of the drive pipe. It gives the Joukowsky amplitude, the
@@ -255,6 +323,109 @@ non-finite value under random live edits. `physics.test.ts` checks the arithmeti
 - The drive pipe is never shorter than 1.05 × the fall. Constant water density and temperature.
 - The calibration rests on a handful of figures (K8, K10, K11) and on guessed valve masses: it is a faithful _reproduction
   of the video_, not a design tool. Dimensions are estimates until a maker sheet is found (research §3).
+- **Plastic pipes (§5.1) are an assumption**, not a reported figure, and the model's recoil of a soft pipe is the same
+  single-mode circuit: no resonance, no creep of the pipe wall, no pipe failure. A real plastic pipe may also burst or
+  fatigue long before it fails to deliver: the model says nothing about that (the sources only say "discouraged").
+- **The frozen instant of a phase is a choice** (a fraction of the phase, or its peak, §8), not a measurement. The phase
+  labels come from events of the circuit (`cycle.ts`), so `close` runs from the first movement of the valve to the opening of
+  the check valve and holds the 18 ms slam in its last third.
+- **Hand interventions are simplified** (§9): the gate valve restarts the ram by itself when it reopens (assumed), the held
+  waste valve is a plain stop, the drain flow (150 L/min) is an estimate, and the ram keeps priority over the drain for the
+  water of the tank.
 - The alarm "drive pipe short" lights below L/h = 2.5, so the video's own site (L/h = 2.7, shorter than the 3–5 × of the
   rules of thumb, research K20) does not carry a permanent warning; the `short-pipe` scenario (L/h = 1.1) does. The threshold
   is one constant (`LENGTH_RATIO_ALARM` in `engine.ts`).
+
+## 8. The cycle step by step (wave 3)
+
+A stroke lasts about half a second at ×1 and its four phases are 265, 61, 19 and 203 ms for the n°1 valve (48, 11, 3.5 and
+37 % of the 549 ms period, model results). `RamSim` can **freeze the cycle at a phase** so that the 3D scene and the panel
+show one instant with its valves, flows and pressures:
+
+- `holdPhase(phase | null)` advances the cycle at once (faster than real time, a few milliseconds of computation) to the
+  instant described below and holds it; `null` releases it. It returns false, and the cycle runs, when the ram is stopped or
+  the phase does not occur (`phaseOccurs(phase)`: with a plastic pipe there is no `deliver`).
+- `stepPhase()` goes to the next phase (accel → close → deliver → recoil → accel), skipping a phase that does not occur, and
+  returns it. From a running cycle the first step goes to the phase after the one it is in.
+- `heldPhase` / `state.phaseHeld` tell which phase is held; `state.phaseTime` is the time spent in the phase (s).
+- While held, every field of the stroke-cycle block of `RamState` is **exactly constant** (tested), whatever `slowMo` and
+  `timeScale` do. The **slow quantities keep running** (tank, clock, volumes), since they integrate the averages. Editing a
+  parameter while frozen finds the same phase again with the new settings at the next frame (the freeze is released if the phase
+  has disappeared); `reset`, a preset and a scenario release it; a stop and a restart find it again.
+- `strokeTrace(patch?)` returns one whole stroke of the periodic regime (`StrokeTrace`: ≈ 300 samples of pressure, velocity,
+  valve opening and phase, with the start and length of each phase), computed by a copy of the cycle model, so it never touches
+  the live run. The panel draws it with the phase starts and the frozen instant as a dot on the curves.
+
+The instants (`HOLD_AT` in `engine.ts`), with the n°1 valve at the video's settings (model results):
+
+| Phase     | Instant held                                                         | At that instant                                                                                             |
+| --------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `accel`   | 95 % of the mean duration of the phase (the end of the acceleration) | valve wide open (100 %), v = 0.78 m/s, jet 26.7 L/min, body pressure 0.2 bar                                |
+| `close`   | the highest body pressure of the phase                               | valve shut (0 %), pressure at the head (6.4 bar), column being stopped (0.58 m/s), check valve not yet open |
+| `deliver` | 50 % of the phase                                                    | check valve 80 % open, 10.3 L/min into the chamber, v = 0.30 m/s, 6.4 bar                                   |
+| `recoil`  | the waste valve half open                                            | v = −0.56 m/s (backwards), pressure 0 bar (air coming in), valve 51 %, check valve shut                     |
+
+If the phase ends before its instant (another valve, another site), the instant is the last one inside the phase. With the
+plastic pipe the `close` instant is the surge peak (5.1 bar) and there is no delivery. The snifter passes air only for a few
+milliseconds in the middle of the pressure collapse (7 L/min at most for the n°1 valve, while the waste valve is still shut);
+the open waste valve then passes air by itself, so **the snifter flow is zero at the frozen `recoil` instant** and the cycle
+card says "through the snifter, then through the valve".
+
+## 9. Hand interventions and part actions (wave 3)
+
+The "test" buttons of the part sheets (`src/part-actions.ts`: frame the part, then act, like Pelton's "test the trip") put
+the simulation in the state the part is about. The logic is in `src/sim/actions.ts` and `RamSim`, tested without any DOM.
+Everything except the stroke nut is a toggle whose label follows the simulation. Four actions are existing faults of the
+model, three are new _hand interventions_, which are not site parameters (they do not make the preset `custom` and `reset`
+puts them back to normal): `setDriveGate`, `holdValveShut`, `setTankDrain`, readable in `sim.hands` and in `RamState`.
+
+| Part (id)                   | Button                         | What the model does                                                                                                                                                                                                                                                  | Visible in                                                           | Time  |
+| --------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ----- |
+| `stroke-nut`                | turn in / out by 0.1 mm        | `stroke` ∓ 0.1 mm (clamped to 0.5–8): −11 % water used, −15 % delivered per step at the video's setting                                                                                                                                                              | 3D valve travel, strip (rate, delivered, uses)                       | –     |
+| `air-chamber`               | drown / refill                 | `waterLogged` (the fault of the scenario): air share 0.4 % at once, peaks 7.2 bar, delivery −40 %                                                                                                                                                                    | 3D water level, alarm `waterLogged`, strip                           | –     |
+| `snifter`                   | block / unblock                | `snifterBlocked`: the air dissolves with τ = 6 h (assumed), water-logged after ≈ 15 h                                                                                                                                                                                | alarm `snifterBlocked` then `waterLogged`, 3D level                  | ×3600 |
+| `waste-valve`               | hold shut / let go and restart | `holdValveShut`: the column stops, the ram is stalled (reason `hand`), the tank fills at the full spring flow; letting go pushes the valve open once, like `restart()`                                                                                               | alarm `heldShut`, 3D valve shut, no jet, strip at 0                  | –     |
+| `drive-gate-valve`          | close / open                   | `setDriveGate`: no water, the ram is stalled (reason `gate`), the tank fills; reopened, the ram restarts by itself (assumed: the pipe drained through the open valve and the snifter, so nothing holds the valve shut); `restart()` refuses while the gate is closed | alarm `gateClosed`, tank level, strip                                | ×600  |
+| `tank-drain`, `buffer-tank` | open / close                   | `setTankDrain`: 150 L/min leave the tank while it holds water (assumed); the 5 700 L tank empties in ≈ 38 min; the n°1 valve does not care (it takes less than the spring), the n°3 valve stops for lack of water                                                    | tank level, alarm `drainOpen`, then `stalledTank` with the n°3 valve | ×600  |
+
+A test resumes a paused simulation, and raises the time speed to the figure in the last column when it is slower (the effect
+needs minutes or hours); it never slows it. Closing the gate valve in time saves the over-consuming n°3 ram from the dry tank
+(tested: closed at 8 h of a 10 h tank, 6 h later the tank is 67 % full); reopened on a tank that cannot sustain it, the ram
+stops again for lack of water, reason `tank`.
+
+**Assumed** (the sources are silent on all of these): the 150 L/min of the drain (`TANK_DRAIN_FLOW`: a DN40 valve under about
+1 m of water, 200 L/min by the orifice formula, rounded down), the automatic restart after the gate, the priority of the ram
+over the drain. The stroke nut step is **derived**: the video's stem is a 6 mm threaded rod (research §3), M6 coarse has a 1 mm
+pitch, so 0.1 mm is a tenth of a turn. Holding the waste valve by hand is shown as a _simulation_: never a finger in the valve
+of a running ram (the button's tooltip and the status line say so).
+
+## 10. The sizing calculator (wave 3)
+
+`src/sim/sizing.ts` (pure, no DOM, no simulation) gives, from the fall h, the delivery head H, the spring flow, the drive pipe
+size and, optionally, the planned length, the checks of the sources (research §2). The panel's "Size it" section draws it with
+its own inputs, so trying a site never disturbs the live run (`sizeRam` is a function; the live state is only read to show the
+simulation's efficiency).
+
+| Output                                | Rule                                                                                                         | Source                                                                |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| minimum drive pipe length             | 5 × h (usual range 3–7 × h)                                                                                  | **reported** S4 (≥ 5 × the fall), S6 (3–7 ×), K20                     |
+| minimum spring flow for the pipe size | ¾″ 7.6, 1″ 22.7, 1½″ 53, 2″ 95 L/min                                                                         | **reported** S4 table 2 (2, 6, 14, 25 gpm × 3.785), K21               |
+| table's maximum pumping               | ¾″ 3.8, 1″ 7.6, 1½″ 15.1, 2″ 26.5 m³/day (1 000, 2 000, 4 000, 7 000 gpd × 3.785 L)                          | **reported** S4 table 2; the table states no head, fall or efficiency |
+| expected delivery                     | q = η·Q·h/H, η = 0.6, Q = the spring flow, in L/day × 1440                                                   | **reported** S4 (Q = 1440·E·S/(L/F)), S6; K17, K18                    |
+| verdict                               | spring ≥ minimum of the pipe size ("enough") or not, with the ratio and the largest size the spring can feed | derived from the table                                                |
+| warnings                              | H/h > 12 too high; H/h < 1.5 stuck (model); L/h < 3 too short; 3 ≤ L/h < 5 under S4's minimum                | research §5; physics.md §7; S6; S4                                    |
+
+The units are converted explicitly (`GPM_TO_LPM`, `GPD_TO_M3_DAY`; the minimum flows are rounded to 0.1 L/min like K21).
+The inner diameters of the four sizes (21, 27, 41, 53 mm, schedule 40 steel, rounded) are an **assumption** (the lab's 27 mm
+pipe is the 1″). The panel shows two deliveries: the typical η = 0.6, and the one the live simulation reaches (η_D from the
+state, 0.45 for the n°1 valve) when it differs; the closed form is used, not `sim.sweep`, because the stroke model's valves are
+calibrated for one 1″ ram and the calculator covers four sizes. "Try it in the simulation" copies h, H, the spring flow and the
+length to the live simulation and leaves the pipe size alone (the model is a 1″ ram).
+
+**Sanity check on the video's site (tested):** h = 7.5 m, H = 65 m, 7.5 L/min, a 1″ pipe of 20 m. The 1″ asks for 22.7 L/min:
+the spring gives 33 % of it, "not enough", and no size of the table is fed (7.5 is a hair under the ¾″'s 7.6; the 7.5–7.8 of
+K6 straddles it). The 20 m of pipe is L/h = 2.7, "too short" (K20). The closed form gives 748 L/day at η = 0.6 (K18, ≈ 750),
+and 500 L/day is η = 0.4 (K10). In the model the n°3 valve takes 17 L/min, three quarters of the 22.7 of the table (K8 ↔ K21
+agree), and starves the 7.5 L/min spring; **what the video did was not to find more water but to retune the valve** (the n°1
+preset) so that the ram takes 6.7 L/min, less than the spring gives: that is the whole point of the "tune it to the water you
+have" lesson, and the calculator says so in its tip.

@@ -25,7 +25,7 @@ import {
   VALVES,
   WAVE_SPEED,
 } from './physics';
-import type { Means, Phase, RamParams } from './types';
+import type { Means, Phase, RamParams, StrokeTrace } from './types';
 
 // The stroke cycle of the ram, integrated in time (SI units inside).
 //
@@ -149,6 +149,41 @@ export interface CycleRecord {
   pChamber: number;
 }
 
+/** What `RamCycle.save` returns. */
+export interface CycleSnapshot {
+  t: number;
+  v: number;
+  p: number;
+  pa: number;
+  z: number;
+  zd: number;
+  cavity: number;
+  phase: Phase;
+  phaseTime: number;
+  airFraction: number;
+  strokeCount: number;
+  deliveryValve: number;
+  qDrive: number;
+  qWaste: number;
+  qDeliver: number;
+  qOut: number;
+  qSnifter: number;
+  sinceClosure: number;
+  lastPeak: number;
+  acc: {
+    drive: number;
+    delivered: number;
+    vMax: number;
+    pMax: number;
+    pMin: number;
+    impact: number;
+    phases: [number, number, number, number];
+    pChamber: number;
+    time: number;
+  };
+  cycles: number;
+}
+
 const PHASE_INDEX: Record<string, number> = { accel: 0, close: 1, deliver: 2, recoil: 3 };
 const DELIVER_ON = 2e-5; // m³/s: 1.2 L/min through the check valve counts as "delivering"
 
@@ -168,6 +203,8 @@ export class RamCycle {
   /** Volume of the water-vapour cavity at the body, m³ (column separation). */
   cavity = 0;
   phase: Phase = 'accel';
+  /** Time spent in the present phase so far, s (0 at the step that entered it). */
+  phaseTime = 0;
   /** Air share of the chamber (fraction of its volume at working pressure). */
   airFraction: number;
   strokeCount = 0;
@@ -226,10 +263,48 @@ export class RamCycle {
     this.zd = 0;
     this.cavity = 0;
     this.phase = 'accel';
+    this.phaseTime = 0;
     this.qDrive = this.qWaste = this.qDeliver = this.qOut = this.qSnifter = 0;
     this.deliveryValve = 0;
     this.sinceClosure = 0;
     this.acc = this.newAcc();
+  }
+
+  /**
+   * The dynamic state, to come back to it (the freeze of the cycle looks a step ahead and falls back one step when the
+   * phase ended too early). The record of finished strokes is append-only: only its length is kept.
+   */
+  save(): CycleSnapshot {
+    return {
+      t: this.t,
+      v: this.v,
+      p: this.p,
+      pa: this.pa,
+      z: this.z,
+      zd: this.zd,
+      cavity: this.cavity,
+      phase: this.phase,
+      phaseTime: this.phaseTime,
+      airFraction: this.airFraction,
+      strokeCount: this.strokeCount,
+      deliveryValve: this.deliveryValve,
+      qDrive: this.qDrive,
+      qWaste: this.qWaste,
+      qDeliver: this.qDeliver,
+      qOut: this.qOut,
+      qSnifter: this.qSnifter,
+      sinceClosure: this.sinceClosure,
+      lastPeak: this.lastPeak,
+      acc: { ...this.acc, phases: [...this.acc.phases] as [number, number, number, number] },
+      cycles: this.cycles.length,
+    };
+  }
+
+  restore(s: CycleSnapshot): void {
+    const { acc, cycles, ...scalars } = s;
+    Object.assign(this, scalars);
+    this.acc = { ...acc, phases: [...acc.phases] as [number, number, number, number] };
+    if (this.cycles.length > cycles) this.cycles.length = cycles;
   }
 
   /** Air volume of the chamber at its present pressure, m³. */
@@ -340,6 +415,7 @@ export class RamCycle {
     this.deliveryValve += (target - this.deliveryValve) * (1 - Math.exp(-dt / tau));
 
     // --- phase machine
+    const phaseBefore = this.phase;
     if (closed) {
       this.phase = 'close';
     } else {
@@ -361,6 +437,7 @@ export class RamCycle {
           break;
       }
     }
+    this.phaseTime = this.phase === phaseBefore ? this.phaseTime + dt : 0;
 
     // --- record of the stroke in progress
     const a = this.acc;
@@ -489,6 +566,74 @@ export function solveSteady(
     }
   }
   return summarise(cyc, cfg, deliveryHead, warm);
+}
+
+/**
+ * One whole stroke of the periodic regime, sampled for the panel (research §11: the cycle step by step). The cycle is
+ * run from rest like `solveSteady` (the chamber pressure is set at every closure to its equilibrium), then the stroke
+ * between two entries into the acceleration phase is recorded, about 300 samples. Returns null when the valve does not
+ * cycle (never closes, or stays shut).
+ */
+export function recordStroke(
+  cfg: CycleConfig,
+  airFraction: number,
+  opts: { warm?: number; tMax?: number } = {},
+): StrokeTrace | null {
+  const warm = opts.warm ?? 3;
+  const tMax = opts.tMax ?? 30;
+  const cyc = new RamCycle(cfg, airFraction);
+  const dt = cfg.dtMax;
+  const t: number[] = [];
+  const pressure: number[] = [];
+  const velocity: number[] = [];
+  const valve: number[] = [];
+  const phase: number[] = [];
+  let recording = false;
+  let t0 = 0;
+  let every = 1;
+  let n = 0;
+  while (cyc.t < tMax) {
+    const before = cyc.phase;
+    const closed = cyc.step(dt);
+    if (closed && cyc.cycles.length > 0) {
+      const r = cyc.cycles[cyc.cycles.length - 1];
+      const q = r.delivered / r.period;
+      cyc.pa = cfg.pStatic + lineResistance(cfg, q) * q;
+    }
+    if (cyc.strokeCount > 0 && cyc.sinceClosure > 3) return null; // closed and never reopened
+    const enteredAccel = cyc.phase === 'accel' && before !== 'accel';
+    if (enteredAccel && cyc.cycles.length >= warm) {
+      if (recording) break; // the next stroke starts: the window is complete
+      recording = true;
+      t0 = cyc.t;
+      // sampling interval from the period of the last strokes
+      const last = cyc.cycles.slice(-3);
+      const period = last.reduce((a, r) => a + r.period, 0) / last.length;
+      every = Math.max(1, Math.round(period / dt / 300));
+      n = 0;
+    }
+    if (recording) {
+      if (n++ % every === 0) {
+        t.push((cyc.t - t0) * 1000);
+        pressure.push(toBar(cyc.p));
+        velocity.push(cyc.v);
+        valve.push(cyc.z / cfg.stroke);
+        phase.push(PHASE_INDEX[cyc.phase] ?? 0);
+      }
+    }
+    if (cyc.strokeCount === 0 && cyc.t > 10) return null; // never closes
+  }
+  if (!recording || t.length < 10) return null;
+  const start: [number, number, number, number] = [-1, -1, -1, -1];
+  const last: [number, number, number, number] = [-1, -1, -1, -1];
+  phase.forEach((k, i) => {
+    if (start[k] < 0) start[k] = t[i];
+    last[k] = t[i];
+  });
+  const span = t[t.length - 1] + (t[1] - t[0]);
+  const length: [number, number, number, number] = [0, 0, 0, 0];
+  for (let k = 0; k < 4; k++) if (start[k] >= 0) length[k] = last[k] - start[k] + (t[1] - t[0]);
+  return { t, pressure, velocity, valve, phase, start, length, period: span };
 }
 
 function emptyMeans(): Means {
