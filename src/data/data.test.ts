@@ -3,6 +3,7 @@ import type { GuideStep, PartCategory, PartInfo } from '@onigam/lab-kit/content'
 import type { L } from '@onigam/lab-kit/i18n';
 import { strL } from '@onigam/lab-kit/i18n';
 import '../i18n/ui';
+import { PART_CATEGORIES, WORLDS, partIds, type WorldId } from '../part-ids';
 import { HOUSE, SITE, TANK } from '../three/dims';
 import { ASSEMBLY } from './assembly';
 import { CHAPTERS } from './chapters';
@@ -32,34 +33,12 @@ vi.mock('@onigam/lab-kit/i18n', () => {
 // Content checks: the catalogue and the two guides against the frozen ids of docs/research.md §4, FR/EN parity,
 // video timestamps, and the figures that the prose repeats against their sources.
 
-/** The 7 site parts and the 18 ram parts of docs/research.md §4, with their category. */
-const FROZEN: Record<string, { scene: 'site' | 'ram'; category: PartCategory }> = {
-  spring: { scene: 'site', category: 'site' },
-  'buffer-tank': { scene: 'site', category: 'hydraulic' },
-  'drive-pipe': { scene: 'site', category: 'hydraulic' },
-  'ram-pit': { scene: 'site', category: 'structure' },
-  'delivery-pipe': { scene: 'site', category: 'hydraulic' },
-  'water-tower': { scene: 'site', category: 'structure' },
-  house: { scene: 'site', category: 'site' },
-  ram: { scene: 'ram', category: 'hydraulic' },
-  'inlet-valve': { scene: 'ram', category: 'hydraulic' },
-  'waste-valve': { scene: 'ram', category: 'hydraulic' },
-  'valve-seat': { scene: 'ram', category: 'mechanical' },
-  'valve-stem': { scene: 'ram', category: 'mechanical' },
-  'valve-guide': { scene: 'ram', category: 'mechanical' },
-  'stroke-nut': { scene: 'ram', category: 'mechanical' },
-  'lock-nut': { scene: 'ram', category: 'mechanical' },
-  counterweight: { scene: 'ram', category: 'mechanical' },
-  'valve-fins': { scene: 'ram', category: 'mechanical' },
-  'base-plate': { scene: 'ram', category: 'structure' },
-  'delivery-valve': { scene: 'ram', category: 'hydraulic' },
-  'air-chamber': { scene: 'ram', category: 'hydraulic' },
-  snifter: { scene: 'ram', category: 'hydraulic' },
-  gauge: { scene: 'ram', category: 'hydraulic' },
-  'outlet-valve': { scene: 'ram', category: 'hydraulic' },
-  'drain-valve': { scene: 'ram', category: 'hydraulic' },
-  strainer: { scene: 'ram', category: 'hydraulic' },
-};
+/** Every frozen id with its world and category (src/part-ids.ts, docs/research.md §11). */
+const FROZEN: Record<string, { scene: WorldId; category: PartCategory }> = Object.fromEntries(
+  WORLDS.flatMap((world) =>
+    Object.entries(PART_CATEGORIES[world]).map(([id, category]) => [id, { scene: world, category }]),
+  ),
+);
 
 const CATEGORIES: PartCategory[] = ['hydraulic', 'mechanical', 'electrical', 'structure', 'site'];
 const VIDEO_SECONDS = 19 * 60 + 57;
@@ -109,18 +88,18 @@ function figures(text: string, lang: 'fr' | 'en'): string[] {
 }
 
 describe('parts catalogue', () => {
-  it('has exactly the 25 frozen ids of research §4, each once', () => {
+  it('has exactly the frozen ids of src/part-ids.ts, each once', () => {
     const ids = PARTS.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect([...ids].sort()).toEqual(Object.keys(FROZEN).sort());
-    expect(PARTS.length).toBe(25);
   });
 
-  it('puts 7 parts in the site world and 18 in the ram world, with the frozen category', () => {
-    expect(PARTS.filter((p) => p.scene === 'site').length).toBe(7);
-    expect(PARTS.filter((p) => p.scene === 'ram').length).toBe(18);
+  it('puts the frozen number of parts in each world, with the frozen category', () => {
+    for (const world of WORLDS) {
+      expect(PARTS.filter((p) => p.scene === world).length, world).toBe(partIds(world).length);
+    }
     for (const p of PARTS) {
-      expect(['site', 'ram'], p.id).toContain(p.scene);
+      expect(WORLDS, p.id).toContain(p.scene);
       expect(CATEGORIES, p.id).toContain(p.category);
       expect(p.scene, p.id).toBe(FROZEN[p.id]?.scene);
       expect(p.category, p.id).toBe(FROZEN[p.id]?.category);
@@ -221,11 +200,17 @@ describe('parts catalogue', () => {
   });
 });
 
+/** Parts that the installation guide may leave out: the farm already has them (the source, the tank, the house). */
+const ALREADY_THERE = ['spring', 'buffer-tank', 'house'];
+
+// A guide may cross several worlds (`GuideStep.scene`): the assembly builds the waste valve in the `valve` world and
+// fits it in the `ram` world; the installation starts on the site, details the catchment, then goes back to the site.
 describe.each([
-  ['assembly', ASSEMBLY, 'ram'],
-  ['installation', INSTALL, 'site'],
-] as const)('%s guide', (_name, steps, world) => {
-  const worldParts = PARTS.filter((p) => p.scene === world).map((p) => p.id);
+  ['assembly', ASSEMBLY, 'valve', ['valve', 'ram'], []],
+  ['installation', INSTALL, 'site', ['catchment', 'site'], ALREADY_THERE],
+] as const)('%s guide', (_name, steps, defaultWorld, worlds, mayLeave) => {
+  const worldOfStep = (s: GuideStep): string => s.scene ?? defaultWorld;
+  const worldParts = PARTS.filter((p) => (worlds as readonly string[]).includes(p.scene)).map((p) => p.id);
 
   it('has unique, kebab-case step ids', () => {
     const ids = steps.map((s) => s.id);
@@ -233,20 +218,34 @@ describe.each([
     for (const id of ids) expect(id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
   });
 
-  it('only installs parts of its own world', () => {
+  it('only plays in the worlds of the guide, and starts in its default world', () => {
+    expect(worldOfStep(steps[0]!)).toBe(defaultWorld);
+    for (const s of steps) expect(worlds as readonly string[], s.id).toContain(worldOfStep(s));
+    for (const w of worlds)
+      expect(
+        steps.some((s) => worldOfStep(s) === w),
+        `no step in ${w}`,
+      ).toBe(true);
+  });
+
+  it('only installs parts of the world its step plays in', () => {
     for (const s of steps) {
       for (const id of s.parts) {
         const part = PARTS.find((p) => p.id === id);
         expect(part, `${s.id}: unknown part ${id}`).toBeDefined();
-        expect(part?.scene, `${s.id}: ${id}`).toBe(world);
+        expect(part?.scene, `${s.id}: ${id}`).toBe(worldOfStep(s));
       }
     }
   });
 
-  it('installs every part of its world, once', () => {
+  it('installs every part of its worlds once (except the ones the farm already has)', () => {
     const installed = steps.flatMap((s) => s.parts);
-    expect([...new Set(installed)].sort()).toEqual([...worldParts].sort());
     expect(installed.length, 'a part is installed twice').toBe(new Set(installed).size);
+    const missing = worldParts.filter((id) => !installed.includes(id));
+    expect(
+      missing.filter((id) => !(mayLeave as readonly string[]).includes(id)),
+      'parts never installed',
+    ).toEqual([]);
   });
 
   it('has a non-empty French and English text everywhere, different in the two languages', () => {
@@ -287,11 +286,11 @@ describe.each([
 });
 
 describe('guides: content that the brief requires', () => {
-  it('has about twelve assembly steps and about six installation steps', () => {
-    expect(ASSEMBLY.length).toBeGreaterThanOrEqual(11);
-    expect(ASSEMBLY.length).toBeLessThanOrEqual(14);
-    expect(INSTALL.length).toBeGreaterThanOrEqual(6);
-    expect(INSTALL.length).toBeLessThanOrEqual(8);
+  it('has about twenty assembly steps and about eleven installation steps', () => {
+    expect(ASSEMBLY.length).toBeGreaterThanOrEqual(17);
+    expect(ASSEMBLY.length).toBeLessThanOrEqual(24);
+    expect(INSTALL.length).toBeGreaterThanOrEqual(9);
+    expect(INSTALL.length).toBeLessThanOrEqual(13);
   });
 
   it('carries the legal note, the potability note and the rigid-pipe warning in the installation guide', () => {

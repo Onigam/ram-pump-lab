@@ -185,7 +185,7 @@ parameter, not a different machine. No second version is needed; the kit has no 
 Wave 1 physics (tests first, from §2) → wave 2 3D ‖ data (ids of §4) → wave 3 drawings ‖ lessons → wave 4 QA →
 checkpoint with the owner. The lead asks the owner's approval before launching a team (token cost).
 
-## 10. Owner feedback after wave 2 (2026-10-24) and the enrichment plan (to validate)
+## 10. Owner feedback after wave 2 (2026-10-24) and the enrichment plan
 
 **Feedback**: (1) the title "Labo du bélier" is too vague: it must say "hydraulique" and the page must say what the device is for
 and what it offers (done: title, tagline, landing text, `lab.json`); (2) more detail per device, like Pelton Lab; (3) more
@@ -210,10 +210,81 @@ specialised agents; (4) more ways to look at and understand the device, like Pel
 3. Data: sheets and guides for the new worlds; every part gets "what goes wrong / how to check".
 4. Simulation and learning tools: the cycle step by step (the four phases, frozen on demand, with the pressure and velocity
    traces), a sizing calculator (drive pipe, flow, head), more scenarios, "test" buttons on parts (slam the valve, drown the chamber).
-5. Lessons: 12 to 14 lessons with 2 quiz questions each, linked to a scenario or a part (principle, water hammer, the four
-   phases, waste valve, air chamber, snifter, check valve, sizing, efficiencies, why valve n°3 over-consumed, tuning the stroke,
-   why the ram stops, siting and law, building safely).
+5. Lessons: **6 lessons** (the owner found 12 to 14 too many for a simpler device) with 2 quiz questions each, linked to a
+   scenario or a part (see §11).
 6. Drawings, mechanical: general arrangement, waste valve exploded and sectioned, cone seat detail with fits, bill of materials.
 7. Drawings, hydraulic: site layout and profile (7.5 m fall, 65 m lift), principle diagram, cycle diagram with traces, sizing chart.
 8. Reviewers (read-only, report only): facts (every figure in the texts against research and the model), language (FR/EN),
    pedagogy (level, order, quiz), then QA (visual regression at 3 widths, performance on a phone, floating parts).
+
+## 11. Wave 3 contract: four worlds, frozen ids, roles (2026-10-24, validated by the owner: "niveau Pelton", 6 lessons)
+
+`src/part-ids.ts` is the code form of this section and the contract between the roles: the catalogue, the 3D registries,
+the guides, the lessons and the drawings use exactly these ids (44, up from 25). Only the lead edits it. The tests are the
+executable specification: `src/lab.test.ts`, `src/data/data.test.ts`, `src/three/*.test.ts` are red until the roles deliver.
+
+**Worlds** (top bar order): `site` (default) → `catchment` → `ram` → `valve`.
+
+| World                    | Ids (frozen)                                                                                                                                                                                                                              |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `site` (8)               | `spring`, `buffer-tank`, `drive-pipe`, `ram-pit`, `waste-drain` (new), `delivery-pipe`, `water-tower`, `house`                                                                                                                            |
+| `catchment` (9, all new) | `spring-box`, `gravel-filter`, `feed-pipe`, `tank-shell`, `tank-lid`, `overflow-pipe`, `intake-screen`, `drive-gate-valve`, `tank-drain`                                                                                                  |
+| `ram` (13)               | `ram`, `inlet-flange` (new), `inlet-valve`, `strainer`, `waste-valve` (the whole valve, one part), `delivery-valve`, `air-chamber`, `snifter`, `gauge`, `delivery-union` (new), `outlet-valve`, `drain-valve`, `foundation` (new)         |
+| `valve` (14)             | re-homed from `ram`: `base-plate`, `valve-seat`, `valve-stem`, `valve-guide`, `valve-fins`, `counterweight`, `stroke-nut`, `lock-nut`; new: `valve-socket`, `valve-reducer`, `valve-nipple`, `valve-sleeve`, `valve-head`, `stem-sleeves` |
+
+Names of the new ids (FR / EN) and what they are:
+
+- `waste-drain` Évacuation des eaux de rejet / Waste-water drain: the pipe or ditch that carries the water thrown out by the
+  waste valve away from the pit (it is most of the drive flow: 6.3 of 6.7 L/min for valve n°1).
+- `spring-box` Regard de captage / Spring box; `gravel-filter` Filtre à gravier / Gravel filter; `feed-pipe` Conduite
+  d'alimentation / Feed pipe (spring box to tank); `tank-shell` Cuve de la réserve tampon / Buffer tank shell (5 700 L,
+  derived, Ø 1.9 × 2.0 m in dims.ts); `tank-lid` Couvercle et aération / Lid and vent; `overflow-pipe` Trop-plein / Overflow;
+  `intake-screen` Crépine de départ / Intake screen (keeps debris and air out of the drive pipe); `drive-gate-valve` Vanne de
+  départ de la conduite motrice / Drive-pipe gate valve; `tank-drain` Vidange de la réserve / Tank drain.
+- `inlet-flange` Bride d'arrivée / Inlet flange; `delivery-union` Raccord union de refoulement / Delivery union;
+  `foundation` Massif d'ancrage / Anchor block (the ram must be anchored: hammer pressures of several bar).
+- `valve-socket` Manchon soudé 26×34 / Welded 26×34 socket (on the base plate); `valve-reducer` Réduction 26×34 → 15×21 /
+  Reducer; `valve-nipple` Mamelon fileté à lumières / Ported nipple (threaded 7–8 cm, the exhaust ports are machined in it);
+  `valve-sleeve` Manchon femelle-femelle / Female-female sleeve (takes the guide); `valve-head` Tête du clapet (vis inox à
+  portée conique) / Valve head (stainless screw with a conical face); `stem-sleeves` Manchons de la tige / Stem sleeves
+  (machined, fit within 0.1 mm, S1 09:02).
+
+**Guides cross worlds** (kit v0.1.4, `GuideStep.scene`): the **assembly** builds the waste valve in the `valve` world
+(≈ 9–11 steps, default world of the guide) then fits it on the ram in the `ram` world (≈ 8–10 steps; the last ram steps
+install `waste-valve`, then the first start). The **installation** starts on the `site` (survey step, no part), details the
+`catchment` (≈ 4 steps, `scene: 'catchment'`), then goes back to the `site` (drive pipe, pit and drain, delivery pipe, tower and
+house, first start): ≈ 11 steps. `spring`, `buffer-tank` and `house` may stay out of the installation (the farm has them).
+
+**Scenarios and part actions** (sim role): existing `source-drop`, `stroke-nut`, `water-logged`, `short-pipe`, `high-lift`,
+`snifter-blocked`; **new, frozen ids** `plastic-pipe` (a plastic drive pipe: low wave speed, the surge no longer opens the check
+valve) and `heavy-weight` (a heavier counterweight: slower, harder strokes). Cycle step by step: the four phases (`accel`,
+`close`, `deliver`, `recoil`) can be frozen and stepped, with the pressure and velocity traces. A sizing calculator (drive pipe,
+source flow, head → minimum pipe length, expected delivery, warnings). "Test" buttons on part sheets (`src/part-actions.ts`).
+
+**Lessons (6, 2 quiz questions each, short)** — ids frozen: `principle` (a small flow lifted high by a large flow falling),
+`cycle` (water hammer and the four phases), `waste-valve` (tuning: stroke, weight, valve n°3 to n°1), `air-chamber` (chamber,
+check valve, snifter), `sizing` (drive pipe, source flow, D'Aubuisson and Rankine efficiencies), `siting` (catchment, the
+tank that empties, rigid pipe, law and potability).
+
+**Drawings** (A3, numbers `RP-Dnn`, groups `ram`, `valve`, `hydraulic`, `site`; each sheet has `scene` and `parts` with frozen
+ids): mechanical role: `general-arrangement` (ram, D01), `waste-valve-assembly` (valve, D02), `waste-valve-parts` (valve, D03),
+`seat-cone-detail` (valve, D04), `chamber-section` (ram, D05), `bom` (ram, D06); hydraulic role: `principle-diagram` (hydraulic,
+D07), `cycle-diagram` (hydraulic, D08), `performance-chart` (hydraulic, D09), `sizing-table` (hydraulic, D10), `site-plan`
+(site, D11), `site-profile` (site, D12), `catchment-layout` (site, D13).
+
+**Ownership** (a role edits only its files; shared files are listed with their single owner)
+
+| Role                                             | Files                                                                                                                                                                                                                                                       |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3D-A (valve and ram)                             | `src/three/valve/**`, `src/three/ram/**`, `src/three/common.ts`, `src/three/cut.ts`, `src/three/ram.test.ts`, `src/three/valve.test.ts`, the `VALVE`/`RAM`/`CHAMBER`/… sections of `dims.ts`, `docs/3d.md`                                                  |
+| 3D-B (catchment and site)                        | `src/three/catchment/**`, `src/three/site/**`, `src/three/site.test.ts`, `src/three/catchment.test.ts`, the `SITE`/`CATCHMENT`/`TANK`/… sections of `dims.ts`                                                                                               |
+| Data-A (ram and valve sheets, assembly)          | `src/data/parts/ram.ts`, `src/data/parts/valve.ts`, `src/data/assembly.ts`, `src/data/parts-ram.test.ts`                                                                                                                                                    |
+| Data-B (site and catchment sheets, installation) | `src/data/parts/site.ts`, `src/data/parts/catchment.ts`, `src/data/install.ts`, `src/data/parts-site.test.ts`                                                                                                                                               |
+| Sim (engine, panel, strings, part actions)       | `src/sim/**`, `src/panels/**`, `src/i18n/ui.ts` (the only role that edits it), `src/part-actions.ts`, `docs/physics.md`                                                                                                                                     |
+| Lessons (wave 3b)                                | `src/data/lessons.ts`, `src/data/lessons.test.ts`                                                                                                                                                                                                           |
+| Drawings-M and Drawings-H (wave 3b)              | `src/drawings/mechanical/**` and `src/drawings/hydraulic/**`                                                                                                                                                                                                |
+| Lead                                             | `src/part-ids.ts`, `src/lab.ts`, `src/lab.test.ts`, `src/data/data.test.ts`, `src/data/part-helpers.ts`, `src/data/units.ts`, `src/data/parts.ts`, `src/three/index.ts`, `src/three/test-utils.ts`, `src/drawings/index.ts`, `README.md`, `public/lab.json` |
+
+`dims.ts` has one owner per section: re-read before each edit, change only your sections, add names, never rename.
+Waves: 3a = 3D-A, 3D-B, Data-A, Data-B, Sim; 3b = Lessons, Drawings-M, Drawings-H (they need the final dims, sheets and
+scenarios); then the read-only reviewers (facts, language, pedagogy) and QA; then the checkpoint.

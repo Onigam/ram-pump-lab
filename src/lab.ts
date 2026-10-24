@@ -4,12 +4,15 @@ import { h, icon, ICONS, type AppContext, type LabDefinition } from '@onigam/lab
 import { ASSEMBLY } from './data/assembly';
 import { CHAPTERS } from './data/chapters';
 import { INSTALL } from './data/install';
+import { LESSONS } from './data/lessons';
 import { PARTS } from './data/parts';
+import { SHEETS } from './drawings';
 import { num, t, type UiKey } from './i18n/ui';
+import { partActions } from './part-actions';
 import { SimPanel } from './panels/sim';
 import { RamSim } from './sim/engine';
 import type { AlarmKey } from './sim/types';
-import { createRamScene, createSiteScene } from './three';
+import { createCatchmentScene, createRamScene, createSiteScene, createValveScene } from './three';
 
 // The lab described to the kit. Edit the content here and in src/data, src/three, src/sim, src/drawings;
 // the kit supplies the whole application frame (see BRIEF.md: the frame is locked).
@@ -124,7 +127,24 @@ export const lab: LabDefinition<RamSim> = {
           fr: 'Un **bélier hydraulique** remonte l’eau d’une source jusqu’à une maison ou un potager situés bien plus haut, **sans électricité, sans carburant et sans moteur** : l’énergie vient de la chute de l’eau elle-même. Ici, l’installation d’une ferme : 7,5 m de chute, 65 m de dénivelé à remonter, environ 500 L d’eau par jour.\n\nSur cette page : le **site** et le **bélier** en 3D (éclaté, coupe, flux, rayons X), le **montage** pièce par pièce, le guide d’**installation**, la **simulation** (clapet, course, débit de la source, hauteur) et le **catalogue** des pièces, avec ses **sources**.',
           en: 'A **hydraulic ram** lifts spring water to a house or a vegetable garden much higher up, **with no electricity, no fuel and no motor**: the energy comes from the falling water itself. Here, a farm installation: 7.5 m of fall, 65 m of lift, about 500 L of water a day.\n\nOn this page: the **site** and the **ram** in 3D (explode, section, flows, X-ray), the part-by-part **assembly**, the **installation** guide, the **simulation** (valve, stroke, spring flow, head) and the **parts catalogue**, with its **sources**.',
         },
-        actions: [{ label: strL('goRam'), scene: 'ram', primary: true }],
+        actions: [
+          { label: strL('goRam'), scene: 'ram', primary: true },
+          { label: strL('goCatchment'), scene: 'catchment' },
+        ],
+      },
+    },
+    {
+      id: 'catchment',
+      label: strL('sceneCatchment'),
+      module: createCatchmentScene(),
+      partPadding: 2.2,
+      overview: {
+        title: { fr: 'Le captage et la réserve tampon', en: 'The spring box and the buffer tank' },
+        text: {
+          fr: 'La **source** arrive dans un **regard de captage**, puis dans la **réserve tampon** qui alimente la **conduite motrice**. Quand le bélier consomme plus d’eau que la source n’en donne, cette réserve se vide : c’est ce qui arrêtait le bélier de la vidéo.',
+          en: 'The **spring** flows into a **spring box**, then into the **buffer tank** that feeds the **drive pipe**. When the ram uses more water than the spring gives, this tank empties: that is what kept stopping the video’s ram.',
+        },
+        actions: [{ label: strL('goSite'), scene: 'site', primary: true }],
       },
     },
     {
@@ -141,17 +161,52 @@ export const lab: LabDefinition<RamSim> = {
           fr: 'Un **clapet de choc** qui claque, un **clapet anti-retour**, une **cloche à air** : l’eau de la conduite motrice, stoppée net, pousse une petite partie d’elle-même beaucoup plus haut. Lancez la simulation pour voir le cycle.',
           en: 'A **waste valve** that slams shut, a **delivery check valve**, an **air chamber**: water in the drive pipe, stopped dead, pushes a small part of itself much higher. Run the simulation to watch the cycle.',
         },
-        actions: [{ label: strL('goSite'), scene: 'site' }],
+        actions: [
+          { label: strL('goValve'), scene: 'valve', primary: true },
+          { label: strL('goSite'), scene: 'site' },
+        ],
+      },
+    },
+    {
+      id: 'valve',
+      label: strL('sceneValve'),
+      module: createValveScene(),
+      partPadding: 2.2,
+      stepFrame: { padding: 1.6, minRadius: 0.04 },
+      overview: {
+        title: { fr: 'Le clapet de choc', en: 'The waste valve' },
+        text: {
+          fr: 'Le clapet de la vidéo, fabriqué avec des **raccords de plomberie**, un **doigt de gant** inox, une **tige** et un **poids** taillé dans une barre d’armature. Tout le réglage du bélier se joue ici : la **course** et le **poids** décident du rythme et de la consommation.',
+          en: 'The video’s valve, made from **plumbing fittings**, a stainless **thermowell**, a **stem** and a **weight** cut from a rebar bar. All the tuning of the ram happens here: the **stroke** and the **weight** set the rhythm and the consumption.',
+        },
+        actions: [{ label: strL('goRam'), scene: 'ram', primary: true }],
       },
     },
   ],
   partLinks: {
     'ram-pit': { scene: 'ram', label: strL('goRam') },
+    'waste-valve': { scene: 'valve', label: strL('goValve') },
+    spring: { scene: 'catchment', label: strL('goCatchment') },
+    'buffer-tank': { scene: 'catchment', label: strL('goCatchment') },
   },
   guides: {
-    assembly: { scene: 'ram', steps: ASSEMBLY },
+    // the build crosses two worlds: the waste valve is made in the `valve` world, then fitted on the ram
+    assembly: { scene: 'valve', steps: ASSEMBLY },
+    // the installation starts and ends on the site; the catchment steps play in the `catchment` world
     install: { scene: 'site', steps: INSTALL },
   },
+  lessons: { items: LESSONS, intro: strL('lessonsIntro') },
+  plans: {
+    sheets: SHEETS,
+    groups: [
+      { id: 'ram', label: strL('groupRam') },
+      { id: 'valve', label: strL('groupValve') },
+      { id: 'hydraulic', label: strL('groupHydraulic') },
+      { id: 'site', label: strL('groupSite') },
+    ],
+    intro: strL('plansIntro'),
+  },
+  partActions,
   simPanel: (ctx: AppContext<RamSim>) => new SimPanel(ctx),
   strip: {
     values: (sim) => {
