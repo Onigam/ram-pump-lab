@@ -3,7 +3,8 @@ import { MAT, group, mesh } from '@onigam/lab-kit/three';
 import { CHAMBER, CHECK_VALVE, RAM } from '../dims';
 import { arc, crispRuns, hexRing, lathe, type Profile } from '../common';
 import { mirrored, rect, type Poly } from '../cut';
-import { v3, type RamCtx } from './ctx';
+import type { RamCtx } from './ctx';
+import { EXPLODE } from './explode';
 
 // The delivery side: the spring check valve screwed on the body and the air chamber on top of it. Both are hollow so
 // that the section shows the seat, the disc and spring, and the cushion of air over the water.
@@ -157,7 +158,7 @@ export function buildChamber(ctx: RamCtx): ChamberGeometry {
   );
   ctx.cut.cap('air-chamber', g, polys);
   ctx.anchor('air-chamber', g, -CH.R, 0.2, 0.02);
-  ctx.add('air-chamber', g, v3(0, 0.26, 0));
+  ctx.add('air-chamber', g, EXPLODE['air-chamber']);
 
   // interior volume for the water: the solid of revolution of the inner profile, 0.4 mm inside the lining (no z-fighting)
   const wet = innerUp.map(([r, y]) => [Math.max(0, r - 0.0004), y] as [number, number]);
@@ -234,7 +235,7 @@ export function buildCheckValve(ctx: RamCtx): { waterProfile: Profile } {
     rect(-RV - 0.0045, 0.016, -RV + 0.0005, 0.042),
   ]);
   ctx.anchor('delivery-valve', g, RV + 0.004, 0.03, 0.0);
-  ctx.add('delivery-valve', g, v3(0, 0.12, 0));
+  ctx.add('delivery-valve', g, EXPLODE['delivery-valve']);
   const waterProfile: Profile = [
     [0, -0.036],
     [SEAT_BORE_R - 0.0004, -0.036],

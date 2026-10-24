@@ -1,5 +1,6 @@
-import { CHAMBER, DELIVERY_ROUTE, HOUSE, PIT, SITE, TANK, TOWER } from '../dims';
+import { CATCHMENT, CHAMBER, DELIVERY_ROUTE, HOUSE, PIT, SITE, TANK, TOWER } from '../dims';
 import { smoothstep } from '../common';
+import { BEND_X as CATCH_BEND_X, groundY as catchmentGround, softRamp } from '../catchment/layout';
 import { fbm } from './noise';
 import { STUB_X0 } from '../ram/inlet';
 
@@ -37,7 +38,9 @@ const TOWER_T = (-TOWER.planZ + 0.08 * TOWER.planX) as number;
 // ------------------------------------------------------------------------------------------------ drive pipe
 
 export interface DriveGeometry {
-  /** Pipe axis end at the tank wall (high end). */
+  /** Start of the drive pipe at the tank: the end of the gate valve (x of the site, y = the fall). */
+  start: { x: number; y: number };
+  /** Top of the slope: where the level run on the bench of the tank ends and the pipe goes down. */
   outlet: { x: number; y: number };
   /** Elbow where the slope pipe turns horizontal (z = 0). */
   elbow: { x: number; y: number };
@@ -50,33 +53,30 @@ export interface DriveGeometry {
 export function driveGeometry(p: SiteParams): DriveGeometry {
   const xEnd = STUB_X0;
   const xElbow = xEnd - SITE.driveLevelRun;
-  const slopeLength = Math.max(p.driveLength - SITE.driveLevelRun, p.fall * 1.02);
+  const slopeLength = Math.max(p.driveLength - SITE.driveLevelRun - SITE.driveStartRun, p.fall * 1.02);
   const run = Math.sqrt(Math.max(0.25, slopeLength * slopeLength - p.fall * p.fall));
+  const xTop = xElbow - run;
   return {
-    outlet: { x: xElbow - run, y: p.fall },
+    start: { x: xTop - SITE.driveStartRun, y: p.fall },
+    outlet: { x: xTop, y: p.fall },
     elbow: { x: xElbow, y: 0 },
     end: { x: xEnd, y: 0 },
     run,
   };
 }
 
-/** Axis height of the drive pipe at x (the slope pipe, the level run and the elbow), NaN west of the tank. */
-function pipeAxisY(x: number, d: DriveGeometry): number {
-  if (x <= d.outlet.x) return d.outlet.y;
-  if (x >= d.elbow.x) return 0;
-  return d.outlet.y * (1 - (x - d.outlet.x) / d.run);
-}
+/** X of the axis of the buffer tank (the catchment frame: its floor is `fall − outletAboveFloor` high). */
+export const tankAxisX = (d: DriveGeometry): number => d.start.x - TANK.diameter / 2 - TANK.outletLength;
 
-/** Ground along the axis of the corridor: the pipe lies on the surface, then dives under the ground near the pit. */
+/**
+ * Ground along the axis of the corridor: the bench of the tank, then the slope with the pipe on its saddles 0.23 m above the
+ * surface (the profile of the catchment world), and the ground rises over the pipe near the pit, where it dives under it.
+ */
 function corridorHeight(x: number, d: DriveGeometry, p: SiteParams): number {
-  const tankFloor = p.fall - TANK.outletAboveFloor;
-  if (x <= d.outlet.x) return tankFloor;
-  const axis = pipeAxisY(x, d);
-  const s = x - d.outlet.x;
-  // 0.02 m of earth over the axis on the slope; a bed under the pipe in the first metres; deep cover near the pit
-  const bed = -TANK.outletAboveFloor + 0.2 * Math.min(1, s / 2.5) + TANK.outletAboveFloor * smoothstep(0, 2.5, s);
-  const near = (GROUND_PIT - 0.02) * smoothstep(d.elbow.x - 6, d.elbow.x, x);
-  return axis + bed + 0.02 + near * 1.0;
+  const bench = p.fall - TANK.outletAboveFloor - CATCHMENT.benchDepth;
+  const line = bench - (p.fall / d.run) * softRamp(Math.min(x, d.elbow.x) - d.outlet.x);
+  const near = (GROUND_PIT + CATCHMENT.driveAboveGround) * smoothstep(d.elbow.x - 6, d.elbow.x, x);
+  return line + near;
 }
 
 // ------------------------------------------------------------------------------------------------ pads
@@ -149,18 +149,25 @@ export function createGround(): Ground {
     // the valley falls away a little to the south whatever the head, so that the waste water of the pit always drains
     const south = -0.06 * Math.max(0, z) * smoothstep(-2, 6, z);
     let y = GROUND_PIT + rise + west + south + (stat ?? staticPart(x, z));
-    // drive-pipe corridor (a capsule along the pipe) and the tank plateau
-    const xa = d.outlet.x - 3;
+    // drive-pipe corridor (a capsule along the pipe, from the tank to the pit)
+    const xa = d.start.x - 3;
     const xb = d.elbow.x + 6;
     const cx = Math.min(Math.max(x, xa), xb);
     const wCor = 1 - smoothstep(2.2, 11, Math.hypot(x - cx, z));
     if (wCor > 0) y += (corridorHeight(x, d, p) - y) * wCor;
-    const wTank = 1 - smoothstep(7, 17, Math.hypot(x - (d.outlet.x - 4.5), z));
-    if (wTank > 0) y += (corridorHeight(d.outlet.x - 1, d, p) + 0.02 - y) * wTank;
     for (const pad of PADS) {
       const w = 1 - smoothstep(pad.r0, pad.r1, Math.hypot(x - pad.x, z - pad.z));
       if (w > 0) y += (pad.height(p) - y) * w;
     }
+    // the catchment: upland shelf of the spring, scarp, bench of the tank and the first metres of the slope, as in the catchment world
+    const tx = tankAxisX(d);
+    const xr = x - tx;
+    const bendRel = CATCH_BEND_X;
+    const wc =
+      (1 - smoothstep(3.5, 9, Math.abs(z))) *
+      smoothstep(-11.5, -8, xr) *
+      (1 - smoothstep(bendRel + 2, bendRel + 4, xr));
+    if (wc > 0) y += (p.fall - TANK.outletAboveFloor + catchmentGround(xr, z, p.fall / d.run) - y) * wc;
     return y;
   };
   return { staticPart, height };

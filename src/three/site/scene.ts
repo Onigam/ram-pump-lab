@@ -1,22 +1,25 @@
 import * as THREE from 'three';
 import { l } from '@onigam/lab-kit/i18n';
-import { MAT, PartRegistry, clamp, group, mesh, roundedPath } from '@onigam/lab-kit/three';
+import { MAT, PartRegistry, clamp, group, roundedPath } from '@onigam/lab-kit/three';
 import type { Hotspot, SceneModule, ViewOpts } from '@onigam/lab-kit/three';
 import type { RamState } from '../../sim/types';
-import { HOUSE, PIT, SITE, SPRING, TANK, TOWER } from '../dims';
-import { FlowDots, noShadow, waterMaterial } from '../common';
+import { HOUSE, SITE, TANK, TOWER } from '../dims';
+import { FlowDots } from '../common';
+import { applyPipeKind, pipeKindOf, type PipeKind } from '../catchment/geo';
+import { BOX_RIM_Y, CORNER, H_LID, SPRING_X } from '../catchment/layout';
+import { createCatchmentModel, type CatchmentModel, type Hold } from '../catchment/model';
 import { createRamModel } from '../ram/model';
 import { STUB_X0 } from '../ram/inlet';
 import { buildHouse, buildTower } from './buildings';
 import { buildPit } from './pit';
-import { buildSpring, buildTank } from './tank';
-import { DEFAULT_PARAMS, GROUND_PIT, PIT_X, driveGeometry, type SiteParams } from './layout';
-import { deliveryPolyline, spaced, wasteStream, writeRibbon } from './routes';
+import { DEFAULT_PARAMS, GROUND_PIT, PIT_X, driveGeometry, tankAxisX, type SiteParams } from './layout';
+import { deliveryPolyline, spaced } from './routes';
 import { createShadowAim } from './shadow';
 import { minWidthMaterial, pickAlong, swapGeometry, tubeAlong } from './pipes';
 import { createSky } from './sky';
 import { buildTerrain } from './terrain';
 import { buildVegetation } from './vegetation';
+import { buildWasteDrain, type WasteDrain } from './waste';
 
 // The "site" world: the hillside of the video. X east, Y up (0 = the ram's inlet axis), Z south; the hill rises to the
 // north. Everything that depends on the fall, the drive length, the delivery head and the pipe diameter is re-placed
@@ -27,6 +30,7 @@ const HOTSPOTS: { id: string; fr: string; en: string; goto?: string; minor?: boo
   { id: 'buffer-tank', fr: 'Réserve tampon', en: 'Buffer tank', minor: true },
   { id: 'drive-pipe', fr: 'Conduite motrice', en: 'Drive pipe', minor: true },
   { id: 'ram-pit', fr: 'Regard du bélier', en: 'Ram pit', goto: 'ram' },
+  { id: 'waste-drain', fr: 'Évacuation des eaux de rejet', en: 'Waste-water drain', minor: true },
   { id: 'delivery-pipe', fr: 'Conduite de refoulement', en: 'Delivery pipe' },
   { id: 'water-tower', fr: 'Château d’eau', en: 'Water tower' },
   { id: 'house', fr: 'Habitation', en: 'House' },
@@ -41,6 +45,9 @@ export interface SiteScene extends SceneModule<RamState> {
   deliveryLength(): number;
   /** Height of the rendered ground at (x, z). */
   surfaceY(x: number, z: number): number;
+  /** The catchment model of the tank and the spring (the same as the `catchment` world), and the waste-water drain. */
+  readonly catchment: CatchmentModel;
+  readonly waste: WasteDrain;
   /** Force the landscape to follow a state at once (tests, first frame). */
   follow(state: Pick<RamState, 'fall' | 'driveLength' | 'deliveryHead' | 'driveDiameter'>): void;
 }
@@ -58,43 +65,31 @@ export function createSiteScene(): SiteScene {
   const veg = buildVegetation(terrain);
   scene.add(veg.group);
 
-  // ---- parts
-  const tank = buildTank();
-  const spring = buildSpring(TANK.height + 0.4);
+  // ---- parts. The spring and the tank are the model of the catchment world (the two frames of it), as single parts.
+  const catchment = createCatchmentModel({ detail: 'site', ground: () => 0, xEnd: GUTTER_END });
+  const tank = catchment.tankFrame;
+  tank.name = 'buffer-tank';
+  const spring = catchment.springFrame;
+  spring.name = 'spring';
   const pit = buildPit();
   const ram = createRamModel(null);
   pit.group.add(ram.root);
   const tower = buildTower();
   const house = buildHouse();
-  scene.add(tank.group, spring.group, pit.group, tower.group, house);
-
-  // feed pipe from the basin to the lid of the tank (fixed relative to both: they move together)
-  const inletX = SPRING.distanceToTank + tank.inlet.x;
-  const feed = tubeAlong(
-    [
-      spring.basinOutlet.clone(),
-      spring.basinOutlet.clone().add(new THREE.Vector3(0.45, -0.1, 0)),
-      new THREE.Vector3(2.4, TANK.height + 0.9, tank.inlet.z + 0.4),
-      new THREE.Vector3(inletX, TANK.height + 0.55, tank.inlet.z),
-      new THREE.Vector3(inletX, TANK.height + 0.14, tank.inlet.z),
-    ],
-    SPRING.feedPipeDiameter / 2,
-    MAT.pe(),
-    10,
-  );
-  feed.castShadow = true;
-  spring.group.add(feed);
+  const waste = buildWasteDrain();
+  scene.add(tank, spring, pit.group, tower.group, house, waste.group);
 
   // ---- drive pipe (tube, supports) and delivery pipe (tube)
   const pipeMat = minWidthMaterial(MAT.zinc(), SITE.driveOuterDiameter / 2);
   const driveMesh = new THREE.Mesh(new THREE.BufferGeometry(), pipeMat.material);
   driveMesh.castShadow = false;
-  const supports = new THREE.InstancedMesh(new THREE.BoxGeometry(0.5, 0.18, 0.28), MAT.concrete(), 24);
+  const supports = new THREE.InstancedMesh(new THREE.BoxGeometry(0.5, 0.2, 0.28), MAT.concrete(), 24);
   supports.castShadow = true;
   supports.receiveShadow = true;
   supports.frustumCulled = false;
   const drive = group('drive-pipe');
   drive.add(driveMesh, supports);
+  let pipeKind: PipeKind = 'steel';
 
   const delMat = minWidthMaterial(MAT.pvcBlue(), SITE.deliveryOuterDiameter / 2);
   const deliveryMesh = new THREE.Mesh(new THREE.BufferGeometry(), delMat.material);
@@ -118,40 +113,14 @@ export function createSiteScene(): SiteScene {
   );
   scene.add(drive, delivery);
 
-  // ---- decoration that is not a catalogue part: outfall of the pit with its stream, tank overflow
-  const outfall = group('outfall');
-  scene.add(outfall);
-  const streamMat = waterMaterial(0.7, 0x5aa9da);
-  const streamGeo = new THREE.BufferGeometry();
-  const STREAM_N = 36;
-  streamGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(STREAM_N * 2 * 3), 3));
-  const sIdx: number[] = [];
-  for (let i = 0; i < STREAM_N - 1; i++) sIdx.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2);
-  streamGeo.setIndex(sIdx);
-  const streamMesh = noShadow(new THREE.Mesh(streamGeo, streamMat));
-  streamMesh.frustumCulled = false;
-  streamMesh.renderOrder = 2;
-  outfall.add(streamMesh);
-  const headwall = mesh(new THREE.BoxGeometry(0.9, 0.5, 0.35), MAT.concrete());
-  outfall.add(headwall);
-  const mouth = mesh(new THREE.CylinderGeometry(PIT.drainDiameter / 2, PIT.drainDiameter / 2, 0.4, 16), MAT.pvcGrey());
-  mouth.rotation.x = Math.PI / 2;
-  outfall.add(mouth);
-
-  // ---- flows ("Flux"): dots of constant screen size along the pipes and the stream
-  const flows = new FlowDots(900, { color: 0x2f8cff, size: 5, pixels: true, throughWalls: true, opacity: 0.95 });
+  // ---- flows ("Flux"): dots of constant screen size along the pipes (the catchment and the waste drain have their own)
+  const flows = new FlowDots(400, { color: 0x2f8cff, size: 5, pixels: true, throughWalls: true, opacity: 0.95 });
   scene.add(flows.object);
   const pDrive = flows.addPath([new THREE.Vector3(), new THREE.Vector3(1, 0, 0)], 40);
   const pDelivery = flows.addPath([new THREE.Vector3(), new THREE.Vector3(1, 0, 0)], 320);
-  const pStream = flows.addPath([new THREE.Vector3(), new THREE.Vector3(1, 0, 0)], 30);
-  const dropOpts = { color: 0x9fd2f2, size: 0.07, opacity: 0.9 };
-  const overflowDots = new FlowDots(14, dropOpts);
-  const arrivalDots = new FlowDots(12, dropOpts);
-  const foamDots = new FlowDots(26, { ...dropOpts, color: 0xffffff, size: 0.12, opacity: 0.75 });
-  scene.add(overflowDots.object, arrivalDots.object, foamDots.object);
-  const pOverflow = overflowDots.addPath([new THREE.Vector3(), new THREE.Vector3(0, -1, 0)], 14);
+  const arrivalDots = new FlowDots(12, { color: 0x9fd2f2, size: 0.07, opacity: 0.9 });
+  scene.add(arrivalDots.object);
   const pArrival = arrivalDots.addPath([new THREE.Vector3(), new THREE.Vector3(0, -1, 0)], 12);
-  const pFoam = foamDots.addPath([new THREE.Vector3(), new THREE.Vector3(1, 0, 0)], 26);
 
   // ---- layout: everything that follows the parameters
   const relocate = (id: string, obj: THREE.Object3D, x: number, y: number, z: number) => {
@@ -162,7 +131,6 @@ export function createSiteScene(): SiteScene {
       registry.setFactor(id, e.factor);
     }
   };
-  let drivePoints: THREE.Vector3[] = [];
   let lengthDelivery = 0;
   const hotAnchors: Record<string, THREE.Object3D> = {};
   const anchor = (id: string, parent: THREE.Object3D) => {
@@ -172,10 +140,11 @@ export function createSiteScene(): SiteScene {
     hotAnchors[id] = a;
     return a;
   };
-  anchor('spring', spring.group).position.set(0, TANK.height + 1.6, 0);
-  anchor('buffer-tank', tank.group).position.set(0, TANK.height + 0.5, 0);
+  anchor('spring', spring).position.set(0, BOX_RIM_Y + 1.3, 0);
+  anchor('buffer-tank', tank).position.set(0, H_LID + 0.6, 0);
   anchor('drive-pipe', drive);
   anchor('ram-pit', pit.group).position.set(PIT_X, GROUND_PIT + 1.6, 0);
+  hotAnchors['waste-drain'] = waste.anchor;
   anchor('delivery-pipe', delivery);
   anchor('water-tower', tower.group).position.set(0, TOWER.groundBelowInlet + 1.8, 0);
   anchor('house', house).position.set(0, 0.2 + HOUSE.wallHeight + HOUSE.ridgeRise + 1.2, 0);
@@ -185,36 +154,41 @@ export function createSiteScene(): SiteScene {
     driveDiameterMm = diameterMm;
     terrain.setParams(p);
     const d = driveGeometry(p);
-    const tankX = d.outlet.x - TANK.diameter / 2 - 0.3;
+    const tx = tankAxisX(d);
     const tankFloor = p.fall - TANK.outletAboveFloor;
-    relocate('buffer-tank', tank.group, tankX, tankFloor + 0.02, 0);
-    relocate('spring', spring.group, tankX - SPRING.distanceToTank, tankFloor + 0.02, 0);
+    relocate('buffer-tank', tank, tx, tankFloor, 0);
+    relocate('spring', spring, tx + SPRING_X, tankFloor, 0);
     relocate('water-tower', tower.group, TOWER.planX, p.head - TOWER.groundBelowInlet, TOWER.planZ);
     relocate('house', house, HOUSE.planX, HOUSE.terraceFraction * p.head, HOUSE.planZ);
+    // the overflow ditch lies on the ground, in the frame of the tank
+    catchment.layGutter((xr, zr) => terrain.surfaceY(tx + xr, zr) - tankFloor, GUTTER_END);
 
-    // drive pipe: out of the tank, down the slope, level run through the pit wall to the stub of the ram
+    // drive pipe: out of the gate valve of the tank, level on the bench, down the slope, level run through the pit wall to the stub of the ram
     const driveOuter = diameterMm / 1000 + 2 * 0.0033;
     const r = driveOuter / 2;
-    drivePoints = [
-      new THREE.Vector3(d.outlet.x - 0.12, p.fall, 0),
+    const drivePoints = [
+      new THREE.Vector3(d.start.x - 0.03, p.fall, 0),
       new THREE.Vector3(d.outlet.x, p.fall, 0),
       new THREE.Vector3(d.elbow.x, 0, 0),
       new THREE.Vector3(STUB_X0, 0, 0),
     ];
-    const bend = Math.max(0.3, driveOuter * 8);
+    const bend = Math.max(CORNER, driveOuter * 8);
     swapGeometry(driveMesh, new THREE.TubeGeometry(roundedPath(drivePoints, bend), 160, r, 14, false));
     pipeMat.uniforms.uPipeRadius.value = r;
     driveRadius = r;
     drivePts = spaced(drivePoints, 0.5);
-    // supports: a concrete saddle every 3 m on the part of the slope where the pipe lies on the surface
+    // supports: a concrete saddle on the bench and one every 3 m on the slope, where the pipe lies 0.23 m above the surface
     const m = new THREE.Matrix4();
     const q = new THREE.Quaternion();
     const slopeAngle = Math.atan2(p.fall, d.run);
-    q.setFromEuler(new THREE.Euler(0, 0, slopeAngle));
     let n = 0;
-    for (let x = d.outlet.x + 1.2; x < d.elbow.x - 6 && n < 24; x += 3) {
+    q.identity();
+    m.compose(new THREE.Vector3(d.start.x + 0.9, p.fall - r - 0.1, 0), q, new THREE.Vector3(1, 1, 1));
+    supports.setMatrixAt(n++, m);
+    q.setFromEuler(new THREE.Euler(0, 0, slopeAngle));
+    for (let x = d.outlet.x + 1.45; x < d.elbow.x - 6 && n < 24; x += 3) {
       const y = p.fall * (1 - (x - d.outlet.x) / d.run);
-      m.compose(new THREE.Vector3(x, y - r - 0.05, 0), q, new THREE.Vector3(1, 1, 1));
+      m.compose(new THREE.Vector3(x, y - r - 0.1, 0), q, new THREE.Vector3(1, 1, 1));
       supports.setMatrixAt(n++, m);
     }
     supports.count = n;
@@ -235,30 +209,13 @@ export function createSiteScene(): SiteScene {
     const mid = pts[Math.floor(pts.length * 0.32)];
     hotAnchors['delivery-pipe'].position.set(mid.x, mid.y + 2.2, mid.z);
 
-    // outfall of the pit drain, and the stream of the waste water down the valley
-    const waste = wasteStream(terrain, pit.drainStart, STREAM_N);
-    outfall.position.copy(waste.outfall);
-    headwall.position.set(0, 0.05, -0.1);
-    mouth.position.set(0, 0.05, 0.12);
-    writeRibbon(streamGeo.attributes.position as THREE.BufferAttribute, waste.points, outfall.position);
-    streamGeo.computeVertexNormals();
-    flows.setPath(pStream, waste.points);
-    foamDots.setPath(
-      pFoam,
-      waste.points.map((p) => p.clone().setY(p.y + 0.03)),
-    );
+    // the waste-water drain: buried pipe from the pit, headwall, ditch and soakaway lie on the new ground
+    waste.lay(terrain, pit.drainStart);
+
     flows.setPath(pDrive, drivePts);
     flows.setPath(pDelivery, deliveryPts);
 
-    // tank overflow and the arrival at the tower, in world coordinates
-    const tx = tank.group.position.x;
-    const ty = tank.group.position.y;
-    const ox = tx;
-    const oz = TANK.diameter / 2 + 0.2;
-    overflowDots.setPath(pOverflow, [
-      new THREE.Vector3(ox, ty + TANK.height - 0.7, oz),
-      new THREE.Vector3(ox, ty + 0.05, oz + 0.35),
-    ]);
+    // the arrival at the tower, in world coordinates
     arrivalDots.setPath(pArrival, [
       new THREE.Vector3(tp.x + TOWER.troughX, tp.y + top + TOWER.pipeEndAboveLid, tp.z + TOWER.troughZ),
       new THREE.Vector3(tp.x + TOWER.troughX, tp.y + top + 0.36, tp.z + TOWER.troughZ),
@@ -268,10 +225,11 @@ export function createSiteScene(): SiteScene {
   layout(params, driveDiameterMm);
 
   // ---- register the parts (after they are placed)
-  registry.add('spring', spring.group, up(5));
-  registry.add('buffer-tank', tank.group, up(9));
+  registry.add('spring', spring, up(5));
+  registry.add('buffer-tank', tank, up(9));
   registry.add('drive-pipe', drive, up(13));
   registry.add('ram-pit', pit.group, up(17));
+  registry.add('waste-drain', waste.group, up(24));
   registry.add('delivery-pipe', delivery, up(22));
   registry.add('water-tower', tower.group, up(30));
   registry.add('house', house, up(12));
@@ -305,6 +263,13 @@ export function createSiteScene(): SiteScene {
     return false;
   };
 
+  /** A part that is exploded, hidden (isolate) or drawn as a wire (the guide): the water of the model would hang in the air. */
+  const away = (id: string): boolean => {
+    const e = registry.get(id);
+    return !!e && (e.factor > 0.001 || e.display === 'wire' || e.display === 'hidden');
+  };
+  const hold: Hold = { tank: false, box: false, flows: false };
+
   const update = (s: RamState, dt: number, view: ViewOpts) => {
     sinceLayout += dt;
     // the landscape follows the sliders; at most every 50 ms so that a drag stays smooth
@@ -313,26 +278,28 @@ export function createSiteScene(): SiteScene {
     sky.update(s.hour, view.time);
     aimShadow();
 
+    // the drive pipe is steel, PVC or polyethylene as the wave speed of the state says
+    const kind = pipeKindOf(s.waveSpeed);
+    if (kind !== pipeKind) {
+      pipeKind = kind;
+      applyPipeKind(pipeMat.material, kind);
+    }
+
     // ram in its pit
     noCut.slowMo = view.slowMo;
     noCut.schematic = view.schematic;
     noCut.time = view.time;
     ram.update(s, dt, noCut);
 
-    // buffer tank level, spring trickle, overflow
-    const level = clamp(s.tankLevel, 0, 1);
-    tank.water.scale.y = Math.max(0.001, level);
-    tank.water.position.y = (TANK.height * Math.max(0.001, level)) / 2;
-    const spring01 = clamp(s.sourceFlow / SITE.sourceFlowLpm, 0, 3);
-    spring.trickle.visible = s.sourceFlow > 0.05;
-    spring.trickle.scale.set(Math.sqrt(spring01), 1, Math.sqrt(spring01));
-    const overflowing = level > 0.995 && s.sourceFlow > s.driveFlow + 0.05;
+    // spring, gravel bed, tank (level, overflow, drain, gate valve) and its flows: the model of the catchment world
+    hold.tank = away('buffer-tank');
+    hold.box = away('spring');
+    hold.flows = hold.tank || hold.box;
+    catchment.update(s, dt, view, hold);
 
-    // waste water: wet floor of the pit, the stream down the valley
-    const waste = clamp(s.wasteFlow / 17, 0, 1.4);
+    // waste water: wet floor of the pit, the buried drain, the ditch and the soakaway
     pit.puddleMaterial.opacity = 0.55 * clamp(s.wasteFlow / 6, 0, 1);
-    streamMesh.visible = s.wasteFlow > 0.2;
-    streamMat.opacity = 0.35 + 0.35 * clamp(waste, 0, 1);
+    waste.update(s, dt, view, away('waste-drain'));
 
     // arrival at the tower: the stream into the trough follows the water leaving the chamber
     const arriving = s.deliveredFlow > 0.02 ? clamp(0.35 + s.outletFlowNow / 3, 0.35, 1) : 0;
@@ -340,29 +307,19 @@ export function createSiteScene(): SiteScene {
     tower.streamMaterial.opacity = 0.75 * arriving;
     tower.troughMaterial.opacity = 0.55 + 0.3 * arriving;
 
-    // "Flux" overlay (schematic) and the local drops
+    // "Flux" overlay (schematic)
     flows.object.visible = view.schematic;
     if (view.schematic) {
-      flows.advance(pDrive, s.driveVelocity * 1.0, dt);
+      // a closed gate valve or a waste valve held shut: the column is at rest
+      flows.advance(pDrive, s.gateOpen === false || s.valveHeldShut === true ? 0 : s.driveVelocity, dt);
       // the true speed in the delivery pipe is millimetres per second: dots travel at a symbolic speed that grows with the flow
       flows.advance(pDelivery, s.deliveredFlow > 0.02 ? 2 + 0.5 * s.outletFlowNow : 0, dt);
-      flows.advance(pStream, s.wasteFlow > 0.2 ? 1.2 + 0.1 * s.wasteFlow : 0, dt);
       flows.place();
     }
-    overflowDots.object.visible = overflowing;
     arrivalDots.object.visible = arriving > 0;
-    foamDots.object.visible = s.wasteFlow > 0.2;
-    if (overflowing) {
-      overflowDots.advance(pOverflow, 2.5, dt);
-      overflowDots.place();
-    }
     if (arriving > 0) {
       arrivalDots.advance(pArrival, 2.2, dt);
       arrivalDots.place();
-    }
-    if (s.wasteFlow > 0.2) {
-      foamDots.advance(pFoam, 0.8 + 0.06 * s.wasteFlow, dt);
-      foamDots.place();
     }
   };
 
@@ -377,9 +334,14 @@ export function createSiteScene(): SiteScene {
     get params() {
       return params;
     },
+    catchment,
+    waste,
     deliveryLength: () => lengthDelivery,
     surfaceY: (x, z) => terrain.surfaceY(x, z),
     follow: (s) => void follow(s),
     update,
   };
 }
+
+/** X (TANK frame) where the overflow ditch of the tank ends on the slope. */
+const GUTTER_END = 9.6;

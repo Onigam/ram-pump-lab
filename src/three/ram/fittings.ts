@@ -1,15 +1,16 @@
 import * as THREE from 'three';
 import { MAT, glass, group, mesh } from '@onigam/lab-kit/three';
 import { CHAMBER, FITTINGS, RAM } from '../dims';
-import { crispRuns, hexRing, lathe } from '../common';
+import { crispRuns, hexNut, hexRing, lathe } from '../common';
 import { COVER_END, DRAIN_Y } from './body';
 import { dialAngle, dialTexture } from './dial';
 import { CH } from './chamber';
 import { ballValve } from './fit';
-import { v3, type RamCtx } from './ctx';
+import type { RamCtx } from './ctx';
+import { EXPLODE } from './explode';
 
-// The small fittings: gauge on the chamber, snifter on the body, outlet valve V3 with the start of the delivery pipe,
-// drain valve V2 on the end cover. All are whole parts (not cut by the section).
+// The small fittings: gauge on the chamber, snifter on the body, outlet valve V3, the union with the start of the delivery
+// pipe, drain valve V2 on the end cover. All are whole parts (not cut by the section).
 
 export function buildGauge(ctx: RamCtx, yTop: number): void {
   const g = group('gauge');
@@ -51,7 +52,7 @@ export function buildGauge(ctx: RamCtx, yTop: number): void {
   lens.castShadow = false;
   g.add(lens);
   ctx.anchor('gauge', g, 0, cy + R + 0.004, 0.0);
-  ctx.add('gauge', g, v3(0, 0.42, 0));
+  ctx.add('gauge', g, EXPLODE.gauge);
 }
 
 export function buildSnifter(ctx: RamCtx): void {
@@ -69,53 +70,103 @@ export function buildSnifter(ctx: RamCtx): void {
   g.add(pin);
   ctx.rig.snifterPin = pin;
   ctx.anchor('snifter', g, 0.0, 0.03, 0.0);
-  ctx.add('snifter', g, v3(0, 0.12, 0));
+  ctx.add('snifter', g, EXPLODE.snifter);
 }
+
+/** x, relative to the chamber port, where the outlet valve V3 starts and ends (the union follows). */
+const OUTLET_VALVE_X = 0.04;
+const outletX0 = (): number => RAM.xDelivery + CH.R - 0.003 + 0.012;
 
 export function buildOutlet(ctx: RamCtx): void {
   const g = group('outlet-valve');
-  const x0 = RAM.xDelivery + CH.R - 0.003 + 0.012;
-  g.position.set(x0, CHAMBER.outletHeight, 0);
-  const steel = MAT.steel();
-  const brass = MAT.brass();
-  // threaded nipple into the chamber port, DN15 ball valve, compression nut, black PE delivery pipe
-  const nipple = mesh(new THREE.CylinderGeometry(0.01065, 0.01065, 0.046, 20), steel, [0.023, 0, 0]);
+  g.position.set(outletX0(), CHAMBER.outletHeight, 0);
+  // threaded nipple into the chamber port, then the DN15 ball valve
+  const nipple = mesh(new THREE.CylinderGeometry(0.01065, 0.01065, 0.046, 20), MAT.steel(), [0.023, 0, 0]);
   nipple.rotation.z = Math.PI / 2;
   g.add(nipple);
-  const vx = 0.04;
   const valve = ballValve({
     length: FITTINGS.smallBallValveLength,
     endR: 0.0125,
     bulgeR: 0.0215,
     bulgeLen: 0.042,
-    body: brass,
+    body: MAT.brass(),
     steel: MAT.steel(),
     grip: MAT.pvcRed(),
   });
-  valve.position.x = vx;
+  valve.position.x = OUTLET_VALVE_X;
   g.add(valve);
-  const nutX = vx + FITTINGS.smallBallValveLength;
-  const nut = mesh(new THREE.CylinderGeometry(0.0185, 0.0185, 0.024, 6), brass, [nutX + 0.006, 0, 0]);
-  nut.rotation.z = Math.PI / 2;
-  g.add(nut);
+  ctx.anchor('outlet-valve', g, OUTLET_VALVE_X + FITTINGS.smallBallValveLength / 2, 0.05, 0);
+  ctx.add('outlet-valve', g, EXPLODE['outlet-valve']);
+}
+
+/**
+ * The union on the delivery outlet: a three-piece brass union (tail on the valve, tail with its collar, the nut that draws
+ * them together) followed by a compression fitting that holds the start of the blue PE delivery pipe. It lets the ram be
+ * disconnected from the pipe without turning either. Frame: origin at the downstream end of the outlet valve, axis +X.
+ */
+export function buildUnion(ctx: RamCtx): void {
+  const g = group('delivery-union');
+  const nutX = OUTLET_VALVE_X + FITTINGS.smallBallValveLength;
+  g.position.set(outletX0() + nutX, CHAMBER.outletHeight, 0);
+  const brass = MAT.brass();
+  const nickel = MAT.nickel();
+  const L = FITTINGS.unionLength;
+  const af = FITTINGS.unionTailAcrossFlats;
+  const nutAf = FITTINGS.unionNutAcrossFlats;
+  const nutL = FITTINGS.unionNutLength;
+  /** A piece standing on Y (from y = 0 up) laid along +X from x. */
+  const along = (obj: THREE.Object3D, x: number): THREE.Object3D => {
+    obj.rotation.z = -Math.PI / 2;
+    obj.position.x = x;
+    return obj;
+  };
+  const cyl = (r: number, len: number, mat: THREE.Material, seg = 28): THREE.Mesh =>
+    mesh(new THREE.CylinderGeometry(r, r, len, seg), mat, [0, len / 2, 0]);
+  // tail on the valve: hex, then the threaded barrel the nut screws on
+  g.add(along(mesh(hexNut(af, 0.01, 0), brass), 0));
+  g.add(along(cyl(0.0165, 0.019, brass), 0.01));
+  // the nut (hex 36 mm) over the barrel, its lip bearing on the collar of the second tail
+  const nut = group('union-nut');
+  nut.add(mesh(hexNut(nutAf, nutL, 0.033), nickel));
+  nut.add(
+    mesh(
+      lathe(
+        crispRuns([
+          [0.0135, nutL - 0.003],
+          [0.0185, nutL - 0.003],
+          [0.0185, nutL],
+          [0.0135, nutL],
+        ]),
+        32,
+      ),
+      nickel,
+    ),
+  );
+  g.add(along(nut, 0.012));
+  // second tail: collar against the first tail, neck through the nut, hex, then the compression body
+  g.add(along(cyl(0.0158, 0.004, brass), 0.026));
+  g.add(along(cyl(0.0135, 0.008, brass), 0.03));
+  g.add(along(mesh(hexNut(af, 0.012, 0), brass), 0.034));
+  // compression nut on the PE pipe
+  g.add(along(mesh(hexNut(0.034, L - 0.046, 0), brass), 0.046));
+  // the delivery pipe: PE 25 mm, from inside the compression nut to the free end
   const pr = 0.0125;
+  const pipeLen = FITTINGS.outletStubLength - 0.052;
   const pipe = mesh(
     lathe(
       crispRuns([
         [0.0081, 0],
         [pr, 0],
-        [pr, FITTINGS.outletStubLength],
-        [0.0081, FITTINGS.outletStubLength],
+        [pr, pipeLen],
+        [0.0081, pipeLen],
       ]),
       28,
     ),
     MAT.pvcBlue(),
   );
-  pipe.rotation.z = -Math.PI / 2;
-  pipe.position.x = nutX;
-  g.add(pipe);
-  ctx.anchor('outlet-valve', g, vx + FITTINGS.smallBallValveLength / 2, 0.05, 0);
-  ctx.add('outlet-valve', g, v3(0.16, 0, 0));
+  g.add(along(pipe, 0.052));
+  ctx.anchor('delivery-union', g, 0.02, 0.0215, 0);
+  ctx.add('delivery-union', g, EXPLODE['delivery-union']);
 }
 
 export function buildDrain(ctx: RamCtx): void {
@@ -152,5 +203,5 @@ export function buildDrain(ctx: RamCtx): void {
     g.add(rib);
   }
   ctx.anchor('drain-valve', g, 0.04, 0.03, 0);
-  ctx.add('drain-valve', g, v3(0.22, 0, 0));
+  ctx.add('drain-valve', g, EXPLODE['drain-valve']);
 }

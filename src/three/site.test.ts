@@ -3,11 +3,13 @@ import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { partIds } from '../part-ids';
 import type { RamState } from '../sim/types';
+import { H_FULL, SPRING_X } from './catchment/layout';
 import * as DIMS from './dims';
 import { createSiteScene, type SiteScene } from './site/scene';
 import { runningState, sceneBoxes, stalledState, touches, view } from './test-utils';
 
-// The `site` world by script: ids, floating and buried parts, explode, the 300 m route, the sliders, NaN-free animation.
+// The `site` world by script: ids, floating and buried parts, explode, the 300 m route, the sliders, the catchment model it
+// shares with the `catchment` world, the waste-water drain, NaN-free animation.
 
 const SITE_IDS = partIds('site');
 
@@ -16,6 +18,7 @@ describe('site world', () => {
   const reg = mod.registry;
 
   it('registers exactly the frozen catalogue ids', () => {
+    expect(SITE_IDS).toHaveLength(8);
     expect([...reg.ids()].sort()).toEqual([...SITE_IDS].sort());
   });
 
@@ -68,13 +71,14 @@ describe('site world', () => {
   });
 
   it('keeps the parts out of the ground, except the buried ones', () => {
-    // buried on purpose: the pit (a chamber below ground), the tank slab and the pipes that dive under the ground
+    // buried on purpose: the pit (a chamber below ground), the tank slab and the dug-in spring box, the pipes that dive under the ground
     const buried: Record<string, string> = {
       'ram-pit': 'a chamber below the ground, the ram stands in it',
-      'buffer-tank': 'its slab is sunk into the plateau',
+      'buffer-tank': 'its slab is sunk into the bench',
       'drive-pipe': 'the pipe goes under the ground before the pit wall',
       'delivery-pipe': 'the pipe leaves the pit under the ground',
-      spring: 'the rock outcrop is embedded in the hillside',
+      'waste-drain': 'the drain pipe is buried from the pit to its headwall',
+      spring: 'the box and the gravel bed are dug into the shelf, the rocks into the scarp',
     };
     const boxes = sceneBoxes(mod);
     for (const [id, box] of boxes) {
@@ -112,7 +116,7 @@ describe('site world', () => {
     expect(springY() - sp0).toBeCloseTo(7.5, 0);
     const d = driveBox();
     expect(d.max.y).toBeGreaterThan(14.9);
-    // the horizontal run of a 40 m pipe falling 15 m is about 36 m (plus the level run), no more
+    // the horizontal run of a 40 m pipe falling 15 m is about 36 m (with the level runs at both ends), no more
     expect(d.max.x - d.min.x).toBeGreaterThan(33);
     expect(d.max.x - d.min.x).toBeLessThan(40);
     // and the world still updates for every state
@@ -137,6 +141,7 @@ describe('site world', () => {
               ).toBe(true);
             }
             expect(Number.isFinite(mod.deliveryLength())).toBe(true);
+            expect(Number.isFinite(mod.waste.outfall.x + mod.waste.soakaway.y)).toBe(true);
           }
         }
       }
@@ -144,15 +149,22 @@ describe('site world', () => {
     mod.follow({ fall: 7.5, driveLength: 20, deliveryHead: 65, driveDiameter: 27 });
   });
 
-  it('animates without NaN for running, stalled and flow states', () => {
+  it('animates without NaN for running, stalled, empty, overflowing, gate closed, drain open and flow states', () => {
     const run = runningState();
     const stalled = stalledState();
-    for (const [name, state, v] of [
+    const states: [string, RamState, Partial<ViewOpts>][] = [
       ['running', run, {}],
       ['stalled', stalled, {}],
       ['schematic', run, { schematic: true }],
       ['night', { ...run, hour: 2 }, {}],
-    ] as [string, RamState, Partial<ViewOpts>][]) {
+      ['empty tank', { ...run, tankLevel: 0, tankLitres: 0, driveFlow: 0 }, { schematic: true }],
+      ['full, ram stopped', { ...stalled, tankLevel: 1, tankLitres: 5700 }, { schematic: true }],
+      ['gate closed', { ...run, gateOpen: false, driveFlow: 0 }, {}],
+      ['drain open', { ...run, tankDrainOpen: true, tankDrainFlow: 20, tankLevel: 0.6 }, { schematic: true }],
+      ['plastic pipe', { ...run, waveSpeed: 500 }, {}],
+      ['no state fields', { ...run, tankLevel: NaN, wasteFlow: NaN, waveSpeed: NaN }, {}],
+    ];
+    for (const [name, state, v] of states) {
       for (let i = 0; i < 20; i++) mod.update(state, 1 / 60, view(v));
       mod.scene.updateMatrixWorld(true);
       let bad = 0;
@@ -163,6 +175,83 @@ describe('site world', () => {
       expect(bad, name).toBe(0);
       for (const id of SITE_IDS) expect(Number.isFinite(reg.bounds(id).min.x), `${name} ${id}`).toBe(true);
     }
+  });
+
+  describe('the catchment of the site is the catchment model', () => {
+    it('registers the two frames of the model as `spring` and `buffer-tank`, the spring 4.2 m west of the tank axis at the same level', () => {
+      mod.follow({ fall: 7.5, driveLength: 20, deliveryHead: 65, driveDiameter: 27 });
+      expect(reg.get('buffer-tank')!.object).toBe(mod.catchment.tankFrame);
+      expect(reg.get('spring')!.object).toBe(mod.catchment.springFrame);
+      const t = mod.catchment.tankFrame.position;
+      const s = mod.catchment.springFrame.position;
+      expect(t.x - s.x).toBeCloseTo(DIMS.SPRING.distanceToTank, 6);
+      expect(SPRING_X).toBe(-DIMS.SPRING.distanceToTank);
+      expect(s.y).toBeCloseTo(t.y, 9);
+      // the outlet of the tank is exactly the fall above the ram axis
+      expect(t.y + DIMS.TANK.outletAboveFloor).toBeCloseTo(DIMS.SITE.fall, 9);
+    });
+
+    it('stands on a bench of the terrain: the slab in the ground, the spring box dug into the shelf 2.45 m higher', () => {
+      mod.follow({ fall: 7.5, driveLength: 20, deliveryHead: 65, driveDiameter: 27 });
+      const t = mod.catchment.tankFrame.position;
+      const s = mod.catchment.springFrame.position;
+      expect(groundAt(mod, t.x, 0)).toBeCloseTo(t.y - DIMS.CATCHMENT.benchDepth, 1);
+      expect(groundAt(mod, s.x, 0)).toBeCloseTo(t.y + DIMS.CATCHMENT.shelfHeight, 1);
+    });
+
+    it('draws the water at the level of the state and the overflow only when the tank is full and the spring gives more than the ram takes', () => {
+      const run = runningState();
+      mod.update({ ...run, tankLevel: 0.5, sourceFlow: 7.5, driveFlow: 6.7 }, 1 / 60, view());
+      expect(mod.catchment.status.waterY).toBeCloseTo(0.5 * H_FULL, 9);
+      expect(mod.catchment.status.overflow).toBe(0);
+      mod.update({ ...run, tankLevel: 1, sourceFlow: 7.5, driveFlow: 6.7 }, 1 / 60, view());
+      expect(mod.catchment.status.overflow).toBeCloseTo(0.8, 9);
+      mod.update({ ...run, tankLevel: 1, sourceFlow: 7.5, driveFlow: 17 }, 1 / 60, view());
+      expect(mod.catchment.status.overflow).toBe(0);
+    });
+  });
+
+  describe('waste-water drain', () => {
+    it('runs from the pit to a soakaway on the ground, 15 m of ditch away, and touches the pit', () => {
+      mod.follow({ fall: 7.5, driveLength: 20, deliveryHead: 65, driveDiameter: 27 });
+      mod.scene.updateMatrixWorld(true);
+      const { outfall, soakaway } = mod.waste;
+      const pit = reg.bounds('ram-pit');
+      const drain = reg.bounds('waste-drain');
+      expect(touches(drain, pit, 0.002)).toBe(true);
+      expect(outfall.z).toBeGreaterThan(pit.max.z); // downhill of the pit (south)
+      expect(Math.abs(outfall.y - groundAt(mod, outfall.x, outfall.z))).toBeLessThan(0.25);
+      expect(Math.abs(soakaway.y - groundAt(mod, soakaway.x, soakaway.z))).toBeLessThan(0.1);
+      expect(outfall.distanceTo(soakaway)).toBeGreaterThan(9);
+      expect(outfall.distanceTo(soakaway)).toBeLessThan(DIMS.WASTE_DRAIN.ditchLength + 2.5);
+      // lower than the pit's floor drain at the end of the run: the water goes down
+      expect(soakaway.y).toBeLessThan(outfall.y);
+    });
+
+    it('carries the waste flow of the state: water when the ram runs, none when it is stopped', () => {
+      const run = runningState();
+      mod.update(run, 1 / 60, view());
+      expect(mod.waste.flowing).toBeGreaterThan(5);
+      expect(mod.waste.flowing).toBeLessThan(8);
+      mod.update(stalledState(), 1 / 60, view());
+      expect(mod.waste.flowing).toBe(0);
+    });
+  });
+
+  it('dresses the drive pipe as steel, PVC or polyethylene from the wave speed of the state', () => {
+    const pipe = reg
+      .get('drive-pipe')!
+      .meshes.find((m) => (m.material as THREE.MeshStandardMaterial).metalness !== undefined)!;
+    const colour = () => (pipe.material as THREE.MeshStandardMaterial).color.getHex();
+    const run = runningState();
+    mod.update({ ...run, waveSpeed: 900 }, 1 / 60, view());
+    const steel = colour();
+    mod.update({ ...run, waveSpeed: 500 }, 1 / 60, view());
+    const pvc = colour();
+    mod.update({ ...run, waveSpeed: 350 }, 1 / 60, view());
+    const pe = colour();
+    expect(new Set([steel, pvc, pe]).size).toBe(3);
+    mod.update({ ...run, waveSpeed: 900 }, 1 / 60, view());
   });
 });
 

@@ -1,18 +1,23 @@
 import * as THREE from 'three';
 import { MAT, group, mesh } from '@onigam/lab-kit/three';
-import { RAM } from '../dims';
+import { RAM, VALVE } from '../dims';
 import { lathe } from '../common';
 import { rect, type Poly } from '../cut';
 import { boltY } from './fit';
-import { v3, type RamCtx } from './ctx';
+import type { RamCtx } from './ctx';
+import { EXPLODE } from './explode';
 
 // The cast-iron body: a horizontal tube with flanges, three bosses on top (waste valve, snifter, delivery valve), two
-// cast feet and a blind cover at the drain end. Hollow, so that the section shows the walls and the water.
+// cast feet (bolted to the foundation, see foundation.ts) and a blind cover at the drain end. Hollow, so that the section
+// shows the walls and the water.
 
 export const BODY_TOP = RAM.bodyOuterRadius;
+/** Height of the top face of the waste valve's base plate above the body axis (the origin of the waste valve model). */
+export const PLATE_TOP_Y = RAM.wasteFlangeTop + VALVE.basePlateThickness;
+/** X of the two cast feet. */
+export const FOOT_X = [RAM.bodyLength / 2 - RAM.footSpacing / 2, RAM.bodyLength / 2 + RAM.footSpacing / 2];
 /** Vertical position of the drain on the end cover. */
 export const DRAIN_Y = -0.022;
-const FOOT_X = [RAM.bodyLength / 2 - RAM.footSpacing / 2, RAM.bodyLength / 2 + RAM.footSpacing / 2];
 const COVER_T = 0.014;
 /** x of the outer face of the drain boss, where the drain valve starts. */
 export const COVER_END = RAM.bodyLength + COVER_T + 0.02 - 0.004;
@@ -169,17 +174,12 @@ export function buildBody(ctx: RamCtx): THREE.Group {
     ),
   );
 
-  // cast feet, each with a lug bolted to the slab
+  // cast feet, each with a lug that the anchor studs of the foundation go through (the nuts belong to the foundation)
   const floor = RAM.floorY;
   for (const fx of FOOT_X) {
     const h = -R + 0.006 - (floor + 0.012);
     g.add(mesh(new THREE.BoxGeometry(0.06, h, 0.08), steel, [fx, floor + 0.012 + h / 2, 0]));
     g.add(mesh(new THREE.BoxGeometry(0.11, 0.012, 0.13), steel, [fx, floor + 0.006, 0]));
-    for (const dz of [-0.052, 0.052]) {
-      const b = boltY(0.005, 0.012, 0.016, 0.007, dark);
-      b.position.set(fx, floor + 0.012, dz);
-      g.add(b);
-    }
   }
 
   // ---- section caps (the plane z = 0)
@@ -226,6 +226,6 @@ export function buildBody(ctx: RamCtx): THREE.Group {
   ctx.cut.cap('ram', g, polys);
 
   ctx.anchor('ram', g, 0.3, 0.0, 0.05);
-  ctx.add('ram', g, v3(0, 0.004, 0));
+  ctx.add('ram', g, EXPLODE.ram);
   return g;
 }

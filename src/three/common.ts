@@ -111,6 +111,89 @@ export function threadedRod(radius: number, length: number, pitch = 0.001, segme
   );
 }
 
+/** Zigzag outline of a thread along Y, from y0 to y1 (a half pitch per tooth): outer radius `r`, root `r - depth`. */
+export function zigzag(r: number, depth: number, y0: number, y1: number, pitch: number): Profile {
+  const steps = Math.max(2, Math.round((y1 - y0) / (pitch / 2)));
+  const out: Profile = [];
+  for (let i = 0; i <= steps; i++) out.push([i % 2 === 0 || i === steps ? r : r - depth, y0 + ((y1 - y0) * i) / steps]);
+  return out;
+}
+
+/**
+ * Hex nut standing on Y from y = 0 to `thickness`, corners along ±X, with a small chamfer on the outline so that its edges
+ * catch the light (`bore` is the diameter of the hole, 0 = solid).
+ */
+export function hexNut(acrossFlats: number, thickness: number, bore = 0, chamfer = 0.0004): THREE.BufferGeometry {
+  const R = (acrossFlats - 2 * chamfer) / Math.sqrt(3);
+  const shape = new THREE.Shape();
+  for (let i = 0; i < 6; i++) {
+    const x = R * Math.cos((i * Math.PI) / 3);
+    const y = R * Math.sin((i * Math.PI) / 3);
+    if (i === 0) shape.moveTo(x, y);
+    else shape.lineTo(x, y);
+  }
+  shape.closePath();
+  if (bore > 0) {
+    const hole = new THREE.Path();
+    hole.absarc(0, 0, bore / 2 + chamfer, 0, TAU, true);
+    shape.holes.push(hole);
+  }
+  const g = new THREE.ExtrudeGeometry(shape, {
+    depth: thickness - 2 * chamfer,
+    bevelEnabled: true,
+    bevelThickness: chamfer,
+    bevelSize: chamfer,
+    bevelSegments: 1,
+    curveSegments: 20,
+  });
+  g.rotateX(-Math.PI / 2);
+  g.translate(0, chamfer, 0);
+  return g;
+}
+
+/**
+ * Drafting-table floor: a paper disc with a grid, as a DataTexture (no canvas, so it also builds in Node). `tile` is the
+ * side of one texture tile in metres (eight cells of one fifth each), `radius` the radius of the disc.
+ */
+export function paperFloor(radius = 12, tile = 8, y = 0): THREE.Mesh {
+  const N = 512;
+  const data = new Uint8Array(N * N * 4);
+  const cell = N / 8;
+  for (let py = 0; py < N; py++) {
+    for (let px = 0; px < N; px++) {
+      const k = (py * N + px) * 4;
+      let a = 0;
+      const mx = px % cell;
+      const my = py % cell;
+      if (mx < 2 || my < 2) a = 0.16;
+      else if (mx % (cell / 5) < 1 || my % (cell / 5) < 1) a = 0.06;
+      // paper #efe6d3 mixed with the blue-grey ink of the grid
+      data[k] = Math.round(239 * (1 - a) + 40 * a);
+      data[k + 1] = Math.round(230 * (1 - a) + 60 * a);
+      data[k + 2] = Math.round(211 * (1 - a) + 90 * a);
+      data[k + 3] = 255;
+    }
+  }
+  const tex = new THREE.DataTexture(data, N, N, THREE.RGBAFormat);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set((2 * radius) / tile, (2 * radius) / tile);
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.anisotropy = 4;
+  tex.needsUpdate = true;
+  const floor = new THREE.Mesh(
+    new THREE.CircleGeometry(radius, 64),
+    new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95 }),
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = y;
+  floor.receiveShadow = true;
+  floor.name = 'floor';
+  return floor;
+}
+
 /** Soft round sprite (white, alpha falling to the edge) for dots and spray; a DataTexture, so no canvas is needed. */
 export function softDotTexture(size = 32): THREE.DataTexture {
   const data = new Uint8Array(size * size * 4);

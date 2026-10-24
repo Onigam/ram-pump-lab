@@ -2,37 +2,35 @@ import * as THREE from 'three';
 import { clamp } from '@onigam/lab-kit/three';
 import type { PartRegistry, ViewOpts } from '@onigam/lab-kit/three';
 import type { RamState } from '../../sim/types';
-import { CHAMBER } from '../dims';
+import { CHAMBER, RAM } from '../dims';
 import { CutKit } from '../cut';
-import { DEG, smoothstep } from '../common';
-import { buildBody } from './body';
+import { smoothstep } from '../common';
+import { createWasteValveModel, type WasteValveModel } from '../valve/model';
+import { PLATE_TOP_Y, buildBody } from './body';
 import { buildChamber, buildCheckValve, SPRING_REST } from './chamber';
 import type { RamCtx, Rig } from './ctx';
 import { dialAngle } from './dial';
-import { buildDrain, buildGauge, buildOutlet, buildSnifter } from './fittings';
+import { EXPLODE } from './explode';
+import { buildDrain, buildGauge, buildOutlet, buildSnifter, buildUnion } from './fittings';
+import { buildFoundation } from './foundation';
 import { buildInlet } from './inlet';
-import { buildWaste } from './waste';
-import { placeTail, travelOf } from './wastegeo';
-import { buildFlows, buildWater, Spray, type RamFlows } from './water';
+import { buildFlows, buildWater, dropFloor, type RamFlows } from './water';
 
 // The ram as one object, with its animation. Used twice: registered in the "ram" world, and unregistered (a second
-// instance) in the pit of the site world.
+// instance) in the pit of the site world. The waste valve is a model of its own, shared with the "valve" world: here its
+// fourteen parts are ONE registered part, `waste-valve`.
 
-/** Visual time constants of the waste valve, seconds: the real closing takes 18 ms and the opening 13 ms (one frame). */
-const VALVE_CLOSE_TAU = 0.012;
-const VALVE_OPEN_TAU = 0.03;
 /** Check valve disc lift is drawn twice as large as the real lift. */
 const DISC_VISUAL = 2;
-/** Turn of the stem per stroke (fins), degrees, and the visual speed limit (no wagon-wheel effect). */
-const SPIN_PER_STROKE = 14;
-const SPIN_MAX_RATE = 160;
 /** Parts whose hollow bodies hold the water. */
-const CONTAINERS = ['ram', 'delivery-valve', 'air-chamber', 'base-plate', 'waste-valve'];
+const CONTAINERS = ['ram', 'delivery-valve', 'air-chamber', 'waste-valve'];
 
 export interface RamModel {
   root: THREE.Group;
   rig: Rig;
   cut: CutKit;
+  /** The waste valve (the very model of the `valve` world), standing on the body's waste flange. */
+  valve: WasteValveModel;
   /** True while the model is exploded or incomplete: nothing moves, no water. */
   exploded(): boolean;
   update(state: RamState, dt: number, view: ViewOpts): void;
@@ -41,7 +39,7 @@ export interface RamModel {
 export function createRamModel(registry: PartRegistry | null): RamModel {
   const root = new THREE.Group();
   root.name = 'ram-model';
-  const rig: Rig = { stemFrames: [], stackFrames: [], anchors: {} };
+  const rig: Rig = { anchors: {} };
   const cut = new CutKit();
   const ctx: RamCtx = {
     root,
@@ -64,28 +62,38 @@ export function createRamModel(registry: PartRegistry | null): RamModel {
     },
   };
 
+  buildFoundation(ctx);
   buildBody(ctx);
   buildInlet(ctx);
-  buildWaste(ctx);
+  // the waste valve: its model stands on the waste flange; the metal is one part, the water and spray are not parts
+  const origin = new THREE.Vector3(RAM.xWaste, PLATE_TOP_Y, 0);
+  const valve = createWasteValveModel({
+    cut,
+    hardware: 'ram',
+    capId: () => 'waste-valve',
+    floorAt: (x, z) => dropFloor(x + origin.x, z + origin.z) - origin.y,
+  });
+  valve.root.position.copy(origin);
+  root.add(valve.root);
+  ctx.anchor('waste-valve', valve.assembly, 0, 0.094, 0.0115);
+  ctx.add('waste-valve', valve.assembly, EXPLODE['waste-valve']);
   const check = buildCheckValve(ctx);
   const chamber = buildChamber(ctx);
   buildGauge(ctx, chamber.yTop);
   buildSnifter(ctx);
   buildOutlet(ctx);
+  buildUnion(ctx);
   buildDrain(ctx);
   const water = buildWater(ctx, chamber, check.waterProfile);
   root.add(water.group);
-  const spray = new Spray(water.ports);
-  root.add(spray.object);
-  const flows: RamFlows = buildFlows();
+  const flows: RamFlows = buildFlows(valve.path.map((p) => p.clone().add(origin)));
   root.add(flows.water.object, flows.air.object);
+  cut.clip(flows.water.object);
+  cut.clip(flows.air.object);
 
   // ---- animation state
-  let visW = 1;
   let visD = 0;
   let visP = 0;
-  let spin = 0;
-  let lastTravel = -1;
   const tmpV = new THREE.Vector3();
 
   const exploded = (): boolean => {
@@ -104,28 +112,8 @@ export function createRamModel(registry: PartRegistry | null): RamModel {
     const frozen = exploded();
     const k = (tau: number) => 1 - Math.exp(-Math.max(dt, 0) / tau);
 
-    // ---- waste valve: the state jumps in about a frame; a short smoothing keeps the slam and the reopening readable
-    const targetW = frozen ? 1 : clamp(s.wasteValve, 0, 1);
-    visW += (targetW - visW) * k(targetW < visW ? VALVE_CLOSE_TAU : VALVE_OPEN_TAU);
-    const travel = travelOf(s.stroke);
-    const lift = -visW * travel; // closed pose is the model's origin; open hangs `travel` lower
-    // fins turn the stem a little at every stroke
-    const spinTarget = frozen ? 0 : s.strokeCount * SPIN_PER_STROKE * DEG;
-    const diff = spinTarget - spin;
-    if (Math.abs(diff) > Math.PI * 2) spin = spinTarget;
-    else {
-      const step = SPIN_MAX_RATE * DEG * Math.max(dt, 0);
-      spin += clamp(diff * k(0.07), -step, step);
-    }
-    for (const f of rig.stemFrames) {
-      f.position.y = lift;
-      f.rotation.y = spin;
-    }
-    if (travel !== lastTravel) {
-      lastTravel = travel;
-      for (const f of rig.stackFrames) f.position.y = travel;
-    }
-    if (rig.rodTail) placeTail(rig.rodTail, travel);
+    // ---- waste valve (the shared model): stem, fins, weight and nuts, stream and spray
+    valve.update(s, dt, frozen);
 
     // ---- delivery check valve
     visD += (clamp(frozen ? 0 : s.deliveryValve, 0, 1) - visD) * k(0.02);
@@ -154,21 +142,13 @@ export function createRamModel(registry: PartRegistry | null): RamModel {
     }
     if (rig.water) rig.water.visible = !frozen;
 
-    // ---- stream through the open waste valve and the spray out of its ports
-    const jet = frozen ? 0 : s.wasteJetFlow;
-    if (rig.wasteStream && rig.wasteStreamMaterial) {
-      rig.wasteStream.visible = jet > 0.3 && visW > 0.05;
-      rig.wasteStreamMaterial.opacity = 0.2 + 0.5 * clamp(jet / 20, 0, 1);
-    }
-    spray.update(dt, jet, !frozen && visW > 0.1);
-
     // ---- "Flux": dots along the water paths, speeds from the flows of the state
     const show = view.schematic && !frozen;
     flows.water.object.visible = show;
     flows.air.object.visible = show;
     if (show) {
       flows.water.advance(flows.drive, s.driveVelocity, dt);
-      flows.water.advance(flows.waste, lpm(s.wasteJetFlow, area(0.0098)), dt);
+      flows.water.advance(flows.waste, lpm(s.wasteJetFlow, area(0.0075)), dt);
       flows.water.advance(flows.inflow, lpm(s.deliveredFlowNow, area(0.0095)), dt);
       flows.water.advance(flows.outflow, lpm(s.outletFlowNow, area(0.0081)), dt);
       flows.air.advance(flows.snifter, Math.min(1.5, s.snifterFlow * 0.1), dt);
@@ -180,5 +160,5 @@ export function createRamModel(registry: PartRegistry | null): RamModel {
     cut.update(root, view.cutaway, registry);
   }
 
-  return { root, rig, cut, exploded, update };
+  return { root, rig, cut, valve, exploded, update };
 }

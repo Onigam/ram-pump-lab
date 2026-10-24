@@ -26,12 +26,18 @@ interface Clipped {
   material: THREE.Material;
   side: THREE.Side;
   extra: THREE.Plane[];
+  /** Dots (`Points`) are cut by a plane a few millimetres behind the section, so that dots on the axis stay. */
+  dots: boolean;
 }
+
+/** How far behind the section plane the dots and drops are still drawn, metres. */
+const DOT_MARGIN = 0.003;
 
 export class CutKit {
   /** The section plane in the frame of the root object (z = 0, the front half is removed). */
   readonly plane = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
   private readonly world = new THREE.Plane();
+  private readonly worldDots = new THREE.Plane();
   private readonly clipped = new Map<THREE.Material, Clipped>();
   private readonly caps: { mesh: THREE.Mesh; id: string }[] = [];
   private readonly capMaterial: THREE.MeshStandardMaterial;
@@ -47,14 +53,19 @@ export class CutKit {
     this.capMaterial.polygonOffsetUnits = -2;
   }
 
-  /** Materials under `obj` are cut by the section (and by `extra` planes at all times, e.g. a water level). */
+  /**
+   * Materials under `obj` are cut by the section (and by `extra` planes at all times, e.g. a water level). Dots and drops
+   * (`Points`) are clipped too, 3 mm behind the plane: the half that is cut away must not leave spray floating in front of the
+   * section, but the flow dots, which travel on the axis, must stay.
+   */
   clip(obj: THREE.Object3D, extra: THREE.Plane[] = []): void {
     obj.traverse((o) => {
       const m = o as THREE.Mesh;
-      if (!m.isMesh || m.userData.cap) return;
+      const dots = (o as THREE.Points).isPoints === true;
+      if (!(m.isMesh || dots) || m.userData.cap) return;
       const mat = m.material as THREE.Material;
       if (!this.clipped.has(mat)) {
-        this.clipped.set(mat, { material: mat, side: mat.side, extra });
+        this.clipped.set(mat, { material: mat, side: mat.side, extra, dots });
         if (extra.length) {
           mat.clippingPlanes = [...extra];
           mat.needsUpdate = true;
@@ -83,10 +94,16 @@ export class CutKit {
   update(root: THREE.Object3D, on: boolean, registry: PartRegistry | null): void {
     root.updateWorldMatrix(true, false);
     this.world.copy(this.plane).applyMatrix4(root.matrixWorld);
+    this.worldDots.copy(this.world);
+    this.worldDots.constant += DOT_MARGIN;
     if (on !== this.on) {
       this.on = on;
       for (const c of this.clipped.values()) {
-        c.material.clippingPlanes = on ? [this.world, ...c.extra] : c.extra.length ? [...c.extra] : [];
+        c.material.clippingPlanes = on
+          ? [c.dots ? this.worldDots : this.world, ...c.extra]
+          : c.extra.length
+            ? [...c.extra]
+            : [];
         c.material.clipShadows = on;
         c.material.side = on ? THREE.DoubleSide : c.side;
         c.material.needsUpdate = true;

@@ -6,12 +6,6 @@ import type { CutKit } from '../cut';
 // pit), the section tool, the explode offsets and the handles the animation needs.
 
 export interface Rig {
-  /** Frames that carry the valve stem: lifted by the valve and turned by the fins. */
-  stemFrames: THREE.Object3D[];
-  /** Frames of the nut stack: raised above the guide by the (visual) travel, the nut sits on the guide when open. */
-  stackFrames: THREE.Object3D[];
-  /** Plain tail of the rod above the counterweight (scaled to stay a few mm proud of it). */
-  rodTail?: THREE.Object3D;
   /** Check valve disc and spring. */
   disc?: THREE.Object3D;
   spring?: THREE.Object3D;
@@ -19,14 +13,10 @@ export interface Rig {
   needle?: THREE.Object3D;
   /** Snifter pin. */
   snifterPin?: THREE.Object3D;
-  /** Stream through the open waste valve. */
-  wasteStream?: THREE.Mesh;
-  /** Its own material: animated directly, never through `mesh.material` (the registry swaps that for the shared ghost one). */
-  wasteStreamMaterial?: THREE.MeshStandardMaterial;
   /** Water in the air chamber: the level plane (frame of the ram root) and the free surface disc. */
   levelPlane?: THREE.Plane;
   surface?: THREE.Mesh;
-  /** Water volumes (hidden while the model is exploded or incomplete). */
+  /** Water volumes of the body, the check valve and the chamber (hidden while the model is exploded or incomplete). */
   water?: THREE.Group;
   /** Anchors of the hotspots, by part id. */
   anchors: Record<string, THREE.Object3D>;
