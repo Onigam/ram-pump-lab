@@ -74,9 +74,3 @@ export function diaH(status: Status | null, diameter: number, height: number): L
   const en = `Ø ${nEnTrim(diameter)} m × ${nEnTrim(height)} m`;
   return status ? tagged(status, fr, en) : l(fr, en);
 }
-
-// ---------------------------------------------------------------------------
-// Site world
-// ---------------------------------------------------------------------------
-
-/** Volume of the delivery pipe and time to fill it at the video's delivery rate (derived from dims.ts and K10). */

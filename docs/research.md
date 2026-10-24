@@ -32,6 +32,9 @@ sources are silent: it must be estimated and flagged, never invented.
 | S6  | Wikipedia (EN, FR) _Hydraulic ram_ / _Bélier hydraulique_                                                           | https://en.wikipedia.org/wiki/Hydraulic_ram                                            | history, typical efficiency 60 % (up to 80 %), drive pipe 3–7 × fall                                               | encyclopedia, secondary                                                                                     |
 | S7  | Réussir, _Un bélier hydraulique pour remplir les abreuvoirs_                                                        | https://www.reussir.fr/bovins-viande/un-belier-hydraulique-pour-remplir-les-abreuvoirs | a farm installation (12 m fall, 65 m lift, 380 m path); **its figures are physically inconsistent** (§2)           | press article                                                                                               |
 
+| S8 | Practical Action, _Hydraulic ram pumps_ (technical brief; no year printed; copy hosted by SSWM) | https://sswm.info/sites/default/files/reference_attachments/PRACTICAL%20ACTION%204000%20Hydraulic%20Ram%20Pumps.pdf | strainer on the drive pipe, concrete foundation, a drowned waste valve, tank sizing (added in wave 3 by the data role) | PDF read by the data role |
+| S9 | Oxfam, _Spring protection_ (Technical Brief TB5, marked "draft 1"; catalogue page on SSWM) | https://sswm.info/index.php/node/4546 | spring box, gravel filter, overflow, washout, gate valve on the outlet, yearly upkeep (added in wave 3 by the data role) | PDF read by the data role |
+
 Credits for the lab: video authors (S1: L'énergie partout, who thanks Didier Nebreda for his advice on rams; S2: Bernard
 Le Poder), the extension and teaching pages above. The lab is an independent educational reconstruction; no footage or
 images are reused.
