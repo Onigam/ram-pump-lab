@@ -5,10 +5,10 @@ Check cost without spending anything: `node <lab-kit>/tools/narration/generate.m
 
 ## Budget
 
-- **17 899 spoken characters** in total (cap 18 000; 30 000 is the owner's ceiling in `src/narration.test.ts`, so about 12 100 remain for retakes).
-- intro 1 902, worlds 2 459 (site 662, catchment 591, ram 615, valve 591), parts 13 538 (site 2 311, catchment 2 376, ram 4 444, valve 4 407).
-- Biggest parts (the nine "heroes", 357 to 466): waste-valve 466, delivery-valve 448, counterweight 425, ram 419, snifter 411, air-chamber 398,
-  valve-head 389, valve-stem 379, valve-seat 357.
+- **17 868 spoken characters** in total (cap 18 000; 30 000 is the owner's ceiling in `src/narration.test.ts`, so about 12 100 remain for retakes).
+- intro 1 902, worlds 2 459 (site 662, catchment 591, ram 615, valve 591), parts 13 507 (site 2 311, catchment 2 376, ram 4 413, valve 4 407).
+- Biggest parts (the nine "heroes", 357 to 466): waste-valve 466, delivery-valve 448, counterweight 425, snifter 411, air-chamber 398,
+  ram 388, valve-head 389, valve-stem 379, valve-seat 357.
 - Smallest: drive-gate-valve 231, overflow-pipe 237, house 249, ram-pit 250, spring-box 256. Ordinary parts average 279.
 - The suggested 230 to 300 per ordinary part held; the first draft (22 000) was cut by dropping repeated facts, not safety lines.
 
@@ -50,7 +50,12 @@ gauge under pressure. Water rights are not in the lab data, so none are mentione
 
 ## Checked
 
-- Dry run: 49 segments, 17 899 characters, no segment rejected. `npx vitest run src/narration.test.ts`: 8 tests pass (ids, cues, camera spacing, budget, no copy of the private transcript).
+- Audio generated 2026-10-28 (`public/audio/fr`, 8 MB): 49 segments, 1 022.9 s (17 min 3 s), 83 cues. Credits spent: 17 899, then 388 to redo `part-ram`
+  once the inventor's name was removed. About 18 300 in all.
+- Played in Chrome (dev server, headless): the intro's world hops, mode hops and closing state follow the voice; `cutaway` (air-chamber), `xray`
+  (valve-seat), `explode` (valve-stem, scene valve) switch on at the start. **Known kit defect**: a cue placed at the very end of a segment is not
+  applied when the audio ends, so the effect stays on (see `docs/kit-requests.md` 14); it needs a kit fix, not a new audio.
+- Dry run: 49 segments, 17 868 characters, no segment rejected. `npx vitest run src/narration.test.ts`: 8 tests pass (ids, cues, camera spacing, budget, no copy of the private transcript).
 - Not checked in the browser: the visual result of `xray` on valve-seat, `explode` on valve-stem and `cutaway` on tank-shell, ram, air-chamber
   (they depend on the scene modules; no audio exists yet).
 
