@@ -269,9 +269,10 @@ describe.each([
     }
   });
 
-  it('gives a duration like "30 min" or "4 h", and no torque (no source states one)', () => {
+  it('gives a duration like "≈ 30 min (est.)" or "1 h (vidéo)", and no torque (no source states one)', () => {
     for (const s of steps) {
-      expect(s.duration, s.id).toMatch(/^\d+ (min|h)$/);
+      // plain strings in the kit: « (est.) » marks the lab's estimates, « (vidéo) » the one figure the video gives
+      expect(s.duration, s.id).toMatch(/^(≈ )?\d+ (min|h)( \((est\.|vidéo)\))?$/);
       expect(s.torque, s.id).toBeUndefined();
     }
   });
@@ -280,6 +281,108 @@ describe.each([
     for (const s of steps) {
       for (const [label, v] of stepTexts(s)) {
         expect(v.fr + v.en, `${s.id}.${label}`).not.toMatch(/todo|tbd|lorem|xxx|placeholder/i);
+      }
+    }
+  });
+});
+
+/** Words of a text, the way a reader counts them (bold markers and placeholders aside). */
+const words = (t: string): number => t.replace(/\*\*/g, '').split(/\s+/).filter(Boolean).length;
+
+describe('guides: the card of a step is short enough to read on a phone', () => {
+  // docs/fix-wave-rules.md §7: a step text has at most 80 words (a hard cap of 90) in each language, a tip about 30 and
+  // a warning about 30 (safety and legal warnings may run a little longer, never shorter).
+  it.each([
+    ['assembly', ASSEMBLY],
+    ['installation', INSTALL],
+  ] as const)('%s: text of at most 90 words, tip of at most 40, warning of at most 70', (_name, steps) => {
+    for (const s of steps) {
+      for (const lang of ['fr', 'en'] as const) {
+        expect(words(s.text[lang]), `${s.id} text ${lang}`).toBeLessThanOrEqual(90);
+        if (s.tip) expect(words(s.tip[lang]), `${s.id} tip ${lang}`).toBeLessThanOrEqual(40);
+        if (s.warning) expect(words(s.warning[lang]), `${s.id} warning ${lang}`).toBeLessThanOrEqual(70);
+      }
+    }
+  });
+
+  it('has 24 assembly steps and 12 installation steps, and tells the visitor where a change of view leads', () => {
+    expect(ASSEMBLY.length).toBe(24);
+    expect(INSTALL.length).toBe(12);
+    const at = (steps: GuideStep[], id: string) => steps.findIndex((s) => s.id === id);
+    // valve -> ram: the first step of the ram says that the scene changes; the last of the valve says the valve is done
+    const firstRam = ASSEMBLY.findIndex((s) => s.scene === 'ram');
+    expect(`${ASSEMBLY[firstRam - 1]!.text.fr} ${ASSEMBLY[firstRam]!.text.fr}`).toMatch(/clapet est terminé|fosse/);
+    expect(`${ASSEMBLY[firstRam - 1]!.text.en} ${ASSEMBLY[firstRam]!.text.en}`).toMatch(/valve is finished|pit/);
+    // site -> catchment -> site
+    const sceneOf = (s: GuideStep) => s.scene ?? 'site';
+    const firstCatchment = INSTALL.findIndex((s) => sceneOf(s) === 'catchment');
+    expect(INSTALL[firstCatchment]!.text.fr).toMatch(/^On zoome sur le captage/);
+    expect(INSTALL[firstCatchment]!.text.en).toMatch(/^We zoom in on the catchment/);
+    const back = INSTALL.findIndex((s, i) => i > firstCatchment && sceneOf(s) === 'site');
+    expect(INSTALL[back]!.text.fr).toMatch(/^Retour sur le site/);
+    expect(INSTALL[back]!.text.en).toMatch(/^Back on the site/);
+    expect(at(INSTALL, 'troubleshoot')).toBe(INSTALL.length - 1);
+  });
+});
+
+describe('visible texts: no internal vocabulary, one term per concept', () => {
+  // docs/fix-wave-rules.md decisions 1 to 3: no source codes, no « monde » / "world", no raw ids, and the glossary of the
+  // language review (weight, ram pit, waste water, Y-strainer, …). Ids and code comments are not visible texts.
+  const visible: [string, L][] = [
+    ...PARTS.flatMap((p) => partTexts(p).map(([label, v]): [string, L] => [`${p.id}.${label}`, v])),
+    ...[...ASSEMBLY, ...INSTALL].flatMap((s) => stepTexts(s).map(([label, v]): [string, L] => [`${s.id}.${label}`, v])),
+    ...CHAPTERS.map(([ts, fr, en]): [string, L] => [`chapter ${ts}`, { fr, en }]),
+  ];
+  const both: [string, RegExp][] = [
+    ['a source code (S1 … S9)', /\bS[1-9]\b/],
+    ['a research number (K4, K15 …)', /\bK\d+\b/],
+    ['« monde » / world', /\bmondes?\b|\bworlds?\b/i],
+    ['a part id between parentheses', /\((?:monde |world )?(?:site|ram|valve|catchment)\)/i],
+    ['a double space', /\S {2,}\S/],
+  ];
+  const frOnly: [string, RegExp][] = [
+    ['contrepoids (say « poids »)', /contrepoids/i],
+    ['« regard » for the ram pit (say « fosse »)', /regard du bélier|regard qui abrite/i],
+    ['« eau perdue » (say « eau rejetée »)', /eau(x)? perdue/i],
+    ['« Chocs par » (say « coups »)', /chocs par/i],
+    ['a space after n° (the kit adds it)', /n° /],
+    ['a no-break space typed by hand', /[\u00a0\u202f]/],
+  ];
+  const enOnly: [string, RegExp][] = [
+    ['counterweight (say "weight")', /counterweight/i],
+    ['the French « n° » (say "No. 1")', /n°/],
+    ['"lost water" (say "waste water")', /lost water|water lost/i],
+    ['"Shocks per" (say "strokes")', /shocks per/i],
+    [
+      'American spellings and calques of the language review',
+      /\b(toward|curb|gallons?|emergence|hinder\w*|axle|betray\w*|rebar bar|absorbent paper|fins nut|center|meter)\b/i,
+    ],
+    ['a no-break space typed by hand', /[\u00a0\u202f]/],
+  ];
+
+  it('has none of them in any part sheet, guide step or chapter', () => {
+    const found: string[] = [];
+    for (const [where, v] of visible) {
+      for (const [what, re] of both) {
+        if (re.test(v.fr)) found.push(`${where} fr: ${what}`);
+        if (re.test(v.en)) found.push(`${where} en: ${what}`);
+      }
+      for (const [what, re] of frOnly) if (re.test(v.fr)) found.push(`${where} fr: ${what}`);
+      for (const [what, re] of enOnly) if (re.test(v.en)) found.push(`${where} en: ${what}`);
+    }
+    expect(found).toEqual([]);
+  });
+
+  it('spells a maintenance tab as three paragraphs opening with their bold label', () => {
+    const labels = {
+      fr: ['**Panne à prévoir.**', '**À vérifier.**', '**Entretien.**'],
+      en: ['**Typical failure.**', '**How to check.**', '**Maintenance.**'],
+    };
+    for (const p of PARTS) {
+      for (const lang of ['fr', 'en'] as const) {
+        const paragraphs = p.maintenance![lang].split('\n\n');
+        expect(paragraphs.length, `${p.id} ${lang}`).toBe(3);
+        paragraphs.forEach((para, i) => expect(para.startsWith(labels[lang][i]!), `${p.id} ${lang} #${i}`).toBe(true));
       }
     }
   });

@@ -27,10 +27,11 @@ vi.mock('@onigam/lab-kit/i18n', () => ({
 // guide. The lead's data.test.ts runs the common checks (frozen ids, FR/EN parity, tags) on the whole catalogue; here are
 // the checks that belong to these two worlds.
 //
-// CONVENTION of `maintenance` (the kit renders **bold**), the same labels as the site and catchment sheets: « **Panne à
-// prévoir.** … **À vérifier.** … **Entretien.** … » in French and « **Typical failure.** … **How to check.** …
-// **Upkeep.** … » in English: the typical failure of the part, a check a visitor could do (listen, look, measure, feel),
-// then the routine upkeep, in this order. Every sheet follows it.
+// CONVENTION of `maintenance` (the kit renders **bold** and turns a blank line into a paragraph), the same labels as the
+// site and catchment sheets: three paragraphs « **Panne à prévoir.** … », « **À vérifier.** … », « **Entretien.** … » in
+// French and « **Typical failure.** … », « **How to check.** … », « **Maintenance.** … » in English: the typical failure
+// of the part, a check a visitor could do (listen, look, measure, feel), then the routine upkeep, in this order. Every
+// sheet follows it.
 
 const SHEETS: PartInfo[] = [...RAM_PARTS, ...VALVE_PARTS];
 const RAM_IDS = partIds('ram');
@@ -143,7 +144,7 @@ describe('the 27 sheets of the ram and valve worlds', () => {
   it('write the maintenance as « Panne / Contrôle / Entretien » in this order, each part with some substance', () => {
     const marks: Record<'fr' | 'en', [string, string, string]> = {
       fr: ['**Panne à prévoir.**', '**À vérifier.**', '**Entretien.**'],
-      en: ['**Typical failure.**', '**How to check.**', '**Upkeep.**'],
+      en: ['**Typical failure.**', '**How to check.**', '**Maintenance.**'],
     };
     for (const p of SHEETS) {
       for (const lang of ['fr', 'en'] as const) {
@@ -159,6 +160,12 @@ describe('the 27 sheets of the ram and valve worlds', () => {
         expect(text.slice(at[1]!, at[2]!).length, `${p.id} ${lang}: check too short`).toBeGreaterThan(50);
         expect(text.slice(at[2]!).length, `${p.id} ${lang}: upkeep too short`).toBeGreaterThan(40);
         for (const m of marks[lang]) expect(text.split(m).length - 1, `${p.id} ${lang}: ${m} once`).toBe(1);
+        // three paragraphs (a blank line between them), each opening with its label
+        const paragraphs = text.split('\n\n');
+        expect(paragraphs.length, `${p.id} ${lang}: three paragraphs`).toBe(3);
+        paragraphs.forEach((para, i) =>
+          expect(para.startsWith(marks[lang][i]!), `${p.id} ${lang}: paragraph ${i}`).toBe(true),
+        );
       }
     }
   });
@@ -171,7 +178,7 @@ describe('the 27 sheets of the ram and valve worlds', () => {
     for (const p of SHEETS) {
       const check = (lang: 'fr' | 'en') => {
         const t = p.maintenance![lang];
-        const marks = lang === 'fr' ? ['**À vérifier.**', '**Entretien.**'] : ['**How to check.**', '**Upkeep.**'];
+        const marks = lang === 'fr' ? ['**À vérifier.**', '**Entretien.**'] : ['**How to check.**', '**Maintenance.**'];
         return t.slice(t.indexOf(marks[0]!), t.indexOf(marks[1]!));
       };
       expect(check('fr'), p.id).toMatch(fr);
@@ -505,7 +512,7 @@ describe('the dimensions quoted in the specs are those of dims.ts', () => {
     ],
     [
       'valve-guide',
-      'Hauteur de la face d’appui du poids (3D)',
+      'Hauteur de la face d’appui de l’écrou de course (3D)',
       () => ({ fr: `${mm(VALVE.guideTop).fr} mm`, en: `${mm(VALVE.guideTop).en} mm` }),
     ],
     [
@@ -769,10 +776,13 @@ describe('the assembly guide', () => {
     const ramOrder = ASSEMBLY.slice(firstRam).flatMap((s) => s.parts);
     expect(ramOrder[0]).toBe('foundation');
     expect(ramOrder[1]).toBe('ram');
-    // the whole waste valve goes on the body after every other ram part, then the first start, which installs nothing
+    // the whole waste valve goes on the body after every other ram part, then the first start and the check of the rate,
+    // which install nothing
     expect(ramOrder[ramOrder.length - 1]).toBe('waste-valve');
-    expect(ASSEMBLY[ASSEMBLY.length - 1]!.parts).toEqual([]);
-    expect(ASSEMBLY[ASSEMBLY.length - 2]!.parts).toEqual(['waste-valve']);
+    const lastPart = ASSEMBLY.map((s) => s.parts.length > 0).lastIndexOf(true);
+    expect(ASSEMBLY[lastPart]!.parts).toEqual(['waste-valve']);
+    expect(ASSEMBLY.slice(lastPart + 1).map((s) => s.id)).toEqual(['first-start', 'check-rate']);
+    for (const s of ASSEMBLY.slice(lastPart + 1)) expect(s.parts, s.id).toEqual([]);
     // the inlet line goes on the body from the body outwards: V1, strainer, then the drive pipe flange
     expect(ramOrder.indexOf('inlet-valve')).toBeLessThan(ramOrder.indexOf('strainer'));
     expect(ramOrder.indexOf('strainer')).toBeLessThan(ramOrder.indexOf('inlet-flange'));
@@ -802,13 +812,15 @@ describe('the assembly guide', () => {
     }
   });
 
-  it('gives an approximate duration like "30 min" or "4 h", never a torque, and keeps the weight’s hour from the video', () => {
+  it('gives an approximate duration like "≈ 30 min (est.)", never a torque, and keeps the weight’s hour from the video', () => {
     for (const s of ASSEMBLY) {
-      expect(s.duration, s.id).toMatch(/^\d+ (min|h)$/);
+      // plain strings in the kit: « (est.) » marks the lab's estimates, « (vidéo) » the one figure the video gives
+      expect(s.duration, s.id).toMatch(/^(≈ )?\d+ (min|h)( \((est\.|vidéo)\))?$/);
+      if (s.id !== 'weight') expect(s.duration, s.id).toMatch(/^≈ .* \(est\.\)$/);
       expect(s.torque, s.id).toBeUndefined();
       expect(`${s.text.fr} ${s.tip?.fr ?? ''} ${s.warning?.fr ?? ''}`, s.id).not.toMatch(/N·m|N\.m|\bNm\b/);
     }
-    expect(ASSEMBLY.find((s) => s.id === 'weight')!.duration).toBe('1 h');
+    expect(ASSEMBLY.find((s) => s.id === 'weight')!.duration).toBe('1 h (vidéo)');
   });
 
   it('keeps the legal and safety cues in the right steps', () => {

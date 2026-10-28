@@ -1,6 +1,7 @@
-// Chapters of the main video (S1, L'énergie partout, 19:57) for the Sources panel: [timestamp, French, English].
-// The video's own chapter list could not be read (the YouTube page was not reachable), so these follow the structure
-// of the private transcript and are written in our own words. Each timestamp is where the topic starts.
+// Outline of the main video (L'énergie partout, 19:57) for the Sources panel: [timestamp, French, English].
+// The video's own chapter list could not be read (the YouTube page was not reachable), so this is the lab's own outline,
+// which follows the structure of the private transcript and is written in our own words. Each timestamp is where the
+// topic starts.
 
 export const CHAPTERS: [timestamp: string, fr: string, en: string][] = [
   [
@@ -16,7 +17,7 @@ export const CHAPTERS: [timestamp: string, fr: string, en: string][] = [
   [
     '01:40',
     'Le site : bélier Walton n°3, 7,5 m de chute, 65 m de refoulement',
-    'The site: Walton n°3 ram, 7.5 m of fall, 65 m of lift',
+    'The site: Walton No. 3 ram, 7.5 m of fall, 65 m of lift',
   ],
   [
     '02:07',
@@ -28,7 +29,7 @@ export const CHAPTERS: [timestamp: string, fr: string, en: string][] = [
     'Le cycle : clapet de choc, clapet de refoulement et cloche',
     'The cycle: waste valve, delivery check valve and chamber',
   ],
-  ['03:47', 'Le nouveau clapet et les tailles n°1, n°2 et n°3', 'The new valve and the n°1, n°2 and n°3 sizes'],
+  ['03:47', 'Le nouveau clapet et les tailles n°1, n°2 et n°3', 'The new valve and the No. 1, No. 2 and No. 3 sizes'],
   [
     '04:50',
     'Les essais ratés : clapets anti-retour, joint plat, soudure de travers',
@@ -48,7 +49,7 @@ export const CHAPTERS: [timestamp: string, fr: string, en: string][] = [
   [
     '14:01',
     'La butée basse, puis le poids usiné dans une barre d’armature',
-    'The lower stop, then the weight machined from a rebar bar',
+    'The lower stop, then the weight machined from a length of rebar',
   ],
   ['18:32', 'Fraiser la portée conique, et conclusion', 'Milling the conical seat, and conclusion'],
 ];

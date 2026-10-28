@@ -23,21 +23,29 @@ vi.mock('@onigam/lab-kit/i18n', () => ({
 // Checks of the `site` (8) and `catchment` (9) sheets and of the installation guide (Data-B). The shared checks (frozen
 // ids, parity, tags, timestamps) are in data.test.ts; these are the ones that belong to the site and catchment content.
 //
-// CONVENTION OF THE MAINTENANCE TAB (stated here, applied to the 17 sheets): ONE paragraph with three bold labels in this
-// order, « **Panne à prévoir.** … **À vérifier.** … **Entretien.** » in French and « **Typical failure.** … **How to
-// check.** … **Upkeep.** » in English: what typically goes wrong with the part, how a visitor can check it (look, listen,
-// measure; never taste spring water), the routine upkeep. The other worlds may follow the same convention.
+// CONVENTION OF THE MAINTENANCE TAB (stated here, applied to the 17 sheets): THREE paragraphs separated by a blank line
+// (`\n\n`, which the kit renders as paragraphs), each opening with a bold label, in this order, « **Panne à prévoir.** …
+// **À vérifier.** … **Entretien.** » in French and « **Typical failure.** … **How to check.** … **Maintenance.** » in
+// English: what typically goes wrong with the part, how a visitor can check it (look, listen, measure; never taste spring
+// water), the routine upkeep. The other worlds follow the same convention.
 
 const SHEETS: PartInfo[] = [...SITE_PARTS, ...CATCHMENT_PARTS];
 const VIDEO_SECONDS = 19 * 60 + 57;
 /** The five status tags of part-helpers.ts, as written in French. */
 const TAGS = ['(estimation)', '(dérivé)', '(résultat du modèle)', '(hypothèse du modèle)', '(calibré sur la vidéo)'];
 const isL = (v: unknown): v is L => typeof v === 'object' && v !== null && 'fr' in v && 'en' in v;
+/** Durations are plain strings in the kit: « ≈ 2 h (est.) » for the lab's estimates, the video's own « 1 h (vidéo) ». */
+const DURATION = /^(≈ )?\d+ (min|h)( \((est\.|vidéo)\))?$/;
 const seconds = (ts: string): number => {
   const [m, s] = ts.split(':').map(Number);
   return (m ?? 0) * 60 + (s ?? 0);
 };
-const sentences = (text: string): number => text.split(/[.!?](?:\s|$)/).filter((s) => s.trim().length > 0).length;
+// `No. 1` (English valve numbers) is not the end of a sentence
+const sentences = (text: string): number =>
+  text
+    .replace(/\bNo\. (?=\d)/g, 'No ')
+    .split(/[.!?](?:\s|$)/)
+    .filter((s) => s.trim().length > 0).length;
 
 /** Numbers of a text, normalised so that the French and English spellings compare equal (same rule as data.test.ts). */
 function figures(text: string, lang: 'fr' | 'en'): string[] {
@@ -152,10 +160,11 @@ describe('site and catchment sheets: catalogue', () => {
 });
 
 describe('site and catchment sheets: what goes wrong and how to check it', () => {
-  const FR = /^\*\*Panne à prévoir\.\*\* (.+) \*\*À vérifier\.\*\* (.+) \*\*Entretien\.\*\* (.+)$/s;
-  const EN = /^\*\*Typical failure\.\*\* (.+) \*\*How to check\.\*\* (.+) \*\*Upkeep\.\*\* (.+)$/s;
+  const FR = /^\*\*Panne à prévoir\.\*\* ([^\n]+)\n\n\*\*À vérifier\.\*\* ([^\n]+)\n\n\*\*Entretien\.\*\* ([^\n]+)$/;
+  const EN =
+    /^\*\*Typical failure\.\*\* ([^\n]+)\n\n\*\*How to check\.\*\* ([^\n]+)\n\n\*\*Maintenance\.\*\* ([^\n]+)$/;
 
-  it('puts a typical failure, a way to check it and the upkeep in every maintenance tab, in that order', () => {
+  it('puts a typical failure, a way to check it and the upkeep in three paragraphs of every maintenance tab, in that order', () => {
     for (const p of SHEETS) {
       for (const [re, lang] of [
         [FR, 'fr'],
@@ -316,7 +325,7 @@ describe('site and catchment sheets: sources, estimates and honesty', () => {
     expect(FIG.source[0]).toBe(SITE.sourceFlowLpm);
     expect(Math.round((SITE.driveLength / SITE.fall) * 10) / 10).toBe(2.7); // « 2,7 fois la chute »
     expect(Math.round((SITE.deliveryHead / SITE.fall) * 10) / 10).toBe(8.7); // « 8,7 fois la chute »
-    expect(DELIVERY_FILL).toEqual({ litres: 60, hours: 3 }); // 61.8 L at 500 L/day
+    expect(DELIVERY_FILL).toEqual({ litres: 62, hours: 3 }); // 61.8 L at 500 L/day
     expect(FIG.tankRiseCm[0]).toBe(16);
     expect(FIG.tankHoursSpring[0]).toBe(12.7);
     expect(FIG.surplus1[0]).toBe(0.8);
@@ -331,7 +340,6 @@ describe('site and catchment sheets: dimensions are those of dims.ts', () => {
   // wrong constant (the tank wall for its height) or a retyped value is caught.
   const mmOf = (m: number): number => Math.round(m * 1000);
   const est = (fr: string, en = fr): [string, string] => [`${fr} (estimation)`, `${en} (estimate)`];
-  const der = (fr: string, en = fr): [string, string] => [`${fr} (dérivé)`, `${en} (derived)`];
   const tankSize = est(
     `Ø ${nFr(TANK.diameter, 1)} m × ${nFr(TANK.height, 0)} m`,
     `Ø ${nEn(TANK.diameter, 1)} m × ${nEn(TANK.height, 0)} m`,
@@ -441,7 +449,7 @@ describe('site and catchment sheets: dimensions are those of dims.ts', () => {
       [
         'spring-box',
         'Sortie au-dessus du fond',
-        der(
+        est(
           `${mmOf(CATCHMENT.boxOutletHeight)} mm : le fond en dessous piège les sédiments`,
           `${mmOf(CATCHMENT.boxOutletHeight)} mm: the bottom below it traps the sediment`,
         ),
@@ -494,7 +502,7 @@ describe('site and catchment sheets: dimensions are those of dims.ts', () => {
         est(`${nFr(SPRING.distanceToTank, 1)} m`, `${nEn(SPRING.distanceToTank, 1)} m`),
       ],
       ['feed-pipe', 'Pente', est(`${nFr(CATCHMENT.feedFall * 100)} %`, `${nEn(CATCHMENT.feedFall * 100)}%`)],
-      ['feed-pipe', 'Extrémité au-dessus du trop-plein', der(`${mmOf(CATCHMENT.feedEnd - TANK.height)} mm`)],
+      ['feed-pipe', 'Extrémité au-dessus du trop-plein', est(`${mmOf(CATCHMENT.feedEnd - TANK.height)} mm`)],
       [
         'ram-pit',
         'Dimensions intérieures (3D)',
@@ -542,10 +550,11 @@ describe('site and catchment sheets: dimensions are those of dims.ts', () => {
       [
         'delivery-pipe',
         'Diamètre intérieur',
-        der(
-          `${nFr(SITE.deliveryBore * 1000, 1)} mm, soit 0,6 × la conduite motrice`,
-          `${nEn(SITE.deliveryBore * 1000, 1)} mm, that is 0.6 × the drive pipe`,
-        ),
+        // the 0.6 is the model's assumption; NC State gives half of the drive pipe
+        [
+          `${nFr(SITE.deliveryBore * 1000, 1)} mm, soit 0,6 × la conduite motrice ; NC State donne la moitié (${nFr((SITE.driveBore * 1000) / 2, 1)} mm) (hypothèse du modèle)`,
+          `${nEn(SITE.deliveryBore * 1000, 1)} mm, that is 0.6 × the drive pipe; NC State gives half (${nEn((SITE.driveBore * 1000) / 2, 1)} mm) (model assumption)`,
+        ],
       ],
     ];
     for (const [id, label, [fr, en]] of table) {
@@ -635,11 +644,13 @@ describe('installation guide of the site and the catchment', () => {
     expect(catchment[0]).toBeGreaterThan(0);
   });
 
-  it('begins with a survey and ends with the first start, neither installing a part', () => {
+  it('begins with a survey and ends with the first start and the troubleshooting, none installing a part', () => {
     expect(INSTALL[0]!.id).toBe('survey');
     expect(INSTALL[0]!.parts).toEqual([]);
-    expect(INSTALL[INSTALL.length - 1]!.id).toBe('first-start');
-    expect(INSTALL[INSTALL.length - 1]!.parts).toEqual([]);
+    // the first start, then the step that watches the rise and looks for the fault
+    expect(INSTALL[INSTALL.length - 2]!.id).toBe('first-start');
+    expect(INSTALL[INSTALL.length - 1]!.id).toBe('troubleshoot');
+    for (const s of INSTALL.slice(-2)) expect(s.parts, s.id).toEqual([]);
   });
 
   it('installs each of the 9 catchment parts exactly once, in a catchment step', () => {
@@ -695,7 +706,7 @@ describe('installation guide of the site and the catchment', () => {
     expect(step('drive-pipe').warning!.en).toMatch(/plastic/i);
   });
 
-  it('gives the first start real content: fill time, what to listen for, the manual restart, the tank level', () => {
+  it('gives the first start real content (fill time, what to listen for, the manual restart) and the next step the tank level and the checklist', () => {
     const s = step('first-start');
     const fr = s.text.fr;
     const en = s.text.en;
@@ -712,16 +723,16 @@ describe('installation guide of the site and the catchment', () => {
     expect(fr).toMatch(/pratique courante/);
     expect(en).toMatch(/by hand/);
     expect(en).toMatch(/common practice/);
-    // the tank level to watch, with the model's figure
-    expect(fr).toMatch(/niveau de la cuve/);
-    expect(en).toMatch(/tank level/);
-    expect(fr).toContain(`≈ ${nFr(FIG.drive30[0], FIG.drive30[1])} L/min`);
-    expect(en).toContain(`≈ ${nEn(FIG.drive30[0], FIG.drive30[1])} L/min`);
-    // the checklist when it stalls covers the catchment and the drain
-    expect(s.tip!.fr).toMatch(/crépine/);
-    expect(s.tip!.fr).toMatch(/évacuation/);
-    expect(s.tip!.en).toMatch(/screen/);
-    expect(s.tip!.en).toMatch(/drain/);
+    // the step that follows watches the rise: tank level with the model's figure, and the checklist when it stalls
+    const t = step('troubleshoot');
+    expect(t.tip!.fr).toMatch(/niveau de la cuve/);
+    expect(t.tip!.en).toMatch(/tank level/);
+    expect(t.tip!.fr).toContain(`≈ ${nFr(FIG.drive30[0], FIG.drive30[1])} L/min`);
+    expect(t.tip!.en).toContain(`≈ ${nEn(FIG.drive30[0], FIG.drive30[1])} L/min`);
+    expect(t.text.fr).toMatch(/crépine/);
+    expect(t.text.fr).toMatch(/évacuation/);
+    expect(t.text.en).toMatch(/screen/);
+    expect(t.text.en).toMatch(/drain/);
     // the safety lines the shared test also looks for
     expect(s.warning!.fr).toMatch(/Jamais un doigt/);
     expect(s.warning!.fr).toMatch(/côté refoulement/);
@@ -749,7 +760,7 @@ describe('installation guide of the site and the catchment', () => {
 
   it('has a duration in hours or minutes, tools, a tip or a warning, and no torque', () => {
     for (const s of INSTALL) {
-      expect(s.duration, s.id).toMatch(/^\d+ (min|h)$/);
+      expect(s.duration, s.id).toMatch(DURATION);
       expect(s.torque, s.id).toBeUndefined();
       expect(s.tools?.length ?? 0, s.id).toBeGreaterThan(0);
       expect(Boolean(s.tip) || Boolean(s.warning), s.id).toBe(true);
