@@ -74,6 +74,11 @@ export class CutKit {
     });
   }
 
+  /** True when the section tool clips this material (such a material is merged by identity only, see merge.ts). */
+  clips(material: THREE.Material): boolean {
+    return this.clipped.has(material);
+  }
+
   /** Flat caps on the section plane. They belong to `id` for display, but are not part of its picked meshes. */
   cap(id: string, parent: THREE.Object3D, polys: Poly[], z = 0): THREE.Mesh {
     const shapes = polys.map((p) => new THREE.Shape(p.map(([x, y]) => new THREE.Vector2(x, y))));

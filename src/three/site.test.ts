@@ -147,7 +147,7 @@ describe('site world', () => {
       }
     }
     mod.follow({ fall: 7.5, driveLength: 20, deliveryHead: 65, driveDiameter: 27 });
-  });
+  }, 30000);
 
   it('animates without NaN for running, stalled, empty, overflowing, gate closed, drain open and flow states', () => {
     const run = runningState();

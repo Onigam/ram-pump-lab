@@ -527,14 +527,14 @@ function stackPart(
   return g;
 }
 
-/** Counterweight machined from a 30-32 mm rebar bar, tapped on its axis and faced flat where it lands on the guide. */
+/** Counterweight machined from a 30-32 mm rebar bar, tapped on its axis and faced flat where it rests on the stroke nut. */
 export function buildWeight(env: PartEnv): THREE.Group {
   const dark = MAT.steelBlack();
   const L = VALVE.counterweightLength;
   return stackPart(
     env,
     'counterweight',
-    G.STACK_Y,
+    G.WEIGHT_Y,
     (b) => {
       const R = VALVE.counterweightDiameter / 2;
       const rib = VALVE.rebarRibHeight;
@@ -567,8 +567,8 @@ export function buildWeight(env: PartEnv): THREE.Group {
         ),
       );
       section(env, 'counterweight', 'stack', [
-        rect(bore, G.STACK_Y, R, G.STACK_Y + L),
-        rect(-R, G.STACK_Y, -bore, G.STACK_Y + L),
+        rect(bore, G.WEIGHT_Y, R, G.WEIGHT_Y + L),
+        rect(-R, G.WEIGHT_Y, -bore, G.WEIGHT_Y + L),
       ]);
       for (const a of [0, Math.PI]) {
         b.add(
@@ -584,7 +584,7 @@ export function buildWeight(env: PartEnv): THREE.Group {
   );
 }
 
-/** M6 nut on the rod: the first one sets the stroke, the second locks it (S1 12:49). */
+/** M6 nut on the rod: the lower one sets the stroke (the weight rests on it), the upper one locks the stack (S1 12:49). */
 function nut(env: PartEnv, id: string, y0: number): THREE.Group {
   const mat = MAT.zinc();
   return stackPart(
@@ -604,7 +604,5 @@ function nut(env: PartEnv, id: string, y0: number): THREE.Group {
   );
 }
 
-export const buildStrokeNut = (env: PartEnv): THREE.Group =>
-  nut(env, 'stroke-nut', G.STACK_Y + VALVE.counterweightLength);
-export const buildLockNut = (env: PartEnv): THREE.Group =>
-  nut(env, 'lock-nut', G.STACK_Y + VALVE.counterweightLength + VALVE.nutThickness);
+export const buildStrokeNut = (env: PartEnv): THREE.Group => nut(env, 'stroke-nut', G.STROKE_NUT_Y);
+export const buildLockNut = (env: PartEnv): THREE.Group => nut(env, 'lock-nut', G.LOCK_NUT_Y);

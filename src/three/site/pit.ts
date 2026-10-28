@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { MAT, group, mesh } from '@onigam/lab-kit/three';
 import { PIT, RAM, SITE } from '../dims';
 import { noShadow, waterMaterial } from '../common';
+import { mergeStatic } from '../merge';
 import { PIT_X } from './layout';
 
 // ------------------------------------------------------------------------------------------------ ram pit
@@ -70,6 +71,7 @@ export function buildPit(): Pit {
   for (const sx of [-0.7, 0.7])
     g.add(mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.2, 12), steel, [cx + sx, top + 0.03, -(W / 2 + t) + 0.05]));
   g.children[g.children.length - 1].rotation.z = Math.PI / 2;
+  mergeStatic(g, { name: 'pit' });
   return {
     group: g,
     lid: hinge,

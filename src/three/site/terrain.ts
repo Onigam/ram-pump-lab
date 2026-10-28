@@ -10,7 +10,8 @@ import { PIT_X, createGround, driveGeometry, type Ground, type SiteParams } from
 // single multiply-add per vertex; a change of the fall or of the drive length re-evaluates only the western part.
 
 export interface Terrain {
-  mesh: THREE.Mesh;
+  /** The ground, in tiles of the grid (one mesh each, culled by the renderer when outside the view). */
+  mesh: THREE.Group;
   ground: Ground;
   /** Recolour after a drag of the head (the colours follow the slope; they are refreshed lazily while it moves). */
   settle(): void;
@@ -84,6 +85,9 @@ function detailTexture(): THREE.DataTexture {
 const HOLE_X = PIT.innerLength / 2;
 const HOLE_Z = PIT.innerWidth / 2;
 
+/** Cells per side of a tile of the ground. */
+const CHUNK = 40;
+
 const C = {
   grassA: new THREE.Color(0x6f9a3f),
   grassB: new THREE.Color(0x93a44c),
@@ -148,24 +152,11 @@ export function buildTerrain(initial: SiteParams): Terrain {
     }
   }
 
-  const idx: number[] = [];
-  for (let j = 0; j < NZ - 1; j++) {
-    for (let i = 0; i < NX - 1; i++) {
-      const v00 = j * NX + i;
-      const v10 = v00 + 1;
-      const v01 = v00 + NX;
-      const v11 = v01 + 1;
-      const cx = (xs[i] + xs[i + 1]) / 2 - PIT_X;
-      const cz = (zs[j] + zs[j + 1]) / 2;
-      if (Math.abs(cx) < HOLE_X && Math.abs(cz) < HOLE_Z) continue; // the opening of the pit
-      idx.push(v00, v01, v10, v10, v01, v11);
-    }
-  }
+  // one geometry holds the attributes; the tiles (blocks of `CHUNK` x `CHUNK` cells) share them and have an index of their own
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
   geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-  geo.setIndex(idx);
 
   const mat = new THREE.MeshStandardMaterial({
     vertexColors: true,
@@ -173,11 +164,46 @@ export function buildTerrain(initial: SiteParams): Terrain {
     roughness: 0.97,
     metalness: 0,
   });
-  const mesh = new THREE.Mesh(geo, mat);
+  const mesh = new THREE.Group();
   mesh.name = 'terrain';
-  mesh.receiveShadow = true;
-  mesh.castShadow = false;
-  mesh.frustumCulled = false;
+  interface Chunk {
+    mesh: THREE.Mesh;
+    i0: number;
+    i1: number;
+    j0: number;
+    j1: number;
+  }
+  const chunks: Chunk[] = [];
+  for (let j0 = 0; j0 < NZ - 1; j0 += CHUNK) {
+    for (let i0 = 0; i0 < NX - 1; i0 += CHUNK) {
+      const i1 = Math.min(NX - 1, i0 + CHUNK);
+      const j1 = Math.min(NZ - 1, j0 + CHUNK);
+      const idx: number[] = [];
+      for (let j = j0; j < j1; j++) {
+        for (let i = i0; i < i1; i++) {
+          const v00 = j * NX + i;
+          const v10 = v00 + 1;
+          const v01 = v00 + NX;
+          const v11 = v01 + 1;
+          const cx = (xs[i] + xs[i + 1]) / 2 - PIT_X;
+          const cz = (zs[j] + zs[j + 1]) / 2;
+          if (Math.abs(cx) < HOLE_X && Math.abs(cz) < HOLE_Z) continue; // the opening of the pit
+          idx.push(v00, v01, v10, v10, v01, v11);
+        }
+      }
+      if (idx.length === 0) continue;
+      const g = new THREE.BufferGeometry();
+      for (const name of ['position', 'color', 'uv']) g.setAttribute(name, geo.attributes[name]);
+      g.setIndex(idx);
+      g.boundingSphere = new THREE.Sphere();
+      const m = new THREE.Mesh(g, mat);
+      m.name = 'terrain';
+      m.receiveShadow = true;
+      m.castShadow = false;
+      mesh.add(m);
+      chunks.push({ mesh: m, i0, i1, j0, j1 });
+    }
+  }
 
   let params: SiteParams = { fall: NaN, driveLength: NaN, head: NaN };
 
@@ -207,6 +233,7 @@ export function buildTerrain(initial: SiteParams): Terrain {
   const normal = new THREE.Vector3();
   const nrmArr = new Float32Array(count * 3);
   geo.setAttribute('normal', new THREE.BufferAttribute(nrmArr, 3));
+  for (const c of chunks) c.mesh.geometry.setAttribute('normal', geo.attributes.normal);
   /** Normals from central differences of the grid heights (a fraction of the cost of computeVertexNormals). */
   const computeNormals = () => {
     for (let j = 0; j < NZ; j++) {
@@ -266,6 +293,29 @@ export function buildTerrain(initial: SiteParams): Terrain {
     (geo.attributes.color as THREE.BufferAttribute).needsUpdate = true;
   };
 
+  /** Bounding sphere of each tile from the heights it has now (the renderer culls tiles by it). */
+  const updateBounds = () => {
+    for (const c of chunks) {
+      let low = Infinity;
+      let high = -Infinity;
+      for (let j = c.j0; j <= c.j1; j++) {
+        for (let i = c.i0; i <= c.i1; i++) {
+          const y = pos[(j * NX + i) * 3 + 1];
+          if (y < low) low = y;
+          if (y > high) high = y;
+        }
+      }
+      // the sphere around the box of the tile: the x and z of the grid lines, the lowest and highest height of its vertices
+      const x0 = xs[c.i0];
+      const x1 = xs[c.i1];
+      const z0 = zs[c.j0];
+      const z1 = zs[c.j1];
+      const s = c.mesh.geometry.boundingSphere!;
+      s.center.set((x0 + x1) / 2, (low + high) / 2, (z0 + z1) / 2);
+      s.radius = 0.5 * Math.hypot(x1 - x0, high - low, z1 - z0) + 0.01;
+    }
+  };
+
   const rebuild = (p: SiteParams, mode: 'all' | 'west' | 'none') => {
     refreshDynamic(p, mode);
     for (let v = 0; v < count; v++) pos[v * 3 + 1] = p0[v] + p.head * q[v];
@@ -273,7 +323,7 @@ export function buildTerrain(initial: SiteParams): Terrain {
     computeNormals();
     if (mode === 'all' || westOrBigHeadStep(p, mode)) recolour();
     else colourStale = true;
-    geo.computeBoundingSphere();
+    updateBounds();
   };
 
   const surfaceY = (x: number, z: number): number => {

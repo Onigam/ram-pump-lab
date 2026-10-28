@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { MAT, glass, group, mesh } from '@onigam/lab-kit/three';
 import { CHAMBER, FITTINGS, RAM } from '../dims';
 import { crispRuns, hexNut, hexRing, lathe } from '../common';
+import { dynamic } from '../merge';
 import { COVER_END, DRAIN_Y } from './body';
 import { dialAngle, dialTexture } from './dial';
 import { CH } from './chamber';
@@ -47,7 +48,7 @@ export function buildGauge(ctx: RamCtx, yTop: number): void {
   needle.add(hub);
   needle.rotation.z = dialAngle(0);
   g.add(needle);
-  ctx.rig.needle = needle;
+  ctx.rig.needle = dynamic(needle);
   const lens = mesh(new THREE.CircleGeometry(R - 0.0022, 48), glass(0.06), [0, cy, zFront + 0.0026]);
   lens.castShadow = false;
   g.add(lens);
@@ -68,7 +69,7 @@ export function buildSnifter(ctx: RamCtx): void {
   pin.add(mesh(new THREE.CylinderGeometry(0.0011, 0.0011, 0.007, 8), MAT.inox(), [0, 0.0015, 0]));
   pin.add(mesh(new THREE.SphereGeometry(0.0021, 12, 8), MAT.inox(), [0, 0.0052, 0]));
   g.add(pin);
-  ctx.rig.snifterPin = pin;
+  ctx.rig.snifterPin = dynamic(pin);
   ctx.anchor('snifter', g, 0.0, 0.03, 0.0);
   ctx.add('snifter', g, EXPLODE.snifter);
 }

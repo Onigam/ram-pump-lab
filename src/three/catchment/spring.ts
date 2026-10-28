@@ -3,6 +3,7 @@ import { MAT, group, mesh, rng } from '@onigam/lab-kit/three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { CATCHMENT as C, SPRING } from '../dims';
 import { DEG } from '../common';
+import { dynamic } from '../merge';
 import type { Detail } from './tank';
 import {
   boulderGeometry,
@@ -323,7 +324,7 @@ export function buildGravelBed(detail: Detail): GravelBed {
   wet.userData.noShadow = true;
   wet.castShadow = false;
   wet.renderOrder = 1;
-  g.add(wet);
+  g.add(dynamic(wet));
   const anchor = new THREE.Object3D();
   anchor.name = 'anchor-gravel-filter';
   anchor.position.set(BED_X0 + 0.3, BED_TOP_Y + 1.3, -0.3);

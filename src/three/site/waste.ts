@@ -4,6 +4,7 @@ import type { ViewOpts } from '@onigam/lab-kit/three';
 import type { RamState } from '../../sim/types';
 import { PIT, WASTE_DRAIN as W } from '../dims';
 import { FlowDots, noShadow, waterMaterial } from '../common';
+import { mergeStatic } from '../merge';
 import { rock, sweepProfile, v3 } from '../catchment/geo';
 import { Splash } from '../catchment/splash';
 import { wasteStream } from './routes';
@@ -67,6 +68,7 @@ export function buildWasteDrain(): WasteDrain {
   mouth.rotation.x = Math.PI / 2;
   mouth.position.set(0, 0.06, 0.02);
   outfallGroup.add(mouth);
+  mergeStatic(outfallGroup, { name: 'outfall' });
   g.add(outfallGroup);
   // the ditch (a concrete U laid on the ground), the water in it, the soakaway
   const ditch = new THREE.Mesh(new THREE.BufferGeometry(), concrete.clone());
@@ -110,6 +112,7 @@ export function buildWasteDrain(): WasteDrain {
       [0, 0.012, 0],
     ),
   );
+  mergeStatic(soak, { name: 'soakaway' });
   g.add(soak);
   const anchor = new THREE.Object3D();
   anchor.name = 'anchor-waste-drain';

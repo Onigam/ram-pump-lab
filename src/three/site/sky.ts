@@ -5,7 +5,8 @@ import { DEG, smoothstep } from '../common';
 
 // Sky dome (Preetham + clouds, stars at night), the sun and the moon as one directional light whose shadow box follows
 // what the camera looks at, a hemisphere fill and the fog. The sun is driven by the simulated clock (RamState.hour), at a
-// fixed late-spring declination and a latitude of the French Alps (the video's farm is near them).
+// fixed late-spring declination and a latitude of 45.5 degrees north, a choice of the lab (the video does not say where the
+// installation is).
 
 const LAT = 45.5 * DEG;
 const DECL = 17 * DEG;

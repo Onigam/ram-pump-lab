@@ -30,7 +30,7 @@ export const SITE = {
   driveBore: 0.027,
   /** Drive pipe outer diameter. derived (ISO 1" tube 33.7 mm: bore 27 mm + 2 × 3.35 mm wall). */
   driveOuterDiameter: 0.0337,
-  /** Delivery pipe inner diameter. derived (S4: delivery ≈ half the drive pipe; physics.md: 0.6 × 27 mm = 16 mm). */
+  /** Delivery pipe inner diameter. derived (physics.md: 0.6 × 27 mm = 16.2 mm), which is a model assumption, not a source value: S4 gives half the drive pipe (13.5 mm); the sheets print it as an estimate. */
   deliveryBore: 0.0162,
   /** Delivery pipe outer diameter. estimate: blue PE100 pipe 25 × 4.4 mm, whose bore is the derived 16.2 mm. */
   deliveryOuterDiameter: 0.025,
@@ -111,6 +111,10 @@ export const SPRING = {
  * highest point of the feed pipe, which then falls all the way (2 %) to a free end above the overflow level of the tank,
  * so the box never feels the tank; the drive pipe leaves low (0.18 m) behind a strainer with an anti-vortex plate, away from
  * the silt; the overflow leaves at the overflow level, the vent is open, the drain is at the lowest point.
+ *
+ * Where the model departs from Oxfam TB5 (S9), which it follows for the box: the washout of the box is a rubber plug on a chain
+ * (S9: an end cap that screws on), and the gravel bed is drawn bare so that its three zones can be seen (S9 covers it with
+ * sheeting and soil).
  */
 export const CATCHMENT = {
   // ---- ground (the diorama is a cut-out block of the hillside: bench, scarp, upland shelf, then the slope of the drive pipe)
@@ -162,7 +166,7 @@ export const CATCHMENT = {
   boxOverflowHeight: 0.495,
   /** Outer diameter of the overflow stub (a flap valve keeps animals and insects out). estimate: PVC 32, the size of the feed pipe. */
   boxOverflowDiameter: 0.032,
-  /** Diameter of the washout plug in the floor of the box (a rubber plug on a chain, to empty the silt, Oxfam TB5). estimate: 60 mm, a size a hand removes. */
+  /** Diameter of the washout plug in the floor of the box (a rubber plug on a chain to empty the silt; Oxfam TB5 closes its washout with a screwed end cap). estimate: 60 mm, a size a hand removes. */
   boxWashoutDiameter: 0.06,
   /** Diameter of the strainer at the start of the feed pipe, inside the box. estimate: twice the 32 mm pipe, so its open area exceeds the pipe's. */
   boxStrainerDiameter: 0.07,
@@ -286,13 +290,13 @@ export const CATCHMENT = {
   /** Height of the axis of the drain above the floor: its invert is flush with the floor, the lowest point. It leaves on the
    *  same side as the drive outlet, 0.15 m below it. estimate: the pipe bottom 5 mm above the floor. */
   drainAxisHeight: 0.03,
-  /** Length of the PVC ball valve of the drain. estimate: 90 mm, a DN50 compact valve. */
+  /** Length of the PVC ball valve of the drain. estimate: 90 mm, a DN50 compact valve (drawn DN50 like its pipe; the simulation's assumed drain flow of 150 L/min is a separate model constant). */
   drainValveLength: 0.09,
   /** X where the drain pipe, which leaves east under the drive pipe, turns south towards the ditch. estimate: past the slab edge, short of the head of the ditch. */
   drainTurnX: 1.55,
 } as const;
 
-/** Ram pit (regard): a concrete chamber with a lid and a drain. */
+/** Ram pit (fosse): a concrete chamber with a lid and a drain. */
 export const PIT = {
   /** Inner length (along X) of the pit. estimate: the 1.4 m long ram plus room to work. */
   innerLength: 2.3,
@@ -372,7 +376,7 @@ export const TOWER = {
   pipeEndAboveLid: 0.75,
 } as const;
 
-/** Farmhouse (habitation). */
+/** House (maison). */
 export const HOUSE = {
   /** House length (along X). estimate: a stone farmhouse. */
   length: 10,
@@ -448,7 +452,7 @@ export const RAM = {
 /**
  * Anchor block (massif d'ancrage) under the two cast feet: the hammer pressures reach several bar (research §7), so the ram
  * is bolted down. Its top face is `RAM.floorY` (the feet stand on it); the part is drawn as a pad of poured concrete with the
- * anchor studs cast in it. All values are estimates: the video shows the ram on a slab but gives no foundation.
+ * anchor studs cast in it. All values are estimates: the video gives no foundation.
  */
 export const FOUNDATION = {
   /** Thickness of the exposed pad. estimate: 60 mm, which is also the gap to the pit floor (PIT.floorY). */
@@ -513,7 +517,7 @@ export const INLET = {
 export const VALVE = {
   /** Valve shown: n°1, the new valve that delivers ≈ 500 L/day (K10). */
   size: 1,
-  /** Seat bore of the valves n°1 / n°2 / n°3. reported (S1 03:54, K7: 15×21, 20×27, 26×34). */
+  /** Seat bore of the valves n°1 / n°2 / n°3. derived from the designation of the fittings (nominal 15×21, 20×27, 26×34: S1 03:54, K7), not a measured bore. */
   seatBore: { 1: 0.015, 2: 0.02, 3: 0.026 },
   /** Thread major diameter of the 15×21 fittings (the "21"). reported (S1 03:54: nominal 15×21). */
   threadDiameter: 0.021,
@@ -521,7 +525,7 @@ export const VALVE = {
   basePlateSide: 0.1,
   /** Base plate thickness. estimate. */
   basePlateThickness: 0.008,
-  /** Outer diameter of the welded 26×34 steel socket on the plate. estimate: 1" socket (S1 06:49). */
+  /** Outer diameter of the welded 26×34 steel socket on the plate. estimate: a 1" socket. This is the lab's simplified version: the video welds a 20×27 fitting on the plate (S1 06:49), then adds two 26×34 fittings and a reduction; the single 26×34 is what the author says he should have used (S1 06:58). */
   weldedFittingDiameter: 0.044,
   /** Height of the welded 26×34 socket above the plate. estimate: a 1" socket. */
   weldedFittingHeight: 0.036,
@@ -578,23 +582,32 @@ export const VALVE = {
   /** Height of the head's flat face when the valve is closed on its seat (cone on the seat chamfer). derived (geometry:
    *  the 45° cone of radius 9.3 mm meets the 7.5 mm seat bore 1.8 mm above the flat face, which is the seat's lower face). */
   headClosedY: 0.052,
-  /** Thickness of the seat ring, machined at the stem's cone angle (S1 09:37). estimate. */
+  /** Thickness of the seat ring, machined at the stem's cone angle (S1 18:54). estimate. */
   seatThickness: 0.0035,
-  /** Outer diameter of the fins filed under the head (S1 12:02–12:45). estimate. */
+  /** Outer diameter of the fins filed under the head: the Walton valve has small fins (S1 12:02), the author plans his own (S1 12:35), effect not shown. estimate. */
   finsDiameter: 0.0175,
   /** Height of the fins nut. estimate. */
   finsHeight: 0.009,
-  /** Number of fins. estimate: small fins filed by the author (S1 12:38). */
+  /** Number of fins. estimate: small fins, as the author plans to file them (S1 12:35). */
   finsCount: 4,
   /**
-   * Stack on the rod above the guide, from the guide's end face upwards: the counterweight, whose flat face lands on the
-   * guide and which is the "main nut" of the final valve (S1 14:14–18:07), then the stroke nut and the lock nut that locks
-   * them (S1 12:55–13:51). The video's final valve shows only the weight and the lock nut; the catalogue keeps the stroke
-   * nut as a separate ordinary nut, drawn between the two. Across flats, thickness. estimate.
+   * Stack on the rod above the guide, from the guide's end face upwards: the STROKE NUT, which rests on the guide and whose
+   * height on the rod sets the stroke; the COUNTERWEIGHT, which rests on the stroke nut; the LOCK NUT, on top of the weight,
+   * which locks the stack (S1 12:55–13:51, 17:40–18:07). In the video's final valve the machined weight is itself the main
+   * nut and there is no separate stroke nut: the lab keeps the two roles as separate parts so that each can be seen.
+   * Across flats of an M6 nut. estimate.
    */
   nutAcrossFlats: 0.01,
   /** Thickness of an M6 nut. estimate. */
   nutThickness: 0.005,
+  /** estimate (as `guideTop`): height of the bottom face of the stroke nut above the plate; it rests on the guide. */
+  strokeNutBottom: 0.162,
+  /** estimate (`guideTop` + `nutThickness`): height of the bottom face of the counterweight, which rests on the stroke nut. */
+  counterweightBottom: 0.167,
+  /** estimate (`counterweightBottom` + `counterweightLength`): height of the bottom face of the lock nut, on top of the weight. */
+  lockNutBottom: 0.227,
+  /** estimate (`lockNutBottom` + `nutThickness`): height of the top face of the lock nut, the top of the stack (the rod sticks out `rodTailProud` above it). */
+  stackTop: 0.232,
   /** Counterweight machined from 30–32 mm rebar (S1 15:59): diameter reported, length derived from the mass. */
   counterweightDiameter: 0.031,
   /** derived: 360 g (physics preset valve n°1) of steel (7 850 kg/m³) in a Ø 31 mm bar = 60 mm. */
@@ -697,7 +710,7 @@ export const FITTINGS = {
   smallBallValveLength: 0.075,
   /** Length of the outlet pipe stub drawn after the outlet valve (from the valve end to the pipe end, union included). estimate. */
   outletStubLength: 0.12,
-  /** Length of the delivery union (3-piece brass union with a compression end), valve end to pipe entry. estimate. */
+  /** Length of the delivery union (3-piece brass union with a compression end), valve end to pipe entry. estimate: drawn as a DN15 union (½" thread) on the PE 25 pipe; a compression end for PE 25 usually has a ¾" thread, so a real one would be DN20 (not checked). */
   unionLength: 0.064,
   /** Union nut across flats. estimate: DN15 union, 36 mm. */
   unionNutAcrossFlats: 0.036,

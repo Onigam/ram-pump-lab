@@ -9,13 +9,15 @@ import type { Terrain } from './terrain';
 export function createShadowAim(terrain: Terrain, sky: SkyRig): () => void {
   const camPos = new THREE.Vector3(-60, 80, 150);
   const camDir = new THREE.Vector3(0.2, -0.3, -1).normalize();
-  terrain.mesh.onBeforeRender = (_renderer, _scene, camera) => {
+  const remember = (_renderer: THREE.WebGLRenderer, _scene: THREE.Scene, camera: THREE.Camera) => {
     // the shadow pass renders with an orthographic camera: keep the visitor's camera only
     if ((camera as THREE.PerspectiveCamera).isPerspectiveCamera) {
       camera.getWorldPosition(camPos);
       camera.getWorldDirection(camDir);
     }
   };
+  // any tile of the ground that is drawn will do
+  for (const tile of terrain.mesh.children) tile.onBeforeRender = remember;
   const focus = new THREE.Vector3();
   const probe = new THREE.Vector3();
   return () => {

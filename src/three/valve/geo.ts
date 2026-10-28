@@ -45,6 +45,10 @@ export const ROD_MID = 0.215;
 export const STACK_Y = VALVE.guideTop;
 export const STACK_HEIGHT = VALVE.counterweightLength + 2 * VALVE.nutThickness;
 export const STACK_TOP = STACK_Y + STACK_HEIGHT;
+/** Bottoms of the three parts of the stack, from the guide upwards: the stroke nut, the weight that rests on it, the lock nut. */
+export const STROKE_NUT_Y = STACK_Y;
+export const WEIGHT_Y = STROKE_NUT_Y + VALVE.nutThickness;
+export const LOCK_NUT_Y = WEIGHT_Y + VALVE.counterweightLength;
 export const SLEEVE_ON_ROD_R = VALVE.stemSleeveDiameter / 2;
 
 /** Visual travel (m) of the valve for a stroke in mm: the real stroke multiplied by the 3D exaggeration, kept sane. */

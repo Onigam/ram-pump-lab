@@ -4,6 +4,7 @@ import { PartRegistry, clamp } from '@onigam/lab-kit/three';
 import type { Hotspot, SceneModule, ViewOpts } from '@onigam/lab-kit/three';
 import type { RamState } from '../../sim/types';
 import { paperFloor } from '../common';
+import { installWarmup, type Warmable } from '../warm';
 import { partIds } from '../../part-ids';
 import { BASE_Y, BLOCK, PLINTH_H, buildBlock, type Block } from './ground';
 import { SPRING_X } from './layout';
@@ -26,12 +27,12 @@ const HOTSPOTS: HotspotDef[] = [
   { id: 'spring-box', fr: 'Regard de captage', en: 'Spring box' },
   { id: 'gravel-filter', fr: 'Filtre à gravier', en: 'Gravel filter' },
   { id: 'feed-pipe', fr: 'Conduite d’alimentation', en: 'Feed pipe', minor: true },
-  { id: 'tank-shell', fr: 'Cuve de la réserve', en: 'Buffer tank' },
+  { id: 'tank-shell', fr: 'Cuve de la réserve tampon', en: 'Buffer tank shell' },
   { id: 'tank-lid', fr: 'Couvercle et aération', en: 'Lid and vent', minor: true },
   { id: 'overflow-pipe', fr: 'Trop-plein', en: 'Overflow' },
   { id: 'intake-screen', fr: 'Crépine de départ', en: 'Intake screen' },
-  { id: 'drive-gate-valve', fr: 'Vanne de départ', en: 'Gate valve', goto: 'site' },
-  { id: 'tank-drain', fr: 'Vidange', en: 'Drain', minor: true },
+  { id: 'drive-gate-valve', fr: 'Vanne de départ', en: 'Drive-pipe gate valve', goto: 'site', minor: true },
+  { id: 'tank-drain', fr: 'Vidange de la réserve', en: 'Tank drain', minor: true },
 ];
 
 /**
@@ -51,7 +52,7 @@ export const EXPLODE: Record<CatchmentPartId, [number, number, number]> = {
   'tank-drain': [0, 0.7, 0],
 };
 
-export interface CatchmentScene extends SceneModule<RamState> {
+export interface CatchmentScene extends SceneModule<RamState>, Warmable {
   readonly model: CatchmentModel;
   readonly block: Block;
   /** What the last `update` decided (water level, overflow, drain, gate, screen dry). */
@@ -175,7 +176,7 @@ export function createCatchmentScene(): CatchmentScene {
     for (const c of block.caps) c.visible = view.cutaway;
   };
 
-  return {
+  const mod: SceneModule<RamState> & { model: CatchmentModel; block: Block; status: ModelStatus } = {
     id: 'catchment',
     scene,
     registry,
@@ -191,4 +192,5 @@ export function createCatchmentScene(): CatchmentScene {
     },
     update,
   };
+  return installWarmup(mod, [block.top]);
 }

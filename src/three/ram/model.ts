@@ -4,6 +4,7 @@ import type { PartRegistry, ViewOpts } from '@onigam/lab-kit/three';
 import type { RamState } from '../../sim/types';
 import { CHAMBER, RAM } from '../dims';
 import { CutKit } from '../cut';
+import { mergeStatic } from '../merge';
 import { smoothstep } from '../common';
 import { createWasteValveModel, type WasteValveModel } from '../valve/model';
 import { PLATE_TOP_Y, buildBody } from './body';
@@ -48,6 +49,8 @@ export function createRamModel(registry: PartRegistry | null): RamModel {
     rig,
     add(id, obj, explode) {
       if (!obj.parent) root.add(obj);
+      // the waste valve keeps its fourteen sub-parts (the `valve` world and its tests compare them one by one)
+      if (id !== 'waste-valve') mergeStatic(obj, { isClipped: (m) => cut.clips(m), name: id });
       const e = explode instanceof THREE.Vector3 ? explode : new THREE.Vector3(...explode);
       registry?.add(id, obj, e);
       return obj;
@@ -75,7 +78,8 @@ export function createRamModel(registry: PartRegistry | null): RamModel {
   });
   valve.root.position.copy(origin);
   root.add(valve.root);
-  ctx.anchor('waste-valve', valve.assembly, 0, 0.094, 0.0115);
+  // high on the stack (the weight): its label then stands clear of the inlet valve's, on every size of the view
+  ctx.anchor('waste-valve', valve.assembly, 0, 0.17, 0.0115);
   ctx.add('waste-valve', valve.assembly, EXPLODE['waste-valve']);
   const check = buildCheckValve(ctx);
   const chamber = buildChamber(ctx);

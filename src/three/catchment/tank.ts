@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { MAT, group, mesh, pmma } from '@onigam/lab-kit/three';
 import { CATCHMENT as C, SITE, TANK } from '../dims';
 import { DEG, TAU } from '../common';
+import { dynamic } from '../merge';
 import { boxBetween, perforatedSteel, pipe, pipeLine, rodBetween, rodX, rodY, sweepProfile, v3 } from './geo';
 import {
   BEND_X,
@@ -303,6 +304,7 @@ export function buildGateValve(detail: Detail): Gate {
   // rising stem and the red hand wheel (they move together: rising stem)
   const rising = new THREE.Group();
   rising.name = 'gate-rising';
+  dynamic(rising);
   rising.position.set(cx, OUT_Y + C.gateBonnetHeight + 0.014, 0);
   const stemH = C.gateStemRise + 0.02;
   rising.add(rodY(-0.012, stemH, 0.005, MAT.inox(), 0, 0, 10));
@@ -369,7 +371,7 @@ export function buildDrain(detail: Detail): Drain {
     g.add(col);
   }
   // lever on a vertical stem in the middle of the valve: along the pipe when open, across it when closed
-  const lever = new THREE.Group();
+  const lever = dynamic(new THREE.Group());
   lever.position.set((xv0 + xv1) / 2, y + rp * 1.45, 0);
   const stem = rodY(0, 0.03, 0.007, MAT.steel(), 0, 0, 8);
   stem.userData.noClip = true;
@@ -464,11 +466,12 @@ export function buildOverflow(detail: Detail): Overflow {
   gutterMesh.castShadow = true;
   gutterMesh.receiveShadow = true;
   gutterMesh.name = 'gutter';
+  dynamic(gutterMesh); // laid again on the ground when the landscape moves
   g.add(gutterMesh);
   // splash stone in the head of the gutter, under the mouth
   const splash = mesh(new THREE.BoxGeometry(0.2, 0.02, 0.17), MAT.stone(), [mouth.x, 0, mouth.z]);
   splash.rotation.y = 0.3;
-  g.add(splash);
+  g.add(dynamic(splash)); // `layGutter` sets its height on the ground
   let line: THREE.Vector3[] = [];
   const outerW = C.gutterWidth;
   const w = C.gutterWall;
@@ -503,7 +506,7 @@ export function buildOverflow(detail: Detail): Overflow {
   layGutter(groundY, 5.2);
   const anchor = new THREE.Object3D();
   anchor.name = 'anchor-overflow-pipe';
-  anchor.position.set(ux * rv, 1.45, uz * rv);
+  anchor.position.set(ux * rv, 1.52, uz * rv);
   g.add(anchor);
   return {
     group: g,

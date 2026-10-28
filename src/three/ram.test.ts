@@ -138,20 +138,20 @@ describe('ram world', () => {
     }
   });
 
-  it('closes the waste valve on its seat and hangs it on its weight when open', () => {
+  it('closes the waste valve on its seat and hangs it on its stroke nut when open', () => {
     const s = runningState();
     const valve = mod.model.valve;
     const step = (w: number) => {
       for (let i = 0; i < 80; i++) mod.update({ ...s, wasteValve: w, strokeCount: 0 }, 1 / 60, view());
       mod.scene.updateMatrixWorld(true);
       const b = (id: (typeof VALVE_PART_IDS)[number]) => worldBox(valve.parts[id]);
-      return { weight: b('counterweight'), guide: b('valve-guide'), head: b('valve-head'), seat: b('valve-seat') };
+      return { nut: b('stroke-nut'), guide: b('valve-guide'), head: b('valve-head'), seat: b('valve-seat') };
     };
     const open = step(1);
-    expect(open.weight.min.y).toBeCloseTo(open.guide.max.y, 3);
+    expect(open.nut.min.y).toBeCloseTo(open.guide.max.y, 3);
     expect(open.seat.min.y - open.head.min.y).toBeCloseTo(travelFor(s.stroke), 3);
     const closed = step(0);
-    expect(closed.weight.min.y - closed.guide.max.y).toBeCloseTo(travelFor(s.stroke), 3);
+    expect(closed.nut.min.y - closed.guide.max.y).toBeCloseTo(travelFor(s.stroke), 3);
     // closed: the flat face of the head is level with the bottom of the seat (the cone is on the cone)
     expect(closed.head.min.y).toBeCloseTo(closed.seat.min.y, 3);
   });

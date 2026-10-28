@@ -4,6 +4,7 @@ import { PartRegistry } from '@onigam/lab-kit/three';
 import type { Hotspot, SceneModule } from '@onigam/lab-kit/three';
 import type { RamState } from '../../sim/types';
 import { FlowDots } from '../common';
+import { installWarmup, type Warmable } from '../warm';
 import { CutKit } from '../cut';
 import { benchFloor, buildBench } from './bench';
 import { EXPLODE_Y } from './explode';
@@ -28,19 +29,19 @@ const HOTSPOTS: HotspotDef[] = [
   { id: 'counterweight', fr: 'Poids', en: 'Weight' },
   { id: 'valve-seat', fr: 'Portée conique', en: 'Conical seat', minor: true },
   { id: 'valve-head', fr: 'Tête du clapet', en: 'Valve head', minor: true },
-  { id: 'valve-stem', fr: 'Tige M6', en: 'M6 stem' },
+  { id: 'valve-stem', fr: 'Tige du clapet', en: 'Valve stem' },
   { id: 'valve-socket', fr: 'Manchon soudé 26×34', en: 'Welded 26×34 socket', minor: true },
   { id: 'valve-sleeve', fr: 'Manchon femelle-femelle', en: 'Female-female sleeve', minor: true },
   { id: 'stem-sleeves', fr: 'Manchons de la tige', en: 'Stem sleeves', minor: true },
   { id: 'valve-fins', fr: 'Ailettes', en: 'Fins', minor: true },
-  { id: 'stroke-nut', fr: 'Écrou de course', en: 'Stroke nut', minor: true },
+  { id: 'stroke-nut', fr: 'Écrou de réglage de course', en: 'Stroke nut', minor: true },
   { id: 'lock-nut', fr: 'Contre-écrou', en: 'Lock nut', minor: true },
 ];
 
 /** Parts that hold the water: while one is hidden or only a wire frame, the water is hidden too. */
 const CONTAINERS = ['base-plate', 'valve-socket', 'valve-reducer', 'valve-nipple', 'valve-seat'];
 
-export interface ValveScene extends SceneModule<RamState> {
+export interface ValveScene extends SceneModule<RamState>, Warmable {
   model: WasteValveModel;
 }
 
@@ -103,7 +104,7 @@ export function createValveScene(): ValveScene {
     return false;
   };
 
-  return {
+  const mod: SceneModule<RamState> & { model: WasteValveModel } = {
     id: 'valve',
     scene,
     registry,
@@ -126,4 +127,5 @@ export function createValveScene(): ValveScene {
       cut.update(model.root, view.cutaway, registry);
     },
   };
+  return installWarmup(mod, [bench.floor]);
 }

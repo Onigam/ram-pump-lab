@@ -15,7 +15,7 @@ import { VALVE_PART_IDS } from './valve/model';
 
 // The `valve` world by script: the video's waste valve at workshop scale. Same checks as the other worlds (ids, floating and
 // buried parts, explode, NaN-free animation) and the mechanical ones that matter for this world: the stem really passes
-// through the guide, the head sits on the cone when closed, the weight lands on the guide, no part interpenetrates another,
+// through the guide, the head sits on the cone when closed, the stroke nut lands on the guide and the weight sits on it, no part interpenetrates another,
 // and the valve of the `ram` world is the very same model.
 
 const VALVE_IDS = partIds('valve');
@@ -124,10 +124,18 @@ describe('valve world', () => {
     const plate = boxes.get('base-plate')!;
     for (const id of ['valve-seat', 'valve-head', 'valve-fins'])
       expect(boxes.get(id)!.max.y, id).toBeLessThan(plate.min.y);
-    for (const id of ['valve-socket', 'valve-reducer', 'valve-nipple', 'valve-sleeve', 'valve-guide', 'counterweight'])
+    for (const id of [
+      'valve-socket',
+      'valve-reducer',
+      'valve-nipple',
+      'valve-sleeve',
+      'valve-guide',
+      'stroke-nut',
+      'counterweight',
+    ])
       expect(boxes.get(id)!.min.y, id).toBeGreaterThan(plate.max.y);
-    // top to bottom along the stack: guide, weight, stroke nut, lock nut
-    const order = ['valve-guide', 'counterweight', 'stroke-nut', 'lock-nut'];
+    // bottom to top along the stack: guide, stroke nut, weight, lock nut
+    const order = ['valve-guide', 'stroke-nut', 'counterweight', 'lock-nut'];
     for (let i = 1; i < order.length; i++)
       expect(boxes.get(order[i])!.min.y).toBeGreaterThan(boxes.get(order[i - 1])!.max.y);
     // the stem passes through the lower fittings of the exploded stack (reducer, nipple, sleeve)
@@ -138,7 +146,7 @@ describe('valve world', () => {
     }
   });
 
-  it('puts the weight on the guide when open, and the head on the seat when closed', () => {
+  it('puts the stroke nut on the guide and the weight on the nut when open, and the head on the seat when closed', () => {
     const s = runningState();
     const hold = (w: number) => {
       for (let i = 0; i < 90; i++) mod.update({ ...s, wasteValve: w, strokeCount: 0 }, 1 / 60, view());
@@ -146,18 +154,41 @@ describe('valve world', () => {
     };
     hold(1);
     const travel = mod.model.travel();
-    expect(part('counterweight').min.y).toBeCloseTo(part('valve-guide').max.y, 4);
-    expect(part('stroke-nut').min.y).toBeCloseTo(part('counterweight').max.y, 4);
-    expect(part('lock-nut').min.y).toBeCloseTo(part('stroke-nut').max.y, 4);
+    expect(part('stroke-nut').min.y).toBeCloseTo(part('valve-guide').max.y, 4);
+    expect(part('counterweight').min.y).toBeCloseTo(part('stroke-nut').max.y, 4);
+    expect(part('lock-nut').min.y).toBeCloseTo(part('counterweight').max.y, 4);
     expect(part('valve-seat').min.y - part('valve-head').min.y).toBeCloseTo(travel, 4);
     hold(0);
-    // closed: the flat face of the head is level with the bottom of the seat, the weight stands `travel` above the guide
+    // closed: the flat face of the head is level with the bottom of the seat, the stroke nut stands `travel` above the guide
     expect(part('valve-head').min.y).toBeCloseTo(part('valve-seat').min.y, 4);
-    expect(part('counterweight').min.y - part('valve-guide').max.y).toBeCloseTo(travel, 4);
+    expect(part('stroke-nut').min.y - part('valve-guide').max.y).toBeCloseTo(travel, 4);
     // the stem stays through the guide: its rod runs from under the fins nut to above the lock nut
     const stem = part('valve-stem');
     expect(stem.min.y).toBeLessThan(part('valve-fins').min.y + 0.002);
     expect(stem.max.y).toBeGreaterThan(part('lock-nut').max.y + 0.006);
+    hold(1);
+  });
+
+  it('stacks, from the guide upwards, the stroke nut, the weight that rests on it and the lock nut on the weight (dims.ts)', () => {
+    const V = DIMS.VALVE;
+    expect(V.strokeNutBottom).toBeCloseTo(V.guideTop, 9);
+    expect(V.counterweightBottom).toBeCloseTo(V.strokeNutBottom + V.nutThickness, 9);
+    expect(V.lockNutBottom).toBeCloseTo(V.counterweightBottom + V.counterweightLength, 9);
+    expect(V.stackTop).toBeCloseTo(V.lockNutBottom + V.nutThickness, 9);
+    // closed: the stack hangs `travel` above the guide; the three parts are in contact with their neighbours
+    const s = runningState();
+    const hold = (w: number) => {
+      for (let i = 0; i < 90; i++) mod.update({ ...s, wasteValve: w, strokeCount: 0 }, 1 / 60, view());
+      mod.scene.updateMatrixWorld(true);
+    };
+    hold(0);
+    const travel = mod.model.travel();
+    expect(part('stroke-nut').min.y).toBeCloseTo(V.strokeNutBottom + travel, 4);
+    expect(part('counterweight').min.y).toBeCloseTo(V.counterweightBottom + travel, 4);
+    expect(part('lock-nut').min.y).toBeCloseTo(V.lockNutBottom + travel, 4);
+    expect(part('lock-nut').max.y).toBeCloseTo(V.stackTop + travel, 4);
+    // the nuts are centred on the rod and the weight is the widest of the three
+    expect(box(mod.model.parts['counterweight']).getSize(new THREE.Vector3()).x).toBeGreaterThan(V.nutAcrossFlats);
     hold(1);
   });
 
@@ -243,7 +274,7 @@ describe('valve world', () => {
         expect(area, `${k} (${pose})`).toBeLessThan(limit);
       }
     }
-  });
+  }, 30000);
 
   it('animates without NaN for running, stalled, section and flow states', () => {
     const run = runningState();

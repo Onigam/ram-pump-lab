@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { MAT, glass, group, mesh } from '@onigam/lab-kit/three';
 import { HOUSE, TOWER } from '../dims';
 import { noShadow, waterMaterial } from '../common';
+import { mergeStatic } from '../merge';
 
 // The house and the water tower. Each is built in its own frame (origin on the ground under its centre, +Z towards the
 // camera of the home view) and placed by the scene. Dimensions come from dims.ts.
@@ -79,6 +80,7 @@ export function buildHouse(): THREE.Group {
   g.add(mesh(new THREE.BoxGeometry(1.7, 0.12, 0.7), roofMat, [0.3, 0.2 + 2.45, zs + 0.5]));
   // rendered base band
   g.add(mesh(new THREE.BoxGeometry(L + 0.06, 0.5, W + 0.06), rend, [0, 0.2 + 0.25, 0]));
+  mergeStatic(g, { name: 'house' });
   return g;
 }
 
@@ -161,6 +163,7 @@ export function buildTower(): Tower {
   const outlet = new THREE.Vector3(-R - 0.1, stand + 0.4, 0.4);
   noShadow(sheet);
   noShadow(stream);
+  mergeStatic(g, { name: 'tower' });
   return {
     group: g,
     inlet,

@@ -5,6 +5,7 @@ import type { RamState } from '../../sim/types';
 import { CATCHMENT as C, SITE, SPRING, TANK } from '../dims';
 import { CutKit, rect, type Poly } from '../cut';
 import { FlowDots, noShadow, waterMaterial } from '../common';
+import { dynamic, mergeStatic } from '../merge';
 import { applyPipeKind, pipeKindOf, pipeLine, v3, type PipeKind } from './geo';
 import {
   BED_FLOOR_Y,
@@ -217,6 +218,8 @@ export function createCatchmentModel(opts: ModelOptions): CatchmentModel {
   const waterS = group('catchment-water-spring');
   const jetsT = group('catchment-jets-tank');
   const jetsS = group('catchment-jets-spring');
+  // the water and the jets are shown, hidden and reshaped every frame: never merged
+  for (const g of [waterT, waterS, jetsT, jetsS]) dynamic(g);
   tankFrame.add(waterT, jetsT);
   springFrame.add(waterS, jetsS);
   const body = new THREE.Mesh(
@@ -439,6 +442,11 @@ export function createCatchmentModel(opts: ModelOptions): CatchmentModel {
     waterCaps.push({ mesh: wt, parent: 'tank' }, { mesh: wb, parent: 'box' });
   }
 
+  // ---- fewer draw calls: the static meshes of each part (and of the rocks) become one mesh per material
+  const isClipped = (m: THREE.Material) => cut?.clips(m) ?? false;
+  for (const id of CATCHMENT_PART_IDS) mergeStatic(parts[id], { isClipped, name: id });
+  mergeStatic(outcrop.group, { isClipped, name: 'outcrop' });
+
   // ---- animation state
   let gateT = 1;
   let pipeKind: PipeKind = 'steel';
@@ -638,7 +646,7 @@ export function createCatchmentModel(opts: ModelOptions): CatchmentModel {
 function shellAnchor(g: THREE.Group): THREE.Object3D {
   const a = new THREE.Object3D();
   a.name = 'anchor-tank-shell';
-  a.position.set(-R_OUT * 0.75, 1.95, R_OUT * 0.55);
+  a.position.set(-R_OUT * 0.75, 2.05, R_OUT * 0.55);
   g.add(a);
   return a;
 }

@@ -8,6 +8,9 @@ import { FlowDots } from '../common';
 import { applyPipeKind, pipeKindOf, type PipeKind } from '../catchment/geo';
 import { BOX_RIM_Y, CORNER, H_LID, SPRING_X } from '../catchment/layout';
 import { createCatchmentModel, type CatchmentModel, type Hold } from '../catchment/model';
+import { farCopy } from '../lod';
+import { mergeStatic } from '../merge';
+import { installWarmup, type Warmable } from '../warm';
 import { createRamModel } from '../ram/model';
 import { STUB_X0 } from '../ram/inlet';
 import { buildHouse, buildTower } from './buildings';
@@ -26,19 +29,19 @@ import { buildWasteDrain, type WasteDrain } from './waste';
 // when they change (see layout.ts for what moves). The ram in its pit is the same model as in the "ram" world.
 
 const HOTSPOTS: { id: string; fr: string; en: string; goto?: string; minor?: boolean }[] = [
-  { id: 'spring', fr: 'Captage de la source', en: 'Spring catchment' },
+  { id: 'spring', fr: 'Captage de la source', en: 'Spring catchment', minor: true },
   { id: 'buffer-tank', fr: 'Réserve tampon', en: 'Buffer tank', minor: true },
   { id: 'drive-pipe', fr: 'Conduite motrice', en: 'Drive pipe', minor: true },
-  { id: 'ram-pit', fr: 'Regard du bélier', en: 'Ram pit', goto: 'ram' },
+  { id: 'ram-pit', fr: 'Fosse du bélier', en: 'Ram pit', goto: 'ram' },
   { id: 'waste-drain', fr: 'Évacuation des eaux de rejet', en: 'Waste-water drain', minor: true },
   { id: 'delivery-pipe', fr: 'Conduite de refoulement', en: 'Delivery pipe' },
   { id: 'water-tower', fr: 'Château d’eau', en: 'Water tower' },
-  { id: 'house', fr: 'Habitation', en: 'House' },
+  { id: 'house', fr: 'Maison', en: 'House' },
 ];
 
 const up = (y: number) => new THREE.Vector3(0, y, 0);
 
-export interface SiteScene extends SceneModule<RamState> {
+export interface SiteScene extends SceneModule<RamState>, Warmable {
   /** Parameters the landscape currently has (tests read them). */
   readonly params: SiteParams;
   /** Length of the delivery pipe as drawn (start stub to the end over the trough), metres. */
@@ -71,9 +74,20 @@ export function createSiteScene(): SiteScene {
   tank.name = 'buffer-tank';
   const spring = catchment.springFrame;
   spring.name = 'spring';
+  // each is ONE part of the site: its nine groups become one mesh per material
+  mergeStatic(tank, { name: 'tank' });
+  mergeStatic(spring, { name: 'spring' });
   const pit = buildPit();
   const ram = createRamModel(null);
-  pit.group.add(ram.root);
+  // the ram is 60 000 triangles of bolts and turned bodies: beyond `RAM_FAR` metres a coarse frozen copy stands for it
+  const ramFar = farCopy(ram.root, { cell: FAR_CELL, minRadius: FAR_CELL });
+  const ramFarWater = farCopy(ram.rig.water!, { cell: FAR_CELL, minRadius: FAR_CELL, transparent: true });
+  ramFar.add(ramFarWater);
+  const ramLod = new THREE.LOD();
+  ramLod.name = 'ram-lod';
+  ramLod.addLevel(ram.root, 0);
+  ramLod.addLevel(ramFar, RAM_FAR, 0.1);
+  pit.group.add(ramLod);
   const tower = buildTower();
   const house = buildHouse();
   const waste = buildWasteDrain();
@@ -147,7 +161,8 @@ export function createSiteScene(): SiteScene {
   hotAnchors['waste-drain'] = waste.anchor;
   anchor('delivery-pipe', delivery);
   anchor('water-tower', tower.group).position.set(0, TOWER.groundBelowInlet + 1.8, 0);
-  anchor('house', house).position.set(0, 0.2 + HOUSE.wallHeight + HOUSE.ridgeRise + 1.2, 0);
+  // on the south wall, under the eaves: the label then stands clear of the water tower's, on every size of the view
+  anchor('house', house).position.set(0, 0.2 + HOUSE.wallHeight - 0.3, HOUSE.width / 2 + 0.1);
 
   const layout = (p: SiteParams, diameterMm: number) => {
     params = { ...p };
@@ -206,8 +221,9 @@ export function createSiteScene(): SiteScene {
     lengthDelivery = new THREE.CatmullRomCurve3(pts, false, 'centripetal').getLength();
     const tp = new THREE.Vector3(TOWER.planX, p.head - TOWER.groundBelowInlet, TOWER.planZ);
     const top = TOWER.groundBelowInlet;
-    const mid = pts[Math.floor(pts.length * 0.32)];
-    hotAnchors['delivery-pipe'].position.set(mid.x, mid.y + 2.2, mid.z);
+    // on the pipe, on its first diagonal: the label runs to the right, so its dot must stand left of the middle of the view
+    const mid = pts[Math.floor(pts.length * DELIVERY_LABEL_AT)];
+    hotAnchors['delivery-pipe'].position.set(mid.x, mid.y + 0.4, mid.z);
 
     // the waste-water drain: buried pipe from the pit, headwall, ditch and soakaway lie on the new ground
     waste.lay(terrain, pit.drainStart);
@@ -290,6 +306,7 @@ export function createSiteScene(): SiteScene {
     noCut.schematic = view.schematic;
     noCut.time = view.time;
     ram.update(s, dt, noCut);
+    ramFarWater.visible = ram.rig.water?.visible !== false;
 
     // spring, gravel bed, tank (level, overflow, drain, gate valve) and its flows: the model of the catchment world
     hold.tank = away('buffer-tank');
@@ -323,7 +340,7 @@ export function createSiteScene(): SiteScene {
     }
   };
 
-  return {
+  const mod: Omit<SiteScene, keyof Warmable> = {
     id: 'site',
     scene,
     registry,
@@ -341,7 +358,16 @@ export function createSiteScene(): SiteScene {
     follow: (s) => void follow(s),
     update,
   };
+  // any tile of the ground that is drawn hands over the renderer and the camera
+  return installWarmup(mod, terrain.mesh.children) as SiteScene;
 }
+
+/** Where along the delivery polyline (0 = the ram, 1 = the tower) the label of the delivery pipe stands. */
+const DELIVERY_LABEL_AT = 0.5;
+
+/** Distance (m) from which the ram in its pit is drawn coarser, and the side of the cube its vertices are welded in. */
+const RAM_FAR = 9;
+const FAR_CELL = 0.012;
 
 /** X (TANK frame) where the overflow ditch of the tank ends on the slope. */
 const GUTTER_END = 9.6;

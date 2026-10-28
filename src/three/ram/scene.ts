@@ -4,6 +4,7 @@ import { PartRegistry } from '@onigam/lab-kit/three';
 import type { Hotspot, SceneModule } from '@onigam/lab-kit/three';
 import type { RamState } from '../../sim/types';
 import { paperFloor } from '../common';
+import { installWarmup, type Warmable } from '../warm';
 import { createRamModel, type RamModel } from './model';
 import { FOUNDATION_BOTTOM } from './foundation';
 
@@ -17,22 +18,22 @@ interface HotspotDef {
 }
 
 const HOTSPOTS: HotspotDef[] = [
-  { id: 'ram', fr: 'Corps en fonte', en: 'Cast body' },
+  { id: 'ram', fr: 'Corps du bélier', en: 'Ram body' },
   { id: 'inlet-valve', fr: 'Vanne d’arrivée V1', en: 'Inlet valve V1' },
   { id: 'waste-valve', fr: 'Clapet de choc', en: 'Waste valve' },
-  { id: 'delivery-valve', fr: 'Clapet anti-retour', en: 'Check valve' },
+  { id: 'delivery-valve', fr: 'Clapet de refoulement', en: 'Delivery valve', minor: true },
   { id: 'air-chamber', fr: 'Cloche à air', en: 'Air chamber' },
-  { id: 'gauge', fr: 'Manomètre', en: 'Pressure gauge' },
-  { id: 'snifter', fr: 'Reniflard', en: 'Snifter' },
-  { id: 'outlet-valve', fr: 'Vanne de sortie V3', en: 'Outlet valve V3' },
-  { id: 'foundation', fr: 'Massif d’ancrage', en: 'Anchor block' },
-  { id: 'strainer', fr: 'Crépine', en: 'Strainer', minor: true },
+  { id: 'gauge', fr: 'Manomètre', en: 'Gauge' },
+  { id: 'snifter', fr: 'Reniflard', en: 'Snifter valve', minor: true },
+  { id: 'outlet-valve', fr: 'Vanne de sortie V3', en: 'Outlet valve V3', minor: true },
+  { id: 'foundation', fr: 'Massif d’ancrage', en: 'Anchor block', minor: true },
+  { id: 'strainer', fr: 'Filtre en Y', en: 'Y-strainer', minor: true },
   { id: 'inlet-flange', fr: 'Bride d’arrivée', en: 'Inlet flange', minor: true },
-  { id: 'delivery-union', fr: 'Raccord union', en: 'Delivery union', minor: true },
+  { id: 'delivery-union', fr: 'Raccord union de refoulement', en: 'Delivery union', minor: true },
   { id: 'drain-valve', fr: 'Vanne de vidange V2', en: 'Drain valve V2', minor: true },
 ];
 
-export interface RamScene extends SceneModule<RamState> {
+export interface RamScene extends SceneModule<RamState>, Warmable {
   model: RamModel;
 }
 
@@ -65,7 +66,8 @@ export function createRamScene(): RamScene {
   const rim = new THREE.DirectionalLight(0xffffff, 0.8);
   rim.position.set(0.5, 3, -4);
   scene.add(rim);
-  scene.add(paperFloor(12, 8, FOUNDATION_BOTTOM - 0.0005));
+  const floor = paperFloor(12, 8, FOUNDATION_BOTTOM - 0.0005);
+  scene.add(floor);
 
   const registry = new PartRegistry();
   const model = createRamModel(registry);
@@ -78,7 +80,7 @@ export function createRamScene(): RamScene {
     minor: h.minor,
   }));
 
-  return {
+  const mod: SceneModule<RamState> & { model: RamModel } = {
     id: 'ram',
     scene,
     registry,
@@ -87,8 +89,11 @@ export function createRamScene(): RamScene {
     home: { position: new THREE.Vector3(0.95, 0.62, 1.75), target: new THREE.Vector3(0.12, 0.2, 0) },
     minDistance: 0.12,
     maxDistance: 6,
+    // the kit frames the assembled ram; its exploded height (the gauge goes up by 0.4 m) and the toolbar need some room around it
+    homePadding: 0.92,
     update(state, dt, view) {
       model.update(state, dt, view);
     },
   };
+  return installWarmup(mod, [floor]);
 }

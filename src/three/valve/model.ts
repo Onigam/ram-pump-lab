@@ -3,6 +3,7 @@ import { clamp } from '@onigam/lab-kit/three';
 import type { RamState } from '../../sim/types';
 import { DEG } from '../common';
 import type { CutKit, Poly } from '../cut';
+import { dynamic } from '../merge';
 import * as G from './geo';
 import {
   buildFins,
@@ -116,6 +117,10 @@ export function createWasteValveModel(opts: WasteValveOpts): WasteValveModel {
     'lock-nut': buildLockNut(env),
   } satisfies Record<ValvePartId, THREE.Group>;
   for (const id of VALVE_PART_IDS) assembly.add(parts[id]);
+
+  // what moves at run time is never merged (merge.ts)
+  for (const f of [...rig.liftFrames, ...rig.spinFrames, ...rig.stackFrames]) dynamic(f);
+  if (rig.rodTail) dynamic(rig.rodTail);
 
   // assembled pose: the valve hangs open on its weight
   for (const f of rig.liftFrames) f.position.y = -G.DEFAULT_TRAVEL;

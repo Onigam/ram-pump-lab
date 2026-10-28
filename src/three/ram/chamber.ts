@@ -3,6 +3,7 @@ import { MAT, group, mesh } from '@onigam/lab-kit/three';
 import { CHAMBER, CHECK_VALVE, RAM } from '../dims';
 import { arc, crispRuns, hexRing, lathe, type Profile } from '../common';
 import { mirrored, rect, type Poly } from '../cut';
+import { dynamic } from '../merge';
 import type { RamCtx } from './ctx';
 import { EXPLODE } from './explode';
 
@@ -212,7 +213,7 @@ export function buildCheckValve(ctx: RamCtx): { waterProfile: Profile } {
   disc.add(seal);
   disc.add(mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.006, 16), MAT.inox(), [0, DISC_T + 0.003, 0]));
   g.add(disc);
-  ctx.rig.disc = disc;
+  ctx.rig.disc = dynamic(disc);
 
   // coil spring from the disc top to the ceiling shoulder: a helix of unit-free rest length, squashed in Y with the lift
   const turns = 7;
@@ -226,7 +227,7 @@ export function buildCheckValve(ctx: RamCtx): { waterProfile: Profile } {
   const spring = mesh(springGeo, MAT.steel());
   spring.position.y = SEAT_Y + DISC_T;
   g.add(spring);
-  ctx.rig.spring = spring;
+  ctx.rig.spring = dynamic(spring);
 
   ctx.cut.clip(body);
   ctx.cut.cap('delivery-valve', g, [

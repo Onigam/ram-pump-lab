@@ -6,7 +6,7 @@ import * as G from './geo';
 // the valve the way it is assembled, and the exploded view keeps the real order of the parts on the axis, with a gap
 // between every two of them:
 //
-//   from above : the weight, the nuts and the guide (down into the sleeve), the machined sleeves (onto the rod), the sleeve,
+//   from above : the lock nut, the weight and the stroke nut (down the rod onto the guide), the guide (down into the sleeve), the machined sleeves (onto the rod), the sleeve,
 //                the nipple and the reducer (over the rod, which stays threaded through them), the socket
 //   from below : the seat ring, the head and the fins nut are fitted from under the plate (the head, 18.6 mm, cannot go
 //                through the 15 mm bore), which is why the plate stands on two parallels
@@ -43,13 +43,9 @@ const STACK: Band[] = [
     y1: st(VALVE.stemSleeveBottom + VALVE.stemSleeveSpacing + VALVE.stemSleeveLength),
   },
   { id: 'valve-guide', y0: G.TUBE_BOTTOM, y1: G.GUIDE_TOP },
-  { id: 'counterweight', y0: G.STACK_Y, y1: G.STACK_Y + VALVE.counterweightLength },
-  {
-    id: 'stroke-nut',
-    y0: G.STACK_Y + VALVE.counterweightLength,
-    y1: G.STACK_Y + VALVE.counterweightLength + VALVE.nutThickness,
-  },
-  { id: 'lock-nut', y0: G.STACK_Y + G.STACK_HEIGHT - VALVE.nutThickness, y1: G.STACK_Y + G.STACK_HEIGHT },
+  { id: 'stroke-nut', y0: G.STROKE_NUT_Y, y1: G.STROKE_NUT_Y + VALVE.nutThickness },
+  { id: 'counterweight', y0: G.WEIGHT_Y, y1: G.WEIGHT_Y + VALVE.counterweightLength },
+  { id: 'lock-nut', y0: G.LOCK_NUT_Y, y1: G.LOCK_NUT_Y + VALVE.nutThickness },
 ];
 
 function plan(): Record<string, number> {
