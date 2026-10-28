@@ -76,10 +76,10 @@ function valveOutside(v: View, cx: number, y0: number): void {
   v.rect([cx - V.portW / 2, y0 + V.portBottom], [cx + V.portW / 2, y0 + V.portTop], thin());
   v.rect([cx - V.sleeveR, y0 + V.sleeveBottom], [cx + V.sleeveR, y0 + V.sleeveTop], med());
   v.rect([cx - V.collarR, y0 + V.sleeveTop], [cx + V.collarR, y0 + V.guideTop], med());
-  v.rect([cx - V.rodR, y0 + V.guideTop], [cx + V.rodR, y0 + st.weight0], thin());
+  v.rect([cx - V.rodR, y0 + V.guideTop], [cx + V.rodR, y0 + st.nut0], thin());
+  nutSide(v, cx, y0 + st.nut0, V.nutAF / 2, V.nutT, med());
   v.rect([cx - V.weightR, y0 + st.weight0], [cx + V.weightR, y0 + st.weight1], med());
   nutSide(v, cx, y0 + st.weight1, V.nutAF / 2, V.nutT, med());
-  nutSide(v, cx, y0 + st.stroke1, V.nutAF / 2, V.nutT, med());
   v.rect([cx - V.rodR, y0 + st.lock1], [cx + V.rodR, y0 + st.rodTop], thin());
   v.center([cx, y0 - 14], [cx, y0 + st.rodTop + 6]);
 }

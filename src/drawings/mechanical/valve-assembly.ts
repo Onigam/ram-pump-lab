@@ -29,9 +29,9 @@ import {
   type Box,
 } from './draw';
 import { CONE_TOP, FINS_BOTTOM, V, cat, dim, lab, labOf, stack } from './geom';
-import { GUIDE, HEAD, SEAT, drawValveSection, movingParts } from './valve-draw';
+import { HEAD, SEAT, drawValveSection, movingParts, strokeAtGuide } from './valve-draw';
 
-const NUMBER = 'RP-D02';
+const NUMBER = 'D02';
 const TITLE = l('Clapet de choc — coupe d’ensemble', 'Waste valve — assembly section');
 const S = STROKE;
 
@@ -57,8 +57,8 @@ function render(): Drawing {
   d.frame({
     title: TITLE,
     subtitle: l(
-      `Pose fermée · course ${nFr(S, 1)} mm · poids ${WEIGHT} g · clapet n°1`,
-      `Closed pose · ${nEn(S, 1)} mm stroke · ${WEIGHT} g weight · n°1 valve`,
+      `Position fermée · course ${nFr(S, 1)} mm · poids ${WEIGHT} g · clapet n°1`,
+      `Closed position · ${nEn(S, 1)} mm stroke · ${WEIGHT} g weight · valve No. 1`,
     ),
     number: NUMBER,
     scale: '1:1 · 5:1',
@@ -120,7 +120,7 @@ function render(): Drawing {
     });
   }
 
-  // balloons (items 14 to 27 of RP-D06), leaders towards a column on the right
+  // balloons (items 14 to 27 of D06), leaders towards a column on the right
   const bx = OX + 62;
   const y = (m: number): number => OY - m;
   balloons(v, [
@@ -135,9 +135,9 @@ function render(): Drawing {
     [[4, 126], bx, y(118), ITEM['stem-sleeves']!],
     [[11.8, 133], bx, y(134), ITEM['valve-sleeve']!],
     [[8.6, 150], bx, y(150), ITEM['valve-guide']!],
-    [[13, 195], bx, y(190), ITEM['counterweight']!],
-    [[4, st.weight1 + 2.5], bx, y(213), ITEM['stroke-nut']!],
-    [[4, st.stroke1 + 2.5], bx, y(232), ITEM['lock-nut']!],
+    [[4, st.nut0 + V.nutT / 2], bx, y(172), ITEM['stroke-nut']!],
+    [[13, (st.weight0 + st.weight1) / 2], bx, y(200), ITEM['counterweight']!],
+    [[4, st.weight1 + V.nutT / 2], bx, y(232), ITEM['lock-nut']!],
   ]);
   v.caption([82, -12], l('COUPE A–A', 'SECTION A–A'), '1:1');
 
@@ -206,17 +206,13 @@ function render(): Drawing {
   // ------------------------------------------------------------------ detail C (stroke at the guide) 5:1, right half
   const WC: Box = { x0: 0, x1: 16, y0: 156, y1: 172 };
   const cv = d.view(300, 156 + k5 * WC.y1, k5);
-  polyIn(cv, GUIDE, hatched('alu'), WC);
-  rectIn(cv, [V.rodR + 0.4, st.weight0], [V.weightR, 172], hatched('plastic'), WC);
-  rectIn(cv, [V.rodR + 0.4, V.guideTop], [V.weightR, 172], open, WC);
-  rectIn(cv, [0, 156], [V.rodR, 172], { w: W.medium, fill: PAPER }, WC);
-  threadV(cv, 0, V.rodR, 156, 172, true);
-  cv.center([0, 155], [0, 173]);
+  strokeAtGuide(cv, S, WC);
   cutEdge(cv, 16, 156, 172, 0.3);
-  dimV(cv, [V.collarR, V.guideTop], [V.weightR, st.weight0], 18.5, lab(S, 'E'), 2.1);
+  dimV(cv, [V.collarR, V.guideTop], [V.nutAF / 2, st.nut0], 18.5, lab(S, 'E'), 2.1);
   cv.leader([V.rodR, 160], 14, 16, l('tige M6', 'M6 rod'), { size: 1.7 });
   cv.leader([8.5, 159], 22, 14, l('guide', 'guide'), { size: 1.7 });
-  cv.leader([10, 168], 8, 10, l('poids', 'weight'), { size: 1.7 });
+  cv.leader([V.nutAF / 2 - 0.5, st.nut0 + V.nutT / 2], 10, -4, l('écrou de course', 'stroke nut'), { size: 1.7 });
+  cv.leader([10, st.weight0 + 1.2], 8, -6, l('poids', 'weight'), { size: 1.7 });
   cv.caption([8, 173.8], l('DÉTAIL C · COURSE AU GUIDE', 'DETAIL C · STROKE AT THE GUIDE'), '5:1');
 
   // ------------------------------------------------------------------ main dimensions
@@ -244,7 +240,7 @@ function render(): Drawing {
       cat(
         L(V.threadR * 2 + 0.1, 'R', 'Ø'),
         ' · L ',
-        L(V.nippleTop - V.nippleBottom, 'R'),
+        L(V.nippleTop - V.nippleBottom, 'E'),
         ' · 4 × ',
         L(V.portW, 'E'),
         '×',
@@ -253,15 +249,15 @@ function render(): Drawing {
     ],
     ['valve-sleeve', cat(L(V.sleeveR * 2, 'E', 'Ø'), ' × ', L(V.sleeveTop - V.sleeveBottom, 'E'))],
     ['valve-seat', cat(L(V.seatTop - V.nippleBottom, 'E'), ' · ', l('cône ', 'cone '), '90°*')],
-    ['valve-head', cat(L(V.headR * 2, 'E', 'Ø'), ' · h ', L(CONE_TOP - V.headBase, 'D'))],
+    ['valve-head', cat(L(V.headR * 2, 'E', 'Ø'), ' · h ', L(CONE_TOP - V.headBase, 'E'))],
     ['valve-stem', cat('M6 · ', l('pas ', 'pitch '), L(V.pitchRod, 'D'))],
-    ['stem-sleeves', cat(L(V.sleeveOnRodR * 2, 'D', 'Ø'), ' × ', L(V.sleeveOnRodL, 'E'))],
+    ['stem-sleeves', cat(L(V.sleeveOnRodR * 2, 'E', 'Ø'), ' × ', L(V.sleeveOnRodL, 'E'))],
     [
       'valve-guide',
       cat(L(V.tubeR * 2, 'E', 'Ø'), '/', L(V.tubeBoreR * 2, 'E'), ' · L ', L(V.guideTop - V.tubeBottom, 'E')),
     ],
     ['valve-fins', cat(L(V.finsR * 2, 'E', 'Ø'), ' · h ', L(V.finsH, 'E'))],
-    ['counterweight', cat(L(V.weightR * 2, 'R', 'Ø'), ' × ', L(V.weightL, 'D'))],
+    ['counterweight', cat(L(V.weightR * 2, 'E', 'Ø'), ' × ', L(V.weightL, 'E'))],
     ['stroke-nut', cat('M6 · ', L(V.nutAF, 'E'), ' ', l('s/plats', 'a/f'), ' × ', L(V.nutT, 'E'))],
     ['lock-nut', cat('M6 · ', L(V.nutAF, 'E'), ' ', l('s/plats', 'a/f'), ' × ', L(V.nutT, 'E'))],
   ];
@@ -283,8 +279,8 @@ function render(): Drawing {
     {
       sym: (q, sx, sy) => q.line([sx, sy], [sx + 10, sy], { w: W.medium, dash: 'phantom', color: MOVING }),
       text: l(
-        'pose ouverte : parties mobiles descendues de la course',
-        'open pose: moving parts lowered by the stroke',
+        'position ouverte : parties mobiles descendues de la course',
+        'open position: moving parts lowered by the stroke',
       ),
     },
     {
@@ -298,30 +294,30 @@ function render(): Drawing {
   const ny = 114;
   box(
     d,
-    207,
+    192,
     ny,
-    138,
+    153,
     l('À LIRE', 'HOW TO READ'),
     [
       {
         bullet: '1',
         t: l(
-          `Pose fermée : la tête repose sur sa portée et le poids est à la course s = ${nFr(S, 1)} mm au-dessus du guide. En pose ouverte (cuivre), la tige descend de s et le poids se pose sur le guide : c’est la butée.`,
-          `Closed pose: the head rests on its seat and the weight stands the stroke s = ${nEn(S, 1)} mm above the guide. In the open pose (copper) the stem drops by s and the weight lands on the guide: that is the stop.`,
+          `Position fermée : la tête repose sur sa portée ; l’écrou de course est à s = ${nFr(S, 1)} mm au-dessus du guide, le poids sur lui, le contre-écrou au-dessus. En position ouverte (cuivre), la tige descend de s et l’écrou se pose sur le guide : c’est la butée.`,
+          `Closed position: the head rests on its seat; the stroke nut stands s = ${nEn(S, 1)} mm above the guide, the weight on it, the lock nut above. In the open position (copper) the stem drops by s and the nut lands on the guide: that is the stop.`,
         ),
       },
       {
         bullet: '2',
         t: l(
-          `La vidéo ne donne ni la course ni le poids : ${nFr(S, 1)} mm et ${WEIGHT} g sont calibrés par le modèle sur ses chiffres (résultat du modèle). La vue 3D exagère la course × 4.`,
-          `The video gives neither the stroke nor the weight: ${nEn(S, 1)} mm and ${WEIGHT} g are calibrated by the model on its figures (model result). The 3D view exaggerates the stroke × 4.`,
+          `La vidéo ne donne ni la course ni le poids : ${nFr(S, 1)} mm et ${WEIGHT} g sont calibrés par le modèle (résultat du modèle). La vue 3D exagère la course × 4.`,
+          `The video gives neither the stroke nor the weight: ${nEn(S, 1)} mm and ${WEIGHT} g are calibrated by the model (model result). The 3D view exaggerates the stroke × 4.`,
         ),
       },
       {
         bullet: '3',
         t: l(
-          'Seuls la tige M6, le filetage 15×21, le mamelon de 7–8 cm et la barre de 30–32 mm viennent de la vidéo ; les autres longueurs sont estimées d’après les noms des raccords.',
-          'Only the M6 rod, the 15×21 thread, the 7–8 cm nipple and the 30–32 mm bar come from the video; the other lengths are estimated from the fittings’ names.',
+          'De la vidéo : tige M6, filetage 15×21, mamelon de 7–8 cm, barre de 30–32 mm ; autres longueurs estimées. Version simplifiée : un seul manchon 26×34 soudé (l’auteur : un 20×27, puis deux raccords). Ailettes : hypothèse.',
+          'From the video: M6 rod, 15×21 thread, 7–8 cm nipple, 30–32 mm bar; other lengths estimated. Simplified version: a single welded 26×34 socket (the author: a 20×27, then two fittings). Fins: an assumption.',
         ),
       },
     ],
@@ -335,8 +331,8 @@ function render(): Drawing {
     l('SÉCURITÉ', 'SAFETY'),
     [
       l(
-        `Jamais un doigt dans le clapet pendant la marche : il claque 100 à 110 fois par minute (S1 13:40) et le corps encaisse ${nFr(MODEL.peakBar, 1)} bar à chaque coup (modèle).`,
-        `Never a finger in the valve while it runs: it slams 100 to 110 times a minute (S1 13:40) and the body takes ${nEn(MODEL.peakBar, 1)} bar at each stroke (model).`,
+        `Jamais un doigt dans le clapet pendant la marche : il claque 100 à 110 fois par minute (vidéo 13:40) et le corps encaisse ${nFr(MODEL.peakBar, 1)} bar à chaque coup (modèle).`,
+        `Never a finger in the valve while it runs: it slams 100 to 110 times a minute (video 13:40) and the body takes ${nEn(MODEL.peakBar, 1)} bar at each stroke (model).`,
       ),
     ],
     { size: 1.75, border: COLORS.red },
@@ -350,8 +346,8 @@ export const wasteValveAssembly: DrawingSheet = {
   group: 'valve',
   title: TITLE,
   description: l(
-    'Coupe par l’axe des quatorze pièces du clapet de choc de la vidéo, en pose fermée : la tête repose sur sa portée conique et le poids attend, à la course s au-dessus du guide. Le second tracé, en cuivre et en traits mixtes, est la pose ouverte : tige, tête, ailettes, manchons, poids et écrous descendent de s jusqu’à ce que le poids se pose sur le guide. L’eau motrice monte par la platine ; clapet ouvert, elle passe sous la tête et s’échappe par les quatre lumières du mamelon. Les repères 14 à 27 renvoient à la nomenclature RP-D06 ; les détails D et C à 5:1 montrent la course.',
-    'Section through the axis of the fourteen parts of the video’s waste valve, closed pose: the head rests on its conical seat and the weight waits, the stroke s above the guide. The second outline, in copper chain lines, is the open pose: stem, head, fins, sleeves, weight and nuts drop by s until the weight lands on the guide. The drive water rises through the plate; with the valve open it passes under the head and escapes through the nipple’s four ports. Items 14 to 27 refer to the bill of materials RP-D06; details D and C at 5:1 show the stroke.',
+    'Coupe par l’axe des quatorze pièces du clapet de choc, d’après celui de la vidéo mais simplifié (un seul manchon 26×34 soudé, là où l’auteur a soudé un 20×27 puis ajouté deux raccords), en position fermée : la tête repose sur sa portée conique et l’écrou de course attend, à la course s au-dessus du guide, le poids posé sur lui. Le second tracé, en cuivre et en traits mixtes, est la position ouverte : tige, tête, ailettes, manchons, poids et écrous descendent de s jusqu’à ce que l’écrou de course se pose sur le guide. L’eau motrice monte par la platine ; clapet ouvert, elle passe sous la tête et s’échappe par les quatre lumières du mamelon. Les repères 14 à 27 renvoient à la nomenclature D06 ; les détails D et C à 5:1 montrent la course.',
+    'Section through the axis of the fourteen parts of the waste valve, after the video’s but simplified (a single welded 26×34 socket where the author welded a 20×27 and then added two fittings), closed position: the head rests on its conical seat and the stroke nut waits, the stroke s above the guide, with the weight resting on it. The second outline, in copper dash-dot lines, is the open position: stem, head, fins, sleeves, weight and nuts drop by s until the stroke nut lands on the guide. The drive water rises through the plate; with the valve open it passes under the head and escapes through the nipple’s four ports. Items 14 to 27 refer to the bill of materials D06; details D and C at 5:1 show the stroke.',
   ),
   scene: 'valve',
   parts: VALVE_PART_IDS,

@@ -4,7 +4,7 @@ import { DEFAULT_PARAMS, PIT_X, createGround, driveGeometry, tankAxisX } from '.
 import { deliveryPolyline, wasteStream } from '../../three/site/routes';
 import type { Terrain } from '../../three/site/terrain';
 
-// The geometry of the site as the 3D `site` world has it, for the plan (RP-D11) and the profile (RP-D12): the ground height
+// The geometry of the site as the 3D `site` world has it, for the plan (D11) and the profile (D12): the ground height
 // function, the drive pipe, the delivery pipe with its bends, and the waste-water drain. Everything comes from
 // src/three/site (layout, routes) and dims.ts, so the sheets and the 3D agree by construction. The terrain is the lab's
 // reconstruction of a hillside, not a survey.

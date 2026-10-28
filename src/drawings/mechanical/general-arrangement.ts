@@ -18,7 +18,7 @@ import {
   plan,
 } from './ram-draw';
 
-const NUMBER = 'RP-D01';
+const NUMBER = 'D01';
 const TITLE = l('Bélier générique 1″ — plan d’ensemble', 'Generic 1″ ram — general arrangement');
 
 function render(): Drawing {
@@ -26,8 +26,8 @@ function render(): Drawing {
   d.frame({
     title: TITLE,
     subtitle: l(
-      'Élévation, vue de dessus et vue d’extrémité · le clapet de choc est celui de la vidéo',
-      'Elevation, plan and end view · the waste valve is the video’s',
+      'Élévation, vue de dessus et vue d’extrémité · clapet de choc d’après la vidéo, simplifié',
+      'Elevation, plan and end view · waste valve after the video’s, simplified',
     ),
     number: NUMBER,
     scale: '1:5',
@@ -70,7 +70,7 @@ function render(): Drawing {
   dimV(ev, [-40, R.floorY], [0, 0], -85, lab(-R.floorY, 'E'), 2);
   dimV(ev, [xW - 50, 0], [xW - 50, R.plateTop], 40, lab(R.plateTop, 'E'), 1.9);
   dimV(ev, [xW - 15.5, 0], [xW - 15.5, VALVE_TOP], 20, lab(VALVE_TOP, 'E'), 2);
-  dimV(ev, [xD - CH_MM.R, 0], [xD - CH_MM.R, sh + ch.yTop], xD - CH_MM.R - 30, lab(sh + ch.yTop, 'D'), 2);
+  dimV(ev, [xD - CH_MM.R, 0], [xD - CH_MM.R, sh + ch.yTop], xD - CH_MM.R - 30, lab(sh + ch.yTop, 'E'), 2);
   dimV(ev, [xD - 31.5, 0], [xD - 31.5, GAUGE_TOP], xD - CH_MM.R - 60, lab(GAUGE_TOP, 'E'), 2);
   dimV(ev, [PIPE_END_X, 0], [PIPE_END_X, yo], PIPE_END_X + 22, lab(yo, 'E'), 2);
 
@@ -127,7 +127,7 @@ function render(): Drawing {
 
   // ------------------------------------------------------------------ parts list, legend, notes
   const xr = 346;
-  heading(d, xr, 14, l('REPÈRES · nomenclature RP-D06', 'ITEMS · bill of materials RP-D06'), { size: 1.9 });
+  heading(d, xr, 14, l('REPÈRES · nomenclature D06', 'ITEMS · bill of materials D06'), { size: 1.9 });
   const rows = partIds('ram').map((id) => [
     { t: String(ITEM[id]), bold: true },
     { t: partOf(id).name },
@@ -164,7 +164,7 @@ function render(): Drawing {
       {
         bullet: '3',
         t: l(
-          'Le tronçon de conduite motrice est coupé : il figure les 20 m qui descendent du réservoir. Aucun couple de serrage n’est donné par la source.',
+          'Le tronçon de conduite motrice est coupé : il figure les 20 m qui descendent de la réserve. Aucun couple de serrage n’est donné par la source.',
           'The drive pipe stub is cut short: it stands for the 20 m coming down from the tank. The source gives no tightening torque.',
         ),
       },
@@ -180,8 +180,8 @@ export const generalArrangement: DrawingSheet = {
   group: 'ram',
   title: TITLE,
   description: l(
-    'Plan d’ensemble du bélier générique de 1″ à 1:5, d’après les cotes du modèle 3D : élévation, vue de dessus et vue d’extrémité côté arrivée, avec la conduite motrice coupée, la vanne et la crépine d’arrivée, le corps sur son massif d’ancrage, le clapet de choc sur sa platine, le reniflard, le clapet de refoulement sous la cloche et son manomètre, la sortie avec sa vanne et son raccord, la vidange. Les repères renvoient à la nomenclature RP-D06. Ce n’est pas le Walton n°3 de la vidéo : seules les cotes marquées sont données par une source, les autres sont des estimations.',
-    'General arrangement of the generic 1″ ram at 1:5, from the 3D model’s dimensions: elevation, plan and end view from the inlet side, with the drive pipe cut short, the inlet valve and strainer, the body on its anchor block, the waste valve on its plate, the snifter, the delivery check valve under the chamber with its gauge, the outlet with its valve and union, the drain. Items refer to the bill of materials RP-D06. This is not the video’s Walton n°3: only the unmarked dimensions are given by a source, the others are estimates.',
+    'Plan d’ensemble du bélier générique de 1″ à 1:5, d’après les cotes de la vue 3D : élévation, vue de dessus et vue d’extrémité côté arrivée, avec la conduite motrice coupée, la vanne et le filtre en Y d’arrivée, le corps sur son massif d’ancrage, le clapet de choc sur sa platine, le reniflard, le clapet de refoulement sous la cloche et son manomètre, la sortie avec sa vanne et son raccord, la vidange. Les repères renvoient à la nomenclature D06. Ce n’est pas le Walton n°3 de la vidéo : seules les cotes sans astérisque viennent d’une source, les autres sont des estimations (*) ou des dérivés (†).',
+    'General arrangement of the generic 1″ ram at 1:5, from the dimensions of the 3D view: elevation, plan and end view from the inlet side, with the drive pipe cut short, the inlet valve and Y-strainer, the body on its anchor block, the waste valve on its plate, the snifter, the delivery check valve under the chamber with its gauge, the outlet with its valve and union, the drain. Items refer to the bill of materials D06. This is not the video’s Walton No. 3: only the dimensions without an asterisk come from a source, the others are estimates (*) or derived (†).',
   ),
   scene: 'ram',
   parts: partIds('ram'),

@@ -37,10 +37,10 @@ import {
 import { partName } from './names';
 import { balloon, cat, chip, flowArrow, gridTable, kindKey, nf, para, type Kind } from './util';
 
-// RP-D13 — Spring box and buffer tank: section A–A and plan at 1:40 (from the 3D `catchment` world: src/three/catchment/
+// D13 — Spring box and buffer tank: section A–A and plan at 1:40 (from the 3D `catchment` world: src/three/catchment/
 // layout.ts and dims.ts) and detail B at 1:10 (the outlet of the tank: intake screen, gate valve, drain). Balloons 1 to 9 are the nine
-// parts of that world, with the names of the catalogue. Nothing here is in the video (S1 only says that a buffer tank
-// exists): the layout follows the common practice of spring protection (Oxfam TB5, S9; Practical Action, S8) and every
+// parts of that world, with the names of the catalogue. Nothing here is in the video (it only says that a buffer tank
+// exists): the layout follows the common practice of spring protection (Oxfam TB5; Practical Action) and every
 // dimension is an estimate of the lab (dims.ts), written in millimetres as on a workshop drawing.
 
 const BLUE = COLORS.water;
@@ -620,9 +620,9 @@ function levelsTable(p: View, x: number, y: number): void {
     {
       name: l('Eau dans le regard (sortie au sol + 12 mm)', 'Water in the box (outlet at ground + 12 mm)'),
       v: BOX_WATER_Y,
-      kind: 'D',
+      kind: 'E',
     },
-    { name: l('Bout libre de la conduite d’alimentation', 'Free end of the feed pipe'), v: C.feedEnd, kind: 'D' },
+    { name: l('Bout libre de la conduite d’alimentation', 'Free end of the feed pipe'), v: C.feedEnd, kind: 'E' },
     { name: l('Dessus du couvercle de la réserve', 'Top of the tank lid'), v: H_LID, kind: 'E' },
     { name: l('Niveau de débordement (100 %)', 'Overflow level (100 %)'), v: H_FULL, kind: 'E' },
     { name: l('Axe du départ de la conduite motrice', 'Axis of the drive pipe outlet'), v: OUT_Y, kind: 'E' },
@@ -645,7 +645,7 @@ function levelsTable(p: View, x: number, y: number): void {
 
 export const catchmentLayout: DrawingSheet = {
   id: 'catchment-layout',
-  number: 'RP-D13',
+  number: 'D13',
   group: 'site',
   title: l('Captage et réserve tampon', 'Spring box and buffer tank'),
   description: l(
@@ -672,7 +672,7 @@ export const catchmentLayout: DrawingSheet = {
         'Coupe et plan 1:40, détail du départ de la conduite motrice 1:10 — cotes estimées',
         'Section and plan 1:40, detail of the start of the drive pipe 1:10 — estimated dimensions',
       ),
-      number: 'RP-D13',
+      number: 'D13',
       scale: '1:40 · 1:10',
     });
     const p = d.paper();
@@ -684,15 +684,15 @@ export const catchmentLayout: DrawingSheet = {
     detailB(d, 250, 98);
     partsList(p, 292, 142);
     levelsTable(p, 292, 199);
-    kindKey(p, 14, 268, { kinds: ['R', 'D', 'E'] });
+    kindKey(p, 14, 268, { kinds: ['E'] });
     para(
       p,
       14,
       249,
       200,
       l(
-        'Le captage n’est pas dans la vidéo : le regard, le filtre à gravier, le trop-plein, la vidange et la vanne de départ suivent la pratique courante de protection d’une source (Oxfam, fiche TB5, S9) et d’une petite réserve (Practical Action, S8). Toutes les cotes sont des estimations (E), écrites en millimètres. L’eau de source n’est pas garantie potable ; le prélèvement est réglementé (en France : DDT, OFB).',
-        'The catchment is not in the video: the spring box, the gravel filter, the overflow, the drain and the outlet valve follow the common practice of protecting a spring (Oxfam, brief TB5, S9) and of a small tank (Practical Action, S8). Every dimension is an estimate (E), written in millimetres. Spring water is not guaranteed potable; taking it is regulated (in France: DDT, OFB).',
+        'Le captage n’est pas dans la vidéo : le regard, le filtre à gravier, le trop-plein, la vidange et la vanne de départ suivent la pratique courante de protection d’une source (Oxfam, fiche technique TB5) et d’une petite réserve (Practical Action). Le lit de gravier est dessiné à nu pour qu’on le voie, Oxfam le recouvre d’une bâche et de terre. Toutes les cotes sont des estimations (E), écrites en millimètres. L’eau de source n’est pas garantie potable ; le prélèvement est réglementé (en France : DDT, OFB).',
+        'The catchment is not in the video: the spring box, the gravel filter, the overflow, the drain and the outlet valve follow the common practice of protecting a spring (Oxfam, technical brief TB5) and of a small tank (Practical Action). The gravel bed is drawn bare so that it can be seen; Oxfam covers it with sheeting and soil. Every dimension is an estimate (E), written in millimetres. Spring water is not guaranteed potable; taking it is regulated (in France: DDT, OFB).',
       ),
       1.6,
       INK_2,

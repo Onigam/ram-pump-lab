@@ -44,7 +44,7 @@ import type { L } from '@onigam/lab-kit/i18n';
 type Cell3 = L;
 import { HEAD, SEAT } from './valve-draw';
 
-const NUMBER = 'RP-D03';
+const NUMBER = 'D03';
 const TITLE = l('Clapet de choc — pièces', 'Waste valve — parts');
 const PARTS_SHOWN = ['valve-stem', 'stem-sleeves', 'valve-head', 'counterweight', 'valve-guide', 'valve-nipple'];
 
@@ -108,13 +108,13 @@ function render(): Drawing {
       [V.sleeveOnRodR, s1 + 6],
       12,
       7,
-      l(`manchons Ø${nFr(V.sleeveOnRodR * 2, 1)}† ×2`, `sleeves Ø${nEn(V.sleeveOnRodR * 2, 1)}† ×2`),
+      l(`manchons Ø${nFr(V.sleeveOnRodR * 2, 1)}* ×2`, `sleeves Ø${nEn(V.sleeveOnRodR * 2, 1)}* ×2`),
       { size: 1.8 },
     );
     v.leader([V.headR - 1.5, V.headBase + dy0 + 1.4], 12, -8, l('tête (voir ci-dessous)', 'head (see below)'), {
       size: 1.8,
     });
-    v.leader([V.finsR, 4.5], 10, 5, l('écrou à ailettes', 'fins nut'), { size: 1.8 });
+    v.leader([V.finsR, 4.5], 10, 5, l('écrou à ailettes', 'finned nut'), { size: 1.8 });
     v.caption([0, rodLen + 14], l('TIGE ET MANCHONS', 'STEM AND SLEEVES'), '1:1');
   }
 
@@ -129,7 +129,7 @@ function render(): Drawing {
     dimH(v, [-V.headR, 0], [V.headR, 0], -1.7, labOf(dim('VALVE', 'headDiameter'), 'Ø'), 2.2);
     dimV(v, [-V.headR, 0], [-V.headR, CONE_TOP - V.headBase], -V.headR - 4.5, labOf(dim('VALVE', 'headHeight')), 2.2);
     v.leader([0, CONE_TOP - V.headBase - 0.2], 14, -3, l('alésage Ø6 : la tige', 'Ø6 bore: the rod'), { size: 1.7 });
-    v.leader([5.5, 1.9], 14, -6, l(`demi-angle du cône ${CONE_DEG}°*`, `cone half angle ${CONE_DEG}°*`), { size: 1.8 });
+    v.leader([5.5, 1.9], 14, -6, l(`demi-angle du cône ${CONE_DEG}°*`, `cone half-angle ${CONE_DEG}°*`), { size: 1.8 });
     v.caption([0, -3.6], l('TÊTE · vis inox raccourcie', 'HEAD · shortened stainless screw'), '5:1');
   }
 
@@ -181,7 +181,7 @@ function render(): Drawing {
     for (const sx of [1, -1]) v.line([sx * V.threadR, neck], [sx * V.threadR, col], { w: W.thin });
     dimV(v, [V.collarR, 0], [V.collarR, neck], 17, lab(neck0, 'E'), 2);
     dimV(v, [V.collarR, neck], [V.collarR, col], 17, lab(V.sleeveTop - NECK_BOTTOM, 'E'), 2);
-    dimV(v, [V.collarR, col], [V.collarR, top], 17, lab(V.guideTop - V.sleeveTop, 'D'), 2);
+    dimV(v, [V.collarR, col], [V.collarR, top], 17, lab(V.guideTop - V.sleeveTop, 'E'), 2);
     dimV(v, [-V.collarR, 0], [-V.collarR, top], -17, lab(len, 'E'), 2);
     dimH(v, [-V.collarR, top], [V.collarR, top], top + 6, labOf(dim('VALVE', 'guideCollarDiameter'), 'Ø'), 2.1);
     dimH(v, [-V.tubeR, 0], [V.tubeR, 0], -5, labOf(dim('VALVE', 'guideTubeOuterDiameter'), 'Ø'), 2.1);
@@ -193,7 +193,7 @@ function render(): Drawing {
       { size: 1.8 },
     );
     v.leader([V.threadR, (neck + col) / 2], 14, -10, l('filetage 15×21', '15×21 thread'), { size: 1.8 });
-    v.leader([V.collarR, top - 0.4], 8, -7, l('butée du poids', 'weight stop'), { size: 1.8 });
+    v.leader([V.collarR, top - 0.4], 8, -7, l('butée de l’écrou', 'nut stop'), { size: 1.8 });
     v.caption([0, -13.5], l('GUIDE · doigt de gant inox', 'GUIDE · stainless thermowell'), '2:1');
   }
 
@@ -231,17 +231,23 @@ function render(): Drawing {
     v.center([0, -4], [0, top + 4]);
     const pm = (V.portBottom + V.portTop) / 2 - y0;
     v.sectionMark([-15, pm], [15, pm], 'B', 1);
-    dimV(v, [V.threadR, 0], [V.threadR, top], 22, lab(top, 'R'), 2.2);
+    dimV(v, [V.threadR, 0], [V.threadR, top], 22, lab(top, 'E'), 2.2);
     dimV(v, [-V.threadR, V.portBottom - y0], [-V.threadR, V.portTop - y0], -22, lab(V.portTop - V.portBottom, 'E'), 2);
     dimV(v, [-V.threadR, 0], [-V.threadR, V.portBottom - y0], -22, lab(V.portBottom - y0, 'E'), 2);
     dimV(v, [-V.threadR, V.portTop - y0], [-V.threadR, top], -22, lab(V.nippleTop - V.portTop, 'E'), 2);
     dimH(v, [-V.threadR, top], [V.threadR, top], top + 7, labOf(dim('VALVE', 'threadDiameter'), 'Ø'), 2.1);
-    dimH(v, [-V.seatBoreR, 0], [V.seatBoreR, 0], -6, lab(V.seatBoreR * 2, 'R', 'Ø'), 2.1);
-    v.leader([corner(V.lockAF), nut0 + 3.5], 8, 0, l(`contre-écrou ${nFr(V.lockAF)}*`, `lock nut ${nEn(V.lockAF)}*`), {
-      size: 1.7,
-    });
+    dimH(v, [-V.seatBoreR, 0], [V.seatBoreR, 0], -6, lab(V.seatBoreR * 2, 'D', 'Ø'), 2.1);
+    v.leader(
+      [corner(V.lockAF), nut0 + 3.5],
+      8,
+      0,
+      l(`contre-écrou ${nFr(V.lockAF)}* s/plats`, `lock nut ${nEn(V.lockAF)}* a/f`),
+      {
+        size: 1.7,
+      },
+    );
     v.leader([V.threadR, top - 8], 12, -2, l('filetage 15×21', '15×21 thread'), { size: 1.7 });
-    v.leader([V.seatBoreR + 0.8, 2.2], 12, 7, l('portée conique (RP-D04)', 'conical seat (RP-D04)'), { size: 1.7 });
+    v.leader([V.seatBoreR + 0.8, 2.2], 12, 7, l('portée conique (D04)', 'conical seat (D04)'), { size: 1.7 });
     v.caption([0, 88.2], l('MAMELON 15×21 À LUMIÈRES', '15×21 PORTED NIPPLE'), '2:1');
 
     // section B–B through the middle of the ports, at 2:1
@@ -290,7 +296,7 @@ function render(): Drawing {
     v.leader([bore, 44], -9, 4, l('M6 taraudé', 'tapped M6'), { size: 1.7 });
     v.leader([-R + 0.6, 22], -4, 6, l('nervures', 'ribs'), { size: 1.7 });
     v.leader([-R + 4, 0.2], -3, 6, l('face plane', 'flat face'), { size: 1.7 });
-    v.caption([0, -12.5], l(`CONTREPOIDS · ${WEIGHT} g (calibré)`, `COUNTERWEIGHT · ${WEIGHT} g (calibrated)`), '1:1');
+    v.caption([0, -12.5], l(`POIDS · ${WEIGHT} g (calibré)`, `WEIGHT · ${WEIGHT} g (calibrated)`), '1:1');
   }
 
   // ------------------------------------------------------------------ 6. fit of a sleeve in the guide, 20:1
@@ -338,9 +344,9 @@ function render(): Drawing {
   const remark = [
     l('celui du nouveau clapet', 'the new valve’s'),
     l('essai : consomme trop', 'trial: uses too much'),
-    l('d’origine : 17 L/min', 'original: 17 L/min'),
+    l('d’origine : 17 L/min (estimation de l’auteur)', 'original: 17 L/min (the author’s estimate)'),
   ];
-  heading(d, 104, 240, l('TAILLES DE PLOMBERIE (S1 03:54)', 'PLUMBING SIZES (S1 03:54)'), { size: 1.9 });
+  heading(d, 104, 240, l('TAILLES DE PLOMBERIE (vidéo 03:54)', 'PLUMBING SIZES (video 03:54)'), { size: 1.9 });
   grid(
     d,
     104,
@@ -348,13 +354,13 @@ function render(): Drawing {
     [
       { label: l('Clapet', 'Valve'), w: 15 },
       { label: l('Raccord', 'Fitting'), w: 40, mono: true },
-      { label: l('Siège', 'Seat'), w: 14, mono: true },
+      { label: l('Portée', 'Seat'), w: 14, mono: true },
       { label: l('Remarque', 'Remark'), w: 55 },
     ],
     ([1, 2, 3] as const).map((n) => [
-      { t: `n°${n}` },
+      { t: l(`n°${n}`, `No. ${n}`) },
       { t: `${trade[n - 1]} (DN${VALVES[n].dn}, ${inch[n - 1]})` },
-      { t: lab(mmV(VALVE.seatBore[n]), 'R', 'Ø') },
+      { t: lab(mmV(VALVE.seatBore[n]), 'D', 'Ø') },
       { t: remark[n - 1]! },
     ]),
     { size: 1.65, pad: 0.55, lineH: 2.5 },
@@ -366,8 +372,8 @@ function render(): Drawing {
     274,
     214,
     l(
-      'Aucune tolérance de fabrication ni couple de serrage : la source n’en donne pas, la feuille ne remplace pas un plan d’atelier. Les raccords 15×21 sont filetés ½″ gaz (14 filets par pouce).',
-      'No machining tolerance and no tightening torque: the source gives none, and this sheet is not a workshop drawing. The 15×21 fittings are ½″ BSP threaded (14 threads per inch).',
+      'Aucune tolérance de fabrication ni couple de serrage : la source n’en donne pas, la feuille ne remplace pas un plan d’atelier. Les raccords 15×21 sont filetés ½″ gaz (14 filets par pouce). Le diamètre de portée est celui du nom du raccord (nominal, †). Dans les fourchettes de la vidéo, 75 mm (mamelon de 7 à 8 cm) et Ø 31 (barre de 30 à 32 mm) sont des valeurs retenues par le labo (*).',
+      'No machining tolerance and no tightening torque: the source gives none, and this sheet is not a workshop drawing. The 15×21 fittings are ½″ BSP threaded (14 threads per inch). The seat diameter is the one in the fitting’s name (nominal, †). Within the video’s ranges, 75 mm (a nipple of 7 to 8 cm) and Ø 31 (a bar of 30 to 32 mm) are values the lab picked (*).',
     ),
     { size: 1.65, color: INK_2 },
   );
@@ -376,17 +382,20 @@ function render(): Drawing {
     [
       l('Manchons dans le guide', 'Sleeves in the guide'),
       cat(lab(V.sleeveOnRodR * 2, 'D', 'Ø'), l(' sur ', ' in '), lab(V.tubeBoreR * 2, 'E', 'Ø')),
-      l('0,1 mm au diamètre (S1 09:02)', '0.1 mm on the diameter (S1 09:02)'),
+      l('0,1 mm au diamètre (vidéo 09:02)', '0.1 mm on the diameter (video 09:02)'),
     ],
     [
       l('Tête sur portée', 'Head on seat'),
       cat(l('cône ', 'cone '), `2 × ${CONE_DEG}°*`),
-      l('portée fraisée au même angle (S1 09:37)', 'seat milled at the same angle (S1 09:37)'),
+      l('portée fraisée au même angle (vidéo 18:54)', 'seat milled at the same angle (video 18:54)'),
     ],
     [
       l('Tête : décalage latéral max.', 'Head: largest sideways shift'),
-      labN(k(VALVE_DERIVED.headShift), 2, 'D', '≤ ', ' mm'),
-      l('conséquence du jeu des manchons', 'follows from the sleeve clearance'),
+      labN(k(VALVE_DERIVED.headShift), 2, 'E', '≤ ', ' mm'),
+      l(
+        'conséquence du jeu des manchons (longueurs estimées)',
+        'follows from the sleeve clearance (lengths estimated)',
+      ),
     ],
     [
       l('Course (réglage du poids)', 'Stroke (weight setting)'),
@@ -415,8 +424,8 @@ export const wasteValveParts: DrawingSheet = {
   group: 'valve',
   title: TITLE,
   description: l(
-    'Les pièces usinées ou fabriquées du clapet, une à une : tige M6 avec ses deux manchons, tête (vis inox raccourcie), contrepoids taillé dans une barre d’armature, doigt de gant qui sert de guide, mamelon 15×21 avec ses quatre lumières (coupe B–B). L’ajustement des manchons dans le guide, à 0,1 mm près (S1 09:02), est détaillé à 20:1 ; deux tableaux donnent les tailles de plomberie des trois clapets et les jeux. La source ne donne ni tolérance de fabrication ni couple de serrage : aucun n’est indiqué.',
-    'The valve’s machined or made parts, one by one: the M6 stem with its two sleeves, the head (shortened stainless screw), the counterweight cut from a rebar bar, the thermowell that serves as the guide, the 15×21 nipple with its four ports (section B–B). The fit of the sleeves in the guide, to within 0.1 mm (S1 09:02), is detailed at 20:1; two tables give the plumbing sizes of the three valves and the clearances. The source gives neither a machining tolerance nor a tightening torque: none is shown.',
+    'Les pièces usinées ou fabriquées du clapet, une à une : tige M6 avec ses deux manchons, tête (vis inox raccourcie), poids taillé dans une barre d’armature, doigt de gant qui sert de guide, mamelon 15×21 avec ses quatre lumières (coupe B–B). L’ajustement des manchons dans le guide, à 0,1 mm près (vidéo 09:02), est détaillé à 20:1 ; deux tableaux donnent les tailles de plomberie des trois clapets et les jeux. La source ne donne ni tolérance de fabrication ni couple de serrage : aucun n’est indiqué.',
+    'The valve’s machined or made parts, one by one: the M6 stem with its two sleeves, the head (shortened stainless screw), the weight cut from a length of rebar, the thermowell that serves as the guide, the 15×21 nipple with its four ports (section B–B). The fit of the sleeves in the guide, to within 0.1 mm (video 09:02), is detailed at 20:1; two tables give the plumbing sizes of the three valves and the clearances. The source gives neither a machining tolerance nor a tightening torque: none is shown.',
   ),
   scene: 'valve',
   parts: PARTS_SHOWN,

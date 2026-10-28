@@ -12,7 +12,7 @@ import { createRamModel } from '../../three/ram/model';
 import * as G from '../../three/valve/geo';
 import { MECHANICAL_SHEETS } from './index';
 import { fakeDocument, FakeXMLSerializer, textBoxes, textExtent } from './test-dom';
-import { CH_MM, CONE_TOP, FINS_BOTTOM, NECK_BOTTOM, ROD_BOTTOM, STATUS, V, chamberSection, k, mm } from './geom';
+import { CH_MM, CONE_TOP, FINS_BOTTOM, NECK_BOTTOM, ROD_BOTTOM, STATUS, V, chamberSection, k, mm, stack } from './geom';
 import { ITEM } from './draw';
 
 // The six mechanical sheets by script: frozen ids, numbers, groups and worlds, a render in both languages with no NaN and no
@@ -20,12 +20,12 @@ import { ITEM } from './draw';
 // JSDoc of dims.ts, and the geometry against the 3D builders.
 
 const EXPECTED = [
-  { id: 'general-arrangement', number: 'RP-D01', group: 'ram', scene: 'ram' },
-  { id: 'waste-valve-assembly', number: 'RP-D02', group: 'valve', scene: 'valve' },
-  { id: 'waste-valve-parts', number: 'RP-D03', group: 'valve', scene: 'valve' },
-  { id: 'seat-cone-detail', number: 'RP-D04', group: 'valve', scene: 'valve' },
-  { id: 'chamber-section', number: 'RP-D05', group: 'ram', scene: 'ram' },
-  { id: 'bom', number: 'RP-D06', group: 'ram', scene: 'ram' },
+  { id: 'general-arrangement', number: 'D01', group: 'ram', scene: 'ram' },
+  { id: 'waste-valve-assembly', number: 'D02', group: 'valve', scene: 'valve' },
+  { id: 'waste-valve-parts', number: 'D03', group: 'valve', scene: 'valve' },
+  { id: 'seat-cone-detail', number: 'D04', group: 'valve', scene: 'valve' },
+  { id: 'chamber-section', number: 'D05', group: 'ram', scene: 'ram' },
+  { id: 'bom', number: 'D06', group: 'ram', scene: 'ram' },
 ] as const;
 
 type Lang = 'fr' | 'en';
@@ -74,7 +74,7 @@ describe('the six sheets', () => {
 
   it('write numbers the way of each language: decimal comma in French, decimal point in English', () => {
     for (const s of MECHANICAL_SHEETS) {
-      const en = texts('en', s.id).filter((t) => !t.startsWith('RP-D'));
+      const en = texts('en', s.id).filter((t) => !/^D\d\d$/.test(t));
       const fr = texts('fr', s.id);
       expect(
         en.filter((t) => /\d,\d{1,2}(?!\d)/.test(t)),
@@ -167,43 +167,51 @@ describe('the dimensions quoted are the ones of dims.ts', () => {
   const fr = (x: number, d = 0): string => x.toFixed(d).replace('.', ',');
   const en = (x: number, d = 0): string => x.toFixed(d);
 
-  it('RP-D01 draws the stack axes, the foundation and the heights of the model', () => {
+  it('D01 draws the stack axes, the foundation and the heights of the model', () => {
     for (const lang of ['fr', 'en'] as const) {
       const f = lang === 'fr' ? fr : en;
       has(lang, 'general-arrangement', `${f(mm(DIMS.RAM.xWaste))}*`);
       has(lang, 'general-arrangement', `${f(mm(DIMS.RAM.xSnifter - DIMS.RAM.xWaste))}*`);
       has(lang, 'general-arrangement', `${f(mm(DIMS.RAM.xDelivery - DIMS.RAM.xSnifter))}*`);
       has(lang, 'general-arrangement', `${f(mm(DIMS.RAM.bodyLength - DIMS.RAM.xDelivery))}*`);
-      has(lang, 'general-arrangement', `${f(mm(DIMS.FOUNDATION.length))}†`);
+      has(lang, 'general-arrangement', `${f(mm(DIMS.FOUNDATION.length))}*`);
       has(lang, 'general-arrangement', `${f(mm(DIMS.FOUNDATION.width))}*`);
       has(lang, 'general-arrangement', `${f(mm(DIMS.INLET.strainerLength))}*`);
       has(lang, 'general-arrangement', `${f(mm(DIMS.INLET.valveLength))}*`);
     }
   });
 
-  it('RP-D02 and RP-D03 quote the valve of the video: the 75 mm nipple and the M6 rod are unmarked, the rest is marked', () => {
+  it('D02 and D03 quote the valve of the video: the thread of the 15×21 is unmarked, a value derived from a figure of the video is †, every other one is an estimate (*)', () => {
     for (const lang of ['fr', 'en'] as const) {
       const f = lang === 'fr' ? fr : en;
-      has(lang, 'waste-valve-parts', '75');
+      // the 21 of the 15×21 fitting is the video's; the 15 of the seat is read from the fitting's name (†)
       has(lang, 'waste-valve-parts', `Ø${f(mm(DIMS.VALVE.threadDiameter))}`);
-      has(lang, 'waste-valve-parts', `Ø${f(mm(DIMS.VALVE.counterweightDiameter))}`);
-      has(lang, 'waste-valve-parts', `${f(mm(DIMS.VALVE.counterweightLength))}†`);
+      has(lang, 'waste-valve-parts', `Ø${f(mm(DIMS.VALVE.seatBore[1]))}†`);
+      // 7–8 cm and 30–32 mm are ranges of the video: the mid-points the lab picked are estimates (F23)
+      has(lang, 'waste-valve-parts', `${f(mm(DIMS.VALVE.nippleLength))}*`);
+      has(lang, 'waste-valve-parts', `Ø${f(mm(DIMS.VALVE.counterweightDiameter))}*`);
+      // a length computed from the calibrated mass, or from other estimated lengths, is an estimate too (F16)
+      has(lang, 'waste-valve-parts', `${f(mm(DIMS.VALVE.counterweightLength))}*`);
       has(lang, 'waste-valve-parts', `Ø${f(mm(DIMS.VALVE.headDiameter), 1)}*`);
       has(lang, 'waste-valve-parts', `Ø${f(mm(DIMS.VALVE.guideCollarDiameter))}*`);
-      has(lang, 'waste-valve-assembly', `${f(mm(DIMS.VALVE.guideTop))}†`);
+      has(lang, 'waste-valve-assembly', `${f(mm(DIMS.VALVE.guideTop))}*`);
       has(lang, 'waste-valve-assembly', `${f(mm(DIMS.VALVE.reductionTop))}*`);
+      // the pitch of the M6 rod comes from the video's M6 alone: derived
+      expect(texts(lang, 'waste-valve-assembly').some((t) => t === `M6 · ${lang === 'fr' ? 'pas' : 'pitch'} 1†`)).toBe(
+        true,
+      );
     }
-    expect(texts('fr', 'waste-valve-parts').some((t) => t.includes('Ø9,9†'))).toBe(true);
-    expect(texts('en', 'waste-valve-parts').some((t) => t.includes('Ø9.9†'))).toBe(true);
+    expect(texts('fr', 'waste-valve-parts').some((t) => t.includes('Ø9,9*'))).toBe(true);
+    expect(texts('en', 'waste-valve-parts').some((t) => t.includes('Ø9.9*'))).toBe(true);
   });
 
-  it('RP-D04 draws the calibrated stroke, the seat bore and the derived contact band', () => {
+  it('D04 draws the calibrated stroke, the seat bore read from the fitting and the contact band (an estimate)', () => {
     for (const lang of ['fr', 'en'] as const) {
       const f = lang === 'fr' ? fr : en;
       has(lang, 'seat-cone-detail', `${f(STROKE, 1)}*`);
-      has(lang, 'seat-cone-detail', `Ø${f(mm(DIMS.VALVE.seatBore[1]))}`);
+      has(lang, 'seat-cone-detail', `Ø${f(mm(DIMS.VALVE.seatBore[1]))}†`);
       has(lang, 'seat-cone-detail', `Ø${f(mm(DIMS.VALVE.headDiameter), 1)}*`);
-      expect(texts(lang, 'seat-cone-detail').some((t) => t.includes(`${f(k(VALVE_DERIVED.contactBand), 2)} mm†`))).toBe(
+      expect(texts(lang, 'seat-cone-detail').some((t) => t.includes(`${f(k(VALVE_DERIVED.contactBand), 2)} mm*`))).toBe(
         true,
       );
       expect(
@@ -214,13 +222,13 @@ describe('the dimensions quoted are the ones of dims.ts', () => {
     }
   });
 
-  it('RP-D05 draws the chamber, the lift of the disc and the level of the model at rest', () => {
+  it('D05 draws the chamber, the lift of the disc and the level of the model at rest', () => {
     const ch = chamberSection();
     const level = CH_MM.shellBottom + ch.level(AIR_FRACTION_NOMINAL);
     for (const lang of ['fr', 'en'] as const) {
       const f = lang === 'fr' ? fr : en;
       has(lang, 'chamber-section', `Ø${f(mm(DIMS.CHAMBER.diameter))}*`);
-      has(lang, 'chamber-section', `${f(Math.round(level))}†`);
+      has(lang, 'chamber-section', `${f(Math.round(level))}*`);
       has(lang, 'chamber-section', `${f(mm(DIMS.CHECK_VALVE.lift))}*`);
       has(lang, 'chamber-section', `Ø${f(mm(DIMS.CHECK_VALVE.seatBore), 1)}*`);
     }
@@ -239,20 +247,22 @@ describe('the dimensions quoted are the ones of dims.ts', () => {
   });
 });
 
-describe('RP-D06 bill of materials', () => {
+describe('D06 bill of materials', () => {
   const ids = [...partIds('ram'), ...partIds('valve')];
 
   it('lists the 27 parts of the ram and valve worlds, each once, in the order of the frozen ids', () => {
     expect(ids).toHaveLength(27);
     expect(Object.keys(ITEM)).toEqual(ids);
-    const fr = texts('fr', 'bom');
-    const found = ids.filter((id) => fr.includes(id));
-    expect(found).toEqual(ids);
-    for (const id of ids)
+    // the item column reads 1 to 27 in that order, once each (the raw ids of the 3D parts are not shown to the visitor)
+    for (const lang of ['fr', 'en'] as const) {
+      const boxes = textBoxes(svgs[lang].bom!).filter((t) => t.bold && /^\d{1,2}$/.test(t.content) && t.x < 30);
       expect(
-        fr.filter((t) => t === id),
-        id,
-      ).toHaveLength(1);
+        boxes.map((t) => Number(t.content)),
+        lang,
+      ).toEqual(Array.from({ length: 27 }, (_, i) => i + 1));
+      const all = texts(lang, 'bom');
+      for (const id of ids) expect(all, `${lang}: the id ${id} must not be shown`).not.toContain(id);
+    }
   });
 
   it('takes names, materials and quantities from the catalogue, in both languages', () => {
@@ -285,7 +295,7 @@ describe('RP-D06 bill of materials', () => {
     for (const lang of ['fr', 'en'] as const) {
       const blob = texts(lang, 'bom').join(' ');
       expect(blob).toMatch(lang === 'fr' ? /couple de serrage/ : /tightening torque/);
-      expect(blob).toMatch(lang === 'fr' ? /Walton n° ?3/ : /Walton n° ?3/);
+      expect(blob).toMatch(lang === 'fr' ? /Walton n° ?3/ : /Walton No\. ?3/);
       expect(blob).not.toMatch(/\d\s?N·m|\bNm\b/);
     }
   });
@@ -299,10 +309,10 @@ describe('every sheet that draws the ram says that it is generic and that the di
       expect(fr, s.id).toContain('123†');
     }
   });
-  it('RP-D01, RP-D05 and RP-D06 name the Walton n°3', () => {
+  it('D01, D05 and D06 name the Walton n°3', () => {
     for (const id of ['general-arrangement', 'chamber-section', 'bom']) {
       for (const lang of ['fr', 'en'] as const)
-        expect(texts(lang, id).join(' '), `${id} ${lang}`).toMatch(/Walton n° ?3/);
+        expect(texts(lang, id).join(' '), `${id} ${lang}`).toMatch(lang === 'fr' ? /Walton n° ?3/ : /Walton No\. ?3/);
     }
   });
 });
@@ -369,6 +379,23 @@ describe('the drawn geometry is the 3D geometry', () => {
       ['redTop', V.redTop, G.RED_TOP],
     ];
     for (const [name, mine, theirs] of pairs) expect(mine, name).toBeCloseTo(theirs * 1000, 6);
+  });
+
+  it('the stack on the rod is the 3D one: stroke nut on the guide, the weight on the nut, the lock nut on the weight', () => {
+    // with no stroke the sheets' stack is the 3D closed stack (the 3D adds its own exaggerated travel)
+    const st = stack(0);
+    expect(st.nut0, 'stroke nut bottom').toBeCloseTo(G.STROKE_NUT_Y * 1000, 6);
+    expect(st.weight0, 'weight bottom').toBeCloseTo(G.WEIGHT_Y * 1000, 6);
+    expect(st.weight1, 'lock nut bottom').toBeCloseTo(G.LOCK_NUT_Y * 1000, 6);
+    expect(st.lock1, 'stack top').toBeCloseTo(G.STACK_TOP * 1000, 6);
+    expect(st.nut0, 'rests on the guide').toBeCloseTo(V.guideTop, 6);
+    expect(st.nut0).toBeCloseTo(k(DIMS.VALVE.strokeNutBottom), 6);
+    expect(st.weight0).toBeCloseTo(k(DIMS.VALVE.counterweightBottom), 6);
+    expect(st.weight1).toBeCloseTo(k(DIMS.VALVE.lockNutBottom), 6);
+    expect(st.lock1).toBeCloseTo(k(DIMS.VALVE.stackTop), 6);
+    // with the stroke, the whole stack stands that much higher
+    expect(stack(2.2).nut0 - stack(0).nut0).toBeCloseTo(2.2, 9);
+    expect(stack(2.2).rodTop - stack(0).rodTop).toBeCloseTo(2.2, 9);
   });
 
   it('the chamber vessel (bottom of the interior and height) equals the one of the 3D ram', () => {

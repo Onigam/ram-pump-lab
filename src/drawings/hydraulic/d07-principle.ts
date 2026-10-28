@@ -3,7 +3,7 @@ import { COLORS, Drawing, INK, INK_2, W, type Pt, type View } from '@onigam/lab-
 import type { DrawingSheet } from '@onigam/lab-kit/drawings';
 import { PIT, SITE, TANK } from '../../three/dims';
 import { G, RHO } from '../../sim/physics';
-import { valve1 } from './model';
+import { REPORTED, valve1 } from './model';
 import { partName } from './names';
 import { airChamber, ballValve, checkValve, gateValve, houseSymbol, instrument, strainer, wasteValve } from './symbols';
 import {
@@ -21,7 +21,7 @@ import {
   type Kind,
 } from './util';
 
-// RP-D07 — Hydraulic diagram of the whole system in symbols, not to scale: spring → spring box → buffer tank → drive pipe
+// D07 — Hydraulic diagram of the whole system in symbols, not to scale: spring → spring box → buffer tank → drive pipe
 // → ram (waste valve, check valve, air chamber, snifter, gauge) → delivery pipe → water tower → house, and the waste drain.
 // The three flows are model results for the n°1 valve of the video (RamSim); the fall h and the head H are the video's;
 // every pipe size and every piece of equipment is dims.ts (estimates, flagged by the E discs).
@@ -169,7 +169,7 @@ function ram(p: View): void {
   // pit boundary
   p.rect([198, 106], [314, 184], { w: W.thin, dash: 'phantom', color: INK_2 });
   p.text([201, 110.8], tr(partName('ram-pit')).toUpperCase(), { size: 1.8, weight: 'bold', color: INK_2 });
-  val(p, 201, 181.4, 'E', l('regard : dimensions estimées', 'pit: estimated dimensions'), { size: 1.5, color: INK_2 });
+  val(p, 201, 181.4, 'E', l('fosse : dimensions estimées', 'pit: estimated dimensions'), { size: 1.5, color: INK_2 });
   // inlet: flange pair, strainer ST-01, inlet valve V1
   for (const x of [204, 206.4]) p.line([x, Y0 - 3.6], [x, Y0 + 3.6], { w: 1.1 });
   pipe(p, [
@@ -319,11 +319,11 @@ function labels(p: View): void {
   flow(p, 15, 111, 'R', cat('S = ', nf(s, 1), ' L/min'));
   // tank
   tag(p, [80, 75.6], 'TK-01', [partName('buffer-tank')], { anchor: 'start' });
-  val(p, 80, 82.3, 'D', cat(nf(TANK.volumeL, 0), ' L'), { size: 1.6 });
+  val(p, 80, 82.3, 'D', cat('≈ ', nf(TANK.volumeL, 0), ' L'), { size: 1.6 });
   p.text([110.5, 83.6], l('évent', 'vent'), { size: 1.5, color: INK_2 });
   p.text([127, 99.6], 'OF-01', { size: 1.8, weight: 'bold' });
   p.text([127, 103], partName('overflow-pipe'), { size: 1.5, color: INK_2 });
-  flow(p, 127, 108, 'D', cat('S − Q = ', nf(Math.max(0, s - Q), 1), ' L/min'), 1.9);
+  flow(p, 127, 108, 'M', cat('S − Q = ', nf(Math.max(0, s - Q), 1), ' L/min'), 1.9);
   p.text([110, 113.2], 'IS-01', { size: 1.6, weight: 'bold', anchor: 'middle', halo: true });
   p.text([124, 127.6], 'VG-01', { size: 1.7, weight: 'bold', anchor: 'middle' });
   p.text([98.5, 129.8], 'VD-01', { size: 1.7, weight: 'bold' });
@@ -413,7 +413,7 @@ function balance(p: View): void {
     [x, y],
     l(
       'BILAN DES DÉBITS — clapet n°1 de la vidéo, site de la vidéo',
-      'WATER BALANCE — the video’s n°1 valve, the video’s site',
+      'WATER BALANCE — the video’s valve No. 1, the video’s site',
     ),
     { size: 2.2, weight: 'bold' },
   );
@@ -422,13 +422,16 @@ function balance(p: View): void {
     ['S', l('débit de la source', 'spring flow'), cat(nf(SITE.sourceFlowLpm, 1), ' L/min'), 'R'],
     [
       'Q',
-      l('eau prise dans la réserve (conduite motrice)', 'water taken from the tank (drive pipe)'),
+      l(
+        'consommation : eau prise dans la réserve (conduite motrice)',
+        'drive flow: water taken from the tank (drive pipe)',
+      ),
       cat(nf(m.driveFlow, 1), ' L/min'),
       'M',
     ],
     [
       'W',
-      l('dont eau rejetée par le clapet de choc', 'of which thrown out by the waste valve'),
+      l('dont eau rejetée par le clapet de choc', 'of which waste water from the waste valve'),
       cat(nf(m.driveFlow - m.deliveredFlow, 1), ' L/min'),
       'M',
     ],
@@ -442,10 +445,10 @@ function balance(p: View): void {
       'S − Q',
       l('surplus qui part au trop-plein', 'surplus going to the overflow'),
       cat(nf(Math.max(0, SITE.sourceFlowLpm - m.driveFlow), 1), ' L/min'),
-      'D',
+      'M',
     ],
     ['n', l('coups de clapet par minute', 'valve strokes per minute'), cat(nf(m.strokesPerMin, 0), ' /min'), 'M'],
-    ['η', l('rendement de d’Aubuisson q·H/(Q·h)', 'D’Aubuisson efficiency q·H/(Q·h)'), nf(m.etaD, 2), 'M'],
+    ['η', l('rendement d’Aubuisson q·H/(Q·h)', 'D’Aubuisson efficiency q·H/(Q·h)'), nf(m.etaD, 2), 'M'],
     [
       'ρgH',
       l('pression statique côté refoulement', 'static pressure on the delivery side'),
@@ -491,12 +494,12 @@ const LEGEND: { id: string; name: L; draw: (p: View, at: Pt) => void }[] = [
   },
   {
     id: 'CV-01 · SN-01',
-    name: l('clapet anti-retour · reniflard', 'check valve · snifter'),
+    name: l('clapet de refoulement · reniflard', 'delivery check valve · snifter'),
     draw: (p, a) => checkValve(p, a, { scale: 0.85 }),
   },
   {
     id: 'IS-01 · ST-01',
-    name: l('crépine de départ · crépine du bélier', 'intake screen · ram strainer'),
+    name: l('crépine de départ · filtre en Y', 'intake screen · Y-strainer'),
     draw: (p, a) => strainer(p, a, { scale: 0.85 }),
   },
   {
@@ -533,17 +536,17 @@ function legend(p: View, x: number, y: number): void {
   p.line([x + 1, ly + 4.6], [x + 9, ly + 4.6], { w: W.thin, color: INK_2, dash: 'center' });
   p.text([x + 12, ly + 4.6], l('niveau de référence', 'reference level'), { size: 1.6, baseline: 'middle' });
   p.rect([x + 97, ly + 2.8], [x + 105, ly + 6.4], { w: W.thin, dash: 'phantom', color: INK_2 });
-  p.text([x + 108, ly + 4.6], l('limite du regard', 'pit boundary'), { size: 1.6, baseline: 'middle' });
+  p.text([x + 108, ly + 4.6], l('limite de la fosse', 'pit boundary'), { size: 1.6, baseline: 'middle' });
 }
 
 export const principleDiagram: DrawingSheet = {
   id: 'principle-diagram',
-  number: 'RP-D07',
+  number: 'D07',
   group: 'hydraulic',
   title: l('Schéma hydraulique de l’installation', 'Hydraulic diagram of the installation'),
   description: l(
-    'Schéma de principe, sans échelle : l’eau de la source passe par le regard de captage, la réserve tampon et la conduite motrice jusqu’au bélier, dont le clapet de choc rejette presque tout, tandis qu’une petite part, refoulée à travers le clapet anti-retour et la cloche à air, monte au château d’eau. Les trois débits Q, W et q sont des résultats du modèle pour le clapet n°1 de la vidéo ; la chute h et la hauteur H sont celles de la vidéo. Les pastilles R, D, M, C, E disent l’origine de chaque valeur.',
-    'Principle diagram, not to scale: the spring water goes through the spring box, the buffer tank and the drive pipe to the ram, whose waste valve throws out almost all of it, while a small part, pushed through the check valve and the air chamber, rises to the water tower. The three flows Q, W and q are model results for the video’s n°1 valve; the fall h and the head H are the video’s. The discs R, D, M, C, E tell where each value comes from.',
+    'Schéma de principe, sans échelle : l’eau de la source passe par le regard de captage, la réserve tampon et la conduite motrice jusqu’au bélier, dont le clapet de choc rejette presque tout, tandis qu’une petite part, refoulée à travers le clapet de refoulement et la cloche à air, monte au château d’eau. Les trois débits Q, W et q sont des résultats du modèle pour le clapet n°1 de la vidéo ; la chute h et la hauteur H sont celles de la vidéo. Les pastilles R, D, M, C, E disent l’origine de chaque valeur.',
+    'Principle diagram, not to scale: the spring water goes through the spring box, the buffer tank and the drive pipe to the ram, whose waste valve lets almost all of it out as waste water, while a small part, pushed through the delivery check valve and the air chamber, rises to the water tower. The three flows Q, W and q are model results for the video’s valve No. 1; the fall h and the head H are the video’s. The discs R, D, M, C, E tell where each value comes from.',
   ),
   scene: 'site',
   parts: ['spring', 'buffer-tank', 'drive-pipe', 'ram-pit', 'waste-drain', 'delivery-pipe', 'water-tower', 'house'],
@@ -555,7 +558,7 @@ export const principleDiagram: DrawingSheet = {
         'Source → réserve → conduite motrice → bélier → refoulement → château d’eau → maison',
         'Spring → tank → drive pipe → ram → delivery pipe → water tower → house',
       ),
-      number: 'RP-D07',
+      number: 'D07',
       scale: tr(l('sans échelle', 'not to scale')),
     });
     const p = d.paper();
@@ -578,19 +581,34 @@ export const principleDiagram: DrawingSheet = {
       [
         l(
           'Les débits sont des moyennes sur un cycle, pour le clapet n°1 réglé comme dans la vidéo (course et poids calibrés sur ses chiffres) : Q = W + q, et seule la petite part q monte au château d’eau.',
-          'The flows are averages over one cycle, for the n°1 valve set as in the video (stroke and weight calibrated on its figures): Q = W + q, and only the small part q goes up to the water tower.',
+          'The flows are averages over one cycle, for valve No. 1 set as in the video (stroke and weight calibrated on its figures): Q = W + q, and only the small part q goes up to the water tower.',
         ),
         l(
-          'Le bélier est un modèle générique de 1″, pas le Walton n°3 de la vidéo. Les diamètres des conduites, la réserve, le regard, le château d’eau et la maison sont des estimations du laboratoire (disque E) : la vidéo n’en donne aucun.',
-          'The ram is a generic 1″ model, not the video’s Walton n°3. The pipe sizes, the tank, the pit, the water tower and the house are the lab’s estimates (disc E): the video gives none of them.',
+          'Le bélier est un modèle générique de 1″, pas le Walton n°3 de la vidéo. Les diamètres des conduites, la réserve, la fosse, le château d’eau et la maison sont des estimations du laboratoire (disque E) : la vidéo n’en donne aucun.',
+          'The ram is a generic 1″ model, not the video’s Walton No. 3. The pipe sizes, the tank, the pit, the water tower and the house are the lab’s estimates (disc E): the video gives none of them.',
         ),
         l(
           'Sécurité : conduite motrice rigide, bélier ancré (pics de plusieurs bars), jamais un doigt dans le clapet de choc en marche. L’eau de source n’est pas garantie potable ; le prélèvement est réglementé (en France : DDT, OFB).',
-          'Safety: rigid drive pipe, anchored ram (peaks of several bar), never a finger in the running waste valve. Spring water is not guaranteed potable; taking it is regulated (in France: DDT, OFB).',
+          'Safety: rigid drive pipe, anchored ram (peaks of several bars), never a finger in the running waste valve. Spring water is not guaranteed potable; taking it is regulated (in France: DDT, OFB).',
         ),
         l(
-          'Les hauteurs ne sont pas à l’échelle (h et H sont écrites) ; le profil à l’échelle est la feuille RP-D12, les courbes du modèle la feuille RP-D09.',
-          'The heights are not to scale (h and H are written); the profile to scale is sheet RP-D12, the model curves are sheet RP-D09.',
+          'Les hauteurs ne sont pas à l’échelle (h et H sont écrites) ; le profil à l’échelle est la feuille D12, les courbes du modèle la feuille D09.',
+          'The heights are not to scale (h and H are written); the profile to scale is sheet D12, the model curves are sheet D09.',
+        ),
+        cat(
+          l('La réserve de ≈ ', 'The tank of ≈ '),
+          nf(TANK.volumeL, 0),
+          l(
+            ' L est dérivée des dix heures de la vidéo, pour une source supposée à ',
+            ' L is derived from the video’s ten hours, for a spring assumed at ',
+          ),
+          nf(SITE.sourceFlowLpm, 1),
+          l(' L/min (≈ ', ' L/min (≈ '),
+          nf((REPORTED.consumptionValve3 - REPORTED.springBefore) * REPORTED.tankHoursValve3 * 60, 0),
+          l(
+            ' L si elle donnait encore 10 L/min) : la vidéo ne date pas ces dix heures.',
+            ' L if it still gave 10 L/min): the video does not date those ten hours.',
+          ),
         ),
       ],
       1.8,

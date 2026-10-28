@@ -1,7 +1,7 @@
 import { l, tr, type L } from '@onigam/lab-kit/i18n';
 import { COLORS, INK, INK_2, W, type Pt, type Text, type View } from '@onigam/lab-kit/drawings';
 
-// Helpers shared by the seven hydraulic and site sheets (RP-D07 … RP-D13): bilingual numbers and text, wrapped notes,
+// Helpers shared by the seven hydraulic and site sheets (D07 … D13): bilingual numbers and text, wrapped notes,
 // the provenance chips that tell a reported figure from a model result, and the small annotations the kit lacks
 // (arrow lines, level marks, break marks). Everything is drawn in paper space (millimetres on the A3 sheet).
 
@@ -85,14 +85,15 @@ export function notes(
 
 /**
  * Where a number comes from. The same five tags as the part sheets (src/data/part-helpers.ts), as a letter in a small disc:
- * R reported (video S1 or a source table), D derived (computed from reported figures), M model result (RamSim, sizing.ts),
- * C calibrated (a model setting chosen to retrieve the video), E estimate or assumption (dims.ts, physics.md).
+ * R reported (the video or a source table), D derived (computed from reported figures only), M model result (RamSim,
+ * sizing.ts), C calibrated (a model setting chosen to retrieve the video), E estimate or assumption (dims.ts, physics.md): a
+ * figure computed from an estimate or from a model result is not D.
  */
 export type Kind = 'R' | 'D' | 'M' | 'C' | 'E';
 
 export const KIND_NAME: Record<Kind, L> = {
-  R: l('rapporté (vidéo S1, tableau S4)', 'reported (video S1, table S4)'),
-  D: l('dérivé (calcul)', 'derived (computed)'),
+  R: l('rapporté (vidéo, tableau NC State)', 'reported (video, NC State table)'),
+  D: l('dérivé de chiffres rapportés', 'derived from reported figures'),
   M: l('résultat du modèle', 'model result'),
   C: l('calibré sur la vidéo', 'calibrated on the video'),
   E: l('estimation ou hypothèse', 'estimate or assumption'),
@@ -220,7 +221,10 @@ export function gridTable(
   return h;
 }
 
-/** The key to the chips: one row (or column) of `R D M C E` with their meaning. Returns the y after it. */
+/**
+ * The key to the chips: a row (or column) of `R D M C E` with their meaning. A row that would run into the title block (it
+ * starts about 165 mm from the left edge) goes on to a second line. Returns the y after it.
+ */
 export function kindKey(
   p: View,
   x: number,
@@ -237,14 +241,22 @@ export function kindKey(
     });
     return y + 5.2 + kinds.length * 4.4;
   }
+  const maxW = o.width ?? 146;
   let cx = x;
+  let row = 0;
   kinds.forEach((k) => {
-    chip(p, [cx + 1.7, y + 5], k);
     const t = KIND_NAME[k];
-    p.text([cx + 5, y + 5], t, { size: 1.8, baseline: 'middle' });
-    cx += 7 + Math.max(textW(t.fr, 1.8), textW(t.en, 1.8));
+    const w = 5 + Math.max(textW(t.fr, 1.8), textW(t.en, 1.8));
+    if (cx > x && cx - x + w > maxW) {
+      cx = x;
+      row += 1;
+    }
+    const cy = y + 5 + row * 4.6;
+    chip(p, [cx + 1.7, cy], k);
+    p.text([cx + 5, cy], t, { size: 1.8, baseline: 'middle' });
+    cx += 2 + w;
   });
-  return y + 8;
+  return y + 8 + row * 4.6;
 }
 
 // ------------------------------------------------------------------------------------------------ annotations

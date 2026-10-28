@@ -5,7 +5,6 @@ import { SITE } from '../../three/dims';
 import {
   GPD_TO_M3_DAY,
   GPM_TO_LPM,
-  HEAD_RATIO_MAX,
   LENGTH_RATIO_S4,
   LENGTH_RATIO_USUAL,
   LITRES_PER_GALLON,
@@ -22,9 +21,9 @@ import { cat, chip, gridTable, kindKey, nf, notes, para, val, type Kind } from '
 
 const valveRunQ = (valve: 1 | 2 | 3): number => valveRuns().find((r) => r.valve === valve)?.means.driveFlow ?? 0;
 
-// RP-D10 — Sizing: the table of NC State Extension (S4, table 2) with its units converted and written out, the lab's own ram
+// D10 — Sizing: the table of NC State Extension (table 2) with its units converted and written out, the lab's own ram
 // and spring placed on it (the spring gives 7.5 L/min, the 1″ ram asks for 22.7), the rules of length and head (drive pipe
-// ≥ 5 × h, H/h ≤ ~12) as gauges, and two worked examples computed by the functions of the calculator (src/sim/sizing.ts,
+// ≥ 5 × h, the model's limit of H/h) as gauges, and two worked examples computed by the functions of the calculator (src/sim/sizing.ts,
 // the same ones as the panel's "Size it" section). Nothing here is a design: the sources' orders of magnitude.
 
 const BLUE = COLORS.water;
@@ -47,8 +46,8 @@ function table(p: View): void {
   p.text(
     [14, 21.5],
     l(
-      '1 · LE TABLEAU DE NC STATE EXTENSION (S4, tableau 2), UNITÉS CONVERTIES',
-      '1 · THE NC STATE EXTENSION TABLE (S4, table 2), UNITS CONVERTED',
+      '1 · LE TABLEAU DE NC STATE EXTENSION (tableau 2), UNITÉS CONVERTIES',
+      '1 · THE NC STATE EXTENSION TABLE (table 2), UNITS CONVERTED',
     ),
     { size: 2.5, weight: 'bold' },
   );
@@ -68,13 +67,13 @@ function table(p: View): void {
       cat(nf(s.innerMm, 0), ' mm'),
       fracInch(s.deliveryInch),
       cat(nf(gpm, 0), ' gpm × ', nf(GPM_TO_LPM, 3), ' = ', nf(s.minSourceLpm, 1), ' L/min'),
-      cat(nf(gpd, 0), ' gpd × ', nf(GPD_TO_M3_DAY, 3), ' = ', nf(s.maxDeliveryLpd / 1000, 1), l(' m³/j', ' m³/day')),
+      cat(nf(gpd, 0), ' gpd × ', nf(GPD_TO_M3_DAY, 5), ' = ', nf(s.maxDeliveryLpd / 1000, 1), l(' m³/jour', ' m³/day')),
     ];
   });
   const y0 = 28;
   const rowH = 8;
   gridTable(p, 14, y0, cols, rows, { rowH, size: 2, tint: 1, tintFill: '#ecd5bf' });
-  // origin of the columns: S4 reports the sizes, the flows and the pumping; the inner diameter is the lab's assumption
+  // origin of the columns: the table reports the sizes, the flows and the pumping; the inner diameter is the lab's assumption
   chip(p, [14 + 26 + 3.4, y0 + rowH * 0.5], 'E', 0.85);
   p.text([14 + 192 + 1.5, y0 + rowH * 2.5], l('◄ labo', '◄ lab'), {
     size: 1.6,
@@ -89,8 +88,8 @@ function table(p: View): void {
       '1 US gallon = ',
       nf(LITRES_PER_GALLON, 3),
       l(
-        ' L : le tableau est en gallons US par minute (gpm) et par jour (gpd) (R, S4) ; les litres sont dérivés (D).',
-        ' L: the table is in US gallons per minute (gpm) and per day (gpd) (R, S4); the litres are derived (D).',
+        ' L : le tableau est en gallons US par minute (gpm) et par jour (gpd) (R, NC State) ; les litres sont dérivés (D).',
+        ' L: the table is in US gallons per minute (gpm) and per day (gpd) (R, NC State); the litres are derived (D).',
       ),
     ),
     { size: 1.7, color: INK_2 },
@@ -98,8 +97,8 @@ function table(p: View): void {
   p.text(
     [14, yEnd + 8.8],
     l(
-      'Øi : acier série 40, arrondi — hypothèse du modèle, absente de S4 (E).',
-      'ID: schedule 40 steel, rounded: a model assumption, not in S4 (E).',
+      'Øi : acier série 40, arrondi — hypothèse du modèle, absente du tableau (E).',
+      'ID: schedule 40 steel, rounded: a model assumption, not in the table (E).',
     ),
     { size: 1.7, color: INK_2 },
   );
@@ -157,7 +156,7 @@ function placed(p: View): void {
   const run = valve1();
   const lines: [number, L, string, number][] = [
     [REPORTED.springNow, l('source 7,5', 'spring 7.5'), COPPER, 0],
-    [REPORTED.consumptionValve3, l('clapet n°3 : 17', 'n°3 valve: 17'), BLUE, 1],
+    [REPORTED.consumptionValve3, l('clapet n°3 : 17', 'valve No. 3: 17'), BLUE, 1],
   ];
   for (const [v, label, color, k] of lines) {
     p.line([X(v), y0 - 2], [X(v), y0 + rowH * 4], { w: 0.5, color, dash: k === 0 ? [2.4, 1.2] : [1, 1] });
@@ -195,7 +194,7 @@ function placed(p: View): void {
     ),
     { size: 1.8, bold: true, color: COLORS.red },
   );
-  val(p, 312, ly, 'M', cat(l('clapet n°3 du modèle : ', 'model n°3 valve: '), nf(valveRunQ(3), 1), ' L/min'), {
+  val(p, 312, ly, 'M', cat(l('clapet n°3 du modèle : ', 'model valve No. 3: '), nf(valveRunQ(3), 1), ' L/min'), {
     size: 1.8,
     bold: true,
     color: BLUE,
@@ -205,7 +204,7 @@ function placed(p: View): void {
     312,
     ly + 4.6,
     'M',
-    cat(l('clapet n°1 du modèle : ', 'model n°1 valve: '), nf(run.means.driveFlow, 1), ' L/min'),
+    cat(l('clapet n°1 du modèle : ', 'model valve No. 1: '), nf(run.means.driveFlow, 1), ' L/min'),
     { size: 1.8, bold: true, color: BLUE },
   );
   p.text(
@@ -227,14 +226,25 @@ function rules(p: View): void {
   );
   p.line([14, 112.2], [406, 112.2], { w: W.thin, color: INK_2 });
   const lim = workingLimits();
+  // the model's own limit for the n°1 valve set as in the video (it is not a rule of the sources: a commercial ram goes further)
+  const modelRatio = lim.headCeiling / SITE.fall;
   gauge(p, 24, 132, 170, {
-    title: l('Longueur de la conduite motrice, en fois la chute : L/h', 'Drive pipe length, in times the fall: L/h'),
+    title: l(
+      'Longueur de la conduite motrice, en multiples de la chute : L/h',
+      'Drive pipe length, in multiples of the fall: L/h',
+    ),
     max: 8,
     ticks: [0, 1, 2, 3, 4, 5, 6, 7, 8],
     band: [LENGTH_RATIO_USUAL[0], LENGTH_RATIO_USUAL[1]],
-    bandLabel: l('usuel : 3 à 7 × h (S6)', 'usual: 3 to 7 × h (S6)'),
+    bandLabel: l('usuel : 3 à 7 × h (Wikipédia)', 'usual: 3 to 7 × h (Wikipedia)'),
     marks: [
-      { v: LENGTH_RATIO_S4, label: l('S4 : au moins 5 × h', 'S4: at least 5 × h'), kind: 'R', left: false, row: 1 },
+      {
+        v: LENGTH_RATIO_S4,
+        label: l('NC State : au moins 5 × h', 'NC State: at least 5 × h'),
+        kind: 'R',
+        left: false,
+        row: 1,
+      },
     ],
     lab: {
       v: r.lengthRatio ?? 0,
@@ -243,13 +253,19 @@ function rules(p: View): void {
     },
   });
   gauge(p, 232, 132, 160, {
-    title: l('Hauteur de refoulement, en fois la chute : H/h', 'Delivery head, in times the fall: H/h'),
+    title: l('Hauteur de refoulement, en multiples de la chute : H/h', 'Delivery head, in multiples of the fall: H/h'),
     max: 14,
     ticks: [0, 2, 4, 6, 8, 10, 12, 14],
-    over: HEAD_RATIO_MAX,
+    over: modelRatio,
     marks: [
-      { v: 10, label: l('vidéo : ≈ 10 (K4)', 'video: ≈ 10 (K4)'), kind: 'R', left: true, row: 1 },
-      { v: HEAD_RATIO_MAX, label: l('règle : ≤ ~12', 'rule: ≤ ~12'), kind: 'E', left: false, row: 0 },
+      { v: 10, label: l('vidéo : ≈ 10', 'video: ≈ 10'), kind: 'R', left: true, row: 1 },
+      {
+        v: modelRatio,
+        label: cat(l('limite du modèle ≈ ', 'model limit ≈ '), nf(modelRatio, 1)),
+        kind: 'M',
+        left: false,
+        row: 0,
+      },
     ],
     lab: { v: r.liftRatio, label: cat('H/h = ', nf(r.liftRatio, 1), ' (', nf(SITE.deliveryHead, 0), ' m)'), kind: 'D' },
   });
@@ -269,7 +285,7 @@ function rules(p: View): void {
   );
   // the verdicts of the calculator, in words
   const verdict = r.warnings.map((w) => tr(WARNINGS[w]));
-  val(p, 24, 152.4, 'D', cat(l('le calculateur dit : ', 'the calculator says: '), verdict.join(' · ')), {
+  val(p, 24, 152.4, 'M', cat(l('le calculateur dit : ', 'the calculator says: '), verdict.join(' · ')), {
     size: 1.6,
     color: INK_2,
   });
@@ -278,19 +294,29 @@ function rules(p: View): void {
     24,
     160,
     380,
-    l(
-      'Règles des sources : conduite motrice d’au moins 5 fois la chute (S4), usuellement 3 à 7 fois (S6), 3 à 5 fois (S7) ; longueur sur diamètre de 150 à 1 000 (S5). Hauteur de refoulement : la vidéo dit qu’un mètre de chute en lève environ dix (K4) ; au-delà de ≈ 12 fois la chute, on en demande trop au bélier (règle du modèle, hypothèse).',
-      'Rules from the sources: a drive pipe at least 5 times the fall (S4), usually 3 to 7 times (S6), 3 to 5 times (S7); length over diameter from 150 to 1,000 (S5). Delivery head: the video says one metre of fall lifts about ten (K4); beyond ≈ 12 times the fall the ram is asked too much (a rule of the model, an assumption).',
+    cat(
+      l(
+        'Règles des sources : conduite motrice d’au moins 5 fois la chute (NC State), usuellement 3 à 7 fois (Wikipédia), 3 à 5 fois (un article de presse) ; longueur sur diamètre de 150 à 1 000 (NITK). Hauteur de refoulement : la vidéo dit qu’un mètre de chute en lève environ dix ; le bélier du modèle (clapet n°1 réglé comme dans la vidéo) ne refoule plus au-delà de ≈ ',
+        'Rules from the sources: a drive pipe at least 5 times the fall (NC State), usually 3 to 7 times (Wikipedia), 3 to 5 times (a press article); length over diameter from 150 to 1,000 (NITK). Delivery head: the video says one metre of fall lifts about ten; the model’s ram (valve No. 1 set as in the video) stops delivering beyond ≈ ',
+      ),
+      nf(modelRatio, 1),
+      l(
+        ' fois la chute, alors que Practical Action donne des performances de béliers du commerce jusqu’à H/h = 20 : la limite dépend du réglage et de la taille.',
+        ' times the fall, whereas Practical Action gives performance of commercial rams up to H/h = 20: the limit depends on the setting and the size.',
+      ),
     ),
     1.7,
   );
 }
 
 const WARNINGS: Record<SizingWarning, L> = {
-  headHigh: l('H/h trop grand : plus de 12 fois la chute', 'H/h too high: more than 12 times the fall'),
+  headHigh: l(
+    'H/h au-delà d’environ 12 : le bélier du modèle ne refoule plus',
+    'H/h above about 12: the model’s ram stops delivering',
+  ),
   headLow: l('H/h trop petit : moins de 1,5', 'H/h too low: under 1.5'),
   lengthShort: l('conduite trop courte : moins de 3 × h', 'pipe too short: under 3 × h'),
-  lengthBelowS4: l('conduite sous le minimum de S4 (5 × h)', 'pipe under the S4 minimum (5 × h)'),
+  lengthBelowS4: l('conduite sous le minimum de NC State (5 × h)', 'pipe under the NC State minimum (5 × h)'),
   sourceShort: l('source insuffisante pour cette taille', 'spring not enough for this size'),
 };
 
@@ -322,7 +348,7 @@ function example(
     cat('H/h = ', nf(input.deliveryHead, 0), ' / ', nf(input.fall, 1)),
     cat(
       nf(r.liftRatio, 1),
-      r.warnings.includes('headHigh') ? l(' trop haut', ' too high') : l(' ≤ 12 : ok', ' ≤ 12: ok'),
+      r.warnings.includes('headHigh') ? l(' au-delà d’environ 12', ' above about 12') : l(' ≤ 12 : ok', ' ≤ 12: ok'),
     ),
     'D',
     !r.warnings.includes('headHigh'),
@@ -330,7 +356,13 @@ function example(
   line(
     1,
     l('Longueur de la conduite motrice', 'Drive pipe length'),
-    cat('L/h = ', nf(input.driveLength ?? 0, 0), ' / ', nf(input.fall, 1), cat(' ; S4 ≥ ', nf(r.minLength, 1), ' m')),
+    cat(
+      'L/h = ',
+      nf(input.driveLength ?? 0, 0),
+      ' / ',
+      nf(input.fall, 1),
+      cat(' ; NC State ≥ ', nf(r.minLength, 1), ' m'),
+    ),
     cat(
       nf(r.lengthRatio ?? 0, 1),
       r.warnings.includes('lengthShort')
@@ -344,7 +376,7 @@ function example(
   );
   line(
     2,
-    cat(l('Source pour un ', 'Spring for a '), fracInch(pipe.inch), l(' (tableau S4)', ' (table S4)')),
+    cat(l('Source pour un ', 'Spring for a '), fracInch(pipe.inch), l(' (tableau NC State)', ' (NC State table)')),
     cat(nf(input.sourceFlow, 1), ' / ', nf(r.minSource, 1), ' L/min'),
     cat(
       nf(100 * r.sourceRatio, 0),
@@ -356,7 +388,7 @@ function example(
   );
   line(
     3,
-    l('Livraison attendue (S4/S6, η = 0,6)', 'Expected delivery (S4/S6, η = 0.6)'),
+    l('Livraison attendue (NC State, η = 0,6)', 'Expected delivery (NC State, η = 0.6)'),
     cat(
       'q = ',
       nf(TYPICAL_ETA, 1),
@@ -392,11 +424,12 @@ function example(
       p,
       x + 4,
       ry + 2.4,
-      'R',
+      'D',
       cat(
         String(REPORTED.deliveryValve1),
-        l(' L/jour, soit η = q·H/(Q·h) = ', ' L/day, i.e. η = q·H/(Q·h) = '),
+        l(' L/jour, soit η = ', ' L/day, i.e. η = '),
         nf(((REPORTED.deliveryValve1 / 1440) * input.deliveryHead) / (input.sourceFlow * input.fall), 2),
+        l(' si le bélier prenait toute la source', ' if the ram took the whole spring'),
       ),
       { size: 1.7, bold: true },
     );
@@ -470,12 +503,12 @@ function examples(p: View): void {
 
 export const sizingTable: DrawingSheet = {
   id: 'sizing-table',
-  number: 'RP-D10',
+  number: 'D10',
   group: 'hydraulic',
   title: l('Dimensionnement : tableau, règles, exemple', 'Sizing: table, rules, worked example'),
   description: l(
-    'Le tableau de NC State Extension relie la taille de la conduite motrice au débit minimal de la source et au pompage maximal ; les unités américaines y sont converties et écrites. Le bélier de 1″ du labo y est placé avec sa source de 7,5 L/min, qui n’en donne qu’un tiers du minimum. Les règles de longueur (au moins 5 × h) et de hauteur (H/h au plus ≈ 12) sont tracées en jauges, puis deux exemples sont calculés avec les fonctions du calculateur de la simulation : le site de la vidéo et un site où la source suffit.',
-    'The NC State Extension table links the drive pipe size to the minimum spring flow and the maximum pumping; its US units are converted and written out. The lab’s 1″ ram is placed on it with its 7.5 L/min spring, which gives only a third of the minimum. The rules of length (at least 5 × h) and head (H/h at most ≈ 12) are drawn as gauges, then two examples are computed with the functions of the simulation’s calculator: the video’s site and a site where the spring is enough.',
+    'Le tableau de NC State Extension relie la taille de la conduite motrice au débit minimal de la source et au pompage maximal ; les unités américaines y sont converties et écrites. Le bélier de 1″ du labo y est placé avec sa source de 7,5 L/min, qui n’en donne qu’un tiers du minimum. Les règles de longueur (au moins 5 × h) et la limite de hauteur du modèle (H/h) sont tracées en jauges, puis deux exemples sont calculés avec les fonctions du calculateur de la simulation : le site de la vidéo et un site où la source suffit.',
+    'The NC State Extension table links the drive pipe size to the minimum spring flow and the maximum pumping; its US units are converted and written out. The lab’s 1″ ram is placed on it with its 7.5 L/min spring, which gives only a third of the minimum. The rules of length (at least 5 × h) and the model’s limit of head (H/h) are drawn as gauges, then two examples are computed with the functions of the simulation’s calculator: the video’s site and a site where the spring is enough.',
   ),
   scene: 'ram',
   parts: ['ram', 'inlet-flange', 'inlet-valve'],
@@ -484,10 +517,10 @@ export const sizingTable: DrawingSheet = {
     d.frame({
       title: l('Dimensionnement : tableau, règles, exemple', 'Sizing: table, rules, worked example'),
       subtitle: l(
-        'Tableau S4, bélier et source du labo, règles de longueur et de hauteur, exemples calculés',
-        'S4 table, the lab’s ram and spring, rules of length and head, computed examples',
+        'Tableau de NC State, bélier et source du labo, règles de longueur et de hauteur, exemples calculés',
+        'NC State table, the lab’s ram and spring, rules of length and head, computed examples',
       ),
-      number: 'RP-D10',
+      number: 'D10',
       scale: tr(l('sans échelle', 'not to scale')),
     });
     const p = d.paper();
@@ -505,7 +538,7 @@ export const sizingTable: DrawingSheet = {
       [
         l(
           'Ordres de grandeur des sources, pas un plan de réalisation : le tableau ne donne ni chute ni hauteur, et le 1″ du labo n’est pas le Walton n°3 de la vidéo.',
-          'Orders of magnitude from the sources, not a build plan: the table gives no fall and no head, and the lab’s 1″ is not the video’s Walton n°3.',
+          'Orders of magnitude from the sources, not a build plan: the table gives no fall and no head, and the lab’s 1″ is not the video’s Walton No. 3.',
         ),
       ],
       1.6,

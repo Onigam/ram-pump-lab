@@ -6,12 +6,21 @@ import { expectedDelivery } from '../../sim/sizing';
 import { VALVE_SETTINGS } from '../../sim/presets';
 import { HEAVY_WEIGHT } from '../../sim/presets';
 import { Chart } from './chart';
-import { REPORTED, sweepHead, sweepStroke, sweepWeight, valveRuns, workingLimits, type SweepPoint } from './model';
+import {
+  REPORTED,
+  sweepHead,
+  sweepStroke,
+  sweepWeight,
+  valveRuns,
+  weightOptimum,
+  workingLimits,
+  type SweepPoint,
+} from './model';
 import { cat, chip, kindKey, nf, notes, val } from './util';
 
-// RP-D09 — Performance charts, computed from the model at render time (RamSim.sweep): the video's story (valve n°3, n°2,
+// D09 — Performance charts, computed from the model at render time (RamSim.sweep): the video's story (valve n°3, n°2,
 // n°1: what each one takes, delivers, how fast it strikes, how long the tank lasts), then the delivery against the delivery
-// head and the tuning of the valve (counterweight, stroke). Model curves are blue lines and bars; the figures the video
+// head and the tuning of the valve (weight, stroke). Model curves are blue lines and bars; the figures the video
 // reports are copper diamonds (R) and bands, never mixed with the curves; closed-form references are dashed (D).
 
 const BLUE = COLORS.water;
@@ -49,7 +58,7 @@ function bars(
     }
     const r = runs[i];
     if (r) {
-      p.text([c.X(xm), c.box.y + c.box.h + 4], cat('n°', String(r.valve)), {
+      p.text([c.X(xm), c.box.y + c.box.h + 4], l(`n°${r.valve}`, `No. ${r.valve}`), {
         size: 1.8,
         weight: 'bold',
         anchor: 'middle',
@@ -86,7 +95,7 @@ function story(p: View): void {
   const a1 = bars(
     p,
     14,
-    l('Eau prise Q (L/min)', 'Water taken, Q (L/min)'),
+    l('Consommation Q (L/min)', 'Drive flow Q (L/min)'),
     l('', ''),
     { max: 20, ticks: [0, 5, 10, 15, 20] },
     runs.map((r) => r.means.driveFlow),
@@ -121,7 +130,7 @@ function story(p: View): void {
     cat(
       '◆ ',
       nf(REPORTED.consumptionValve3, 0),
-      l(' L/min : estimation de l’auteur, n°3', ' L/min: the author’s estimate, n°3'),
+      l(' L/min : estimation de l’auteur, n°3', ' L/min: the author’s estimate, No. 3'),
     ),
     { size: 1.5, color: COPPER },
   );
@@ -141,12 +150,15 @@ function story(p: View): void {
     112 + 18,
     98,
     'R',
-    cat('◆ ', nf(REPORTED.deliveryValve1, 0), l(' L/jour : n°1, vidéo', ' L/day: n°1, video')),
+    cat('◆ ', nf(REPORTED.deliveryValve1, 0), l(' L/jour : n°1, vidéo', ' L/day: No. 1, video')),
     { size: 1.5, color: COPPER },
   );
   p.text(
     [112 + 18, 101.6],
-    l('tant que le bélier tourne : le n°3 s’arrête au bout de 10 h', 'while the ram runs: the n°3 stops after 10 h'),
+    l(
+      'tant que le bélier tourne : le n°3 s’arrête au bout de 10 h',
+      'while the ram runs: valve No. 3 stops after 10 h',
+    ),
     { size: 1.5, color: INK_2 },
   );
   // strokes
@@ -228,16 +240,21 @@ function story(p: View): void {
     308 + 18,
     98,
     'R',
-    cat('◆ ≈ ', nf(REPORTED.tankHoursValve3, 0), l(' h : n°3, vidéo (S1 02:07)', ' h: n°3, video (S1 02:07)')),
+    cat('◆ ≈ ', nf(REPORTED.tankHoursValve3, 0), l(' h : n°3, vidéo (02:07)', ' h: No. 3, video (02:07)')),
     { size: 1.5, color: COPPER },
   );
   p.text(
     [308 + 18, 101.6],
     cat(
-      l('réserve de ', 'tank of '),
+      l('réserve de ≈ ', 'tank of ≈ '),
       nf(TANK.volumeL, 0),
       l(' L, dérivée de ce chiffre (D)', ' L, derived from this figure (D)'),
     ),
+    { size: 1.5, color: INK_2 },
+  );
+  p.text(
+    [308 + 18, 104.8],
+    cat(l('pour une source supposée à ', 'for a spring assumed at '), nf(SITE.sourceFlowLpm, 1), ' L/min'),
     { size: 1.5, color: INK_2 },
   );
 }
@@ -274,7 +291,7 @@ function head(p: View, x: number): void {
   );
   up.frame();
   lo.frame();
-  up.title(l('Refoulement selon la hauteur H', 'Delivery against the head H'), l('clapet n°1', 'n°1 valve'));
+  up.title(l('Refoulement selon la hauteur H', 'Delivery against H'), l('clapet n°1', 'valve No. 1'), 3.4);
   // H/h scale along the top
   for (const r of [2, 4, 6, 8, 10, 12]) {
     const H = r * SITE.fall;
@@ -283,14 +300,14 @@ function head(p: View, x: number): void {
     p.text([up.X(H), up.box.y - 2.4], String(r), { size: 1.4, anchor: 'middle', mono: true, color: INK_2 });
   }
   p.text([up.box.x + up.box.w + 1.5, up.box.y - 2.4], 'H/h', { size: 1.4, color: INK_2 });
-  // zone where the rule H/h ≤ ~12 is exceeded
+  // zone where the model's ram no longer delivers
   for (const c of [up, lo]) c.band(lim.headCeiling, 100, { fill: '#f1d9d4', opacity: 0.7 });
   p.text(
     [up.X((lim.headCeiling + 100) / 2) + 0.6, up.Y(2000)],
-    cat('H > ', nf(lim.headCeiling, 0), l(' m : rien n’est refoulé', ' m: nothing is delivered')),
+    cat('H > ≈ ', nf(lim.headCeiling, 0), l(' m : rien n’est refoulé', ' m: nothing is delivered')),
     { size: 1.5, color: COLORS.red, rotate: 90, anchor: 'middle' },
   );
-  // curves: model, the η = 1 bound with the same drive flow, the closed form of S4
+  // curves: model, the η = 1 bound with the same drive flow, the closed form of NC State
   up.line(
     pts(s, (q) => q.bound),
     { w: W.medium, color: INK_2, dash: [0.5, 1] },
@@ -324,12 +341,12 @@ function head(p: View, x: number): void {
   p.line([x, ly], [x + 8, ly], { w: 0.6, color: BLUE });
   p.text([x + 10, ly], l('modèle', 'model'), { size: 1.5, baseline: 'middle' });
   p.line([x + 28, ly], [x + 36, ly], { w: W.medium, color: INK_2, dash: [0.5, 1] });
-  p.text([x + 38, ly], l('borne η = 1 (K14)', 'bound η = 1 (K14)'), { size: 1.5, baseline: 'middle' });
+  p.text([x + 38, ly], l('borne η = 1 : q = Q·h/H', 'bound η = 1: q = Q·h/H'), { size: 1.5, baseline: 'middle' });
   p.line([x, ly + 3.6], [x + 8, ly + 3.6], { w: W.medium, color: COPPER, dash: [2.4, 1.2] });
   p.text(
     [x + 10, ly + 3.6],
     cat(
-      l('formule S4, η = 0,6, Q = 7,5 L/min (D) · ', 'S4 formula, η = 0.6, Q = 7.5 L/min (D) · '),
+      l('formule de NC State, η = 0,6, Q = 7,5 L/min (D) · ', 'NC State formula, η = 0.6, Q = 7.5 L/min (D) · '),
       '✕ ',
       nf(expectedDelivery(SITE.sourceFlowLpm, SITE.fall, SITE.deliveryHead, 0.6).lpd, 0),
     ),
@@ -430,13 +447,13 @@ function tuningPanels(p: View): void {
   const st = sweepStroke();
   const v1 = VALVE_SETTINGS[1];
   tuning(p, 168, {
-    title: l('Réglage : poids du contrepoids', 'Tuning: counterweight'),
-    sub: l('clapet n°1', 'n°1 valve'),
+    title: l('Réglage : poids du clapet', 'Tuning: valve weight'),
+    sub: l('clapet n°1', 'valve No. 1'),
     xs: w,
     x0: 0,
     x1: 1000,
     ticks: [0, 200, 400, 600, 800, 1000],
-    xLabel: l('contrepoids (g)', 'counterweight (g)'),
+    xLabel: l('poids (g)', 'weight (g)'),
     qMax: 1000,
     QMax: 30,
     Qticks: [0, 10, 20, 30],
@@ -446,12 +463,12 @@ function tuningPanels(p: View): void {
     ],
     floor: lim.weightFloor,
     ceiling: lim.weightCeiling,
-    floorLabel: cat('< ', nf(lim.weightFloor, 0), ' g'),
-    ceilLabel: cat('> ', nf(lim.weightCeiling, 0), l(' g : ne ferme plus', ' g: never closes')),
+    floorLabel: cat('< ≈ ', nf(Math.round(lim.weightFloor / 5) * 5, 0), ' g'),
+    ceilLabel: cat('> ≈ ', nf(Math.round(lim.weightCeiling / 50) * 50, 0), l(' g : ne ferme plus', ' g: never closes')),
   });
   tuning(p, 296, {
-    title: l('Réglage : course (écrou de réglage)', 'Tuning: stroke (stroke nut)'),
-    sub: l('clapet n°1', 'n°1 valve'),
+    title: l('Réglage : course', 'Tuning: stroke'),
+    sub: l('clapet n°1', 'valve No. 1'),
     xs: st,
     x0: 0.5,
     x1: 6,
@@ -462,7 +479,13 @@ function tuningPanels(p: View): void {
     Qticks: [0, 8, 16, 24],
     marks: [{ x: v1.stroke, label: cat(nf(v1.stroke, 1), ' mm'), kind: 'C', dy: 0 }],
     floor: lim.strokeFloor,
-    floorLabel: cat('< ', nf(lim.strokeFloor, 1), ' mm'),
+    floorLabel: cat(
+      '< ',
+      nf(Math.floor(lim.strokeFloor * 10) / 10, 1),
+      '–',
+      nf(Math.floor(lim.strokeFloor * 10) / 10 + 0.1, 1),
+      ' mm',
+    ),
   });
 }
 
@@ -492,8 +515,8 @@ function legend(p: View, x: number, y: number): void {
     [
       () => p.line([x, y + 14.7], [x + 8, y + 14.7], { w: W.medium, color: COPPER, dash: [2.4, 1.2] }),
       l(
-        'tireté cuivre : débit de la source (R) ou formule de S4 (D)',
-        'dashed copper: spring flow (R) or S4 formula (D)',
+        'tireté cuivre : débit de la source (R) ou formule de NC State (D)',
+        'dashed copper: spring flow (R) or NC State formula (D)',
       ),
     ],
     [
@@ -512,12 +535,12 @@ function legend(p: View, x: number, y: number): void {
 
 export const performanceChart: DrawingSheet = {
   id: 'performance-chart',
-  number: 'RP-D09',
+  number: 'D09',
   group: 'hydraulic',
   title: l('Courbes de performance', 'Performance charts'),
   description: l(
-    'Ce que le modèle calcule pour le site de la vidéo. En haut : les trois clapets (n°3, n°2, n°1), l’eau qu’ils prennent, l’eau qu’ils refoulent, leur cadence et le temps que tient la réserve ; les chiffres rapportés par la vidéo sont les losanges et bandes cuivre, à côté des barres du modèle. En bas : le refoulement selon la hauteur, puis le réglage du clapet n°1 (contrepoids et course), avec la consommation en dessous pour la comparer au débit de la source.',
-    'What the model computes for the video’s site. Top: the three valves (n°3, n°2, n°1), the water they take, the water they deliver, their rate and how long the tank lasts; the figures the video reports are the copper diamonds and bands beside the model’s bars. Bottom: the delivery against the head, then the tuning of the n°1 valve (counterweight and stroke), with the consumption underneath to compare it with the spring flow.',
+    'Ce que le modèle calcule pour le site de la vidéo. En haut : les trois clapets (n°3, n°2, n°1), l’eau qu’ils prennent, l’eau qu’ils refoulent, leur cadence et le temps que tient la réserve ; les chiffres rapportés par la vidéo sont les losanges et bandes cuivre, à côté des barres du modèle. En bas : le refoulement selon la hauteur, puis le réglage du clapet n°1 (poids et course), avec la consommation en dessous pour la comparer au débit de la source.',
+    'What the model computes for the video’s site. Top: the three valves (No. 3, No. 2, No. 1), the water they take, the water they deliver, their rate and how long the tank lasts; the figures the video reports are the copper diamonds and bands beside the model’s bars. Bottom: the delivery against the head, then the tuning of valve No. 1 (weight and stroke), with the drive flow underneath to compare it with the spring flow.',
   ),
   scene: 'ram',
   parts: ['waste-valve', 'air-chamber', 'delivery-valve'],
@@ -527,9 +550,9 @@ export const performanceChart: DrawingSheet = {
       title: l('Courbes de performance', 'Performance charts'),
       subtitle: l(
         'Clapets n°3, n°2, n°1 — refoulement selon H — réglage du poids et de la course',
-        'Valves n°3, n°2, n°1 — delivery against H — tuning of weight and stroke',
+        'Valves No. 3, No. 2, No. 1 — delivery against H — tuning of weight and stroke',
       ),
-      number: 'RP-D09',
+      number: 'D09',
       scale: tr(l('courbes', 'curves')),
     });
     const p = d.paper();
@@ -538,7 +561,7 @@ export const performanceChart: DrawingSheet = {
       [14, 116],
       l(
         '2 · REFOULEMENT ET RÉGLAGE : COURBES DU MODÈLE (le clapet n°1 de la vidéo, tout le reste inchangé)',
-        '2 · DELIVERY AND TUNING: MODEL CURVES (the video’s n°1 valve, everything else unchanged)',
+        '2 · DELIVERY AND TUNING: MODEL CURVES (the video’s valve No. 1, everything else unchanged)',
       ),
       { size: 2.5, weight: 'bold' },
     );
@@ -547,8 +570,7 @@ export const performanceChart: DrawingSheet = {
     tuningPanels(p);
     legend(p, 14, 238);
     kindKey(p, 14, 266);
-    const w = sweepWeight();
-    const best = w.reduce((m, q) => (q.perDay > m.perDay ? q : m), w[0] as SweepPoint);
+    const best = weightOptimum();
     const lim = workingLimits();
     notes(
       p,
@@ -568,12 +590,12 @@ export const performanceChart: DrawingSheet = {
           ),
           nf(best.perDay, 0),
           l(' L/jour vers ', ' L/day near '),
-          nf(best.x, 0),
+          nf(best.weight, 0),
           l(
-            ' g), mais en prenant plus que la source : la réserve se vide, c’est l’histoire du clapet n°3. Au-delà de ',
-            ' g), but by taking more than the spring gives: the tank empties, the n°3 valve’s story. Beyond ',
+            ' g), mais en prenant plus que la source : la réserve se vide, comme avec le clapet n°3. Au-delà de ≈ ',
+            ' g), but by taking more than the spring gives: the tank empties, as with valve No. 3. Beyond ≈ ',
           ),
-          nf(lim.weightCeiling, 0),
+          nf(Math.round(lim.weightCeiling / 50) * 50, 0),
           l(' g le clapet ne ferme plus.', ' g the valve no longer closes.'),
         ),
       ],

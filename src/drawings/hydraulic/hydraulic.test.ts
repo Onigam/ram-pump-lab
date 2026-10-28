@@ -19,24 +19,25 @@ import {
   sweepStroke,
   sweepWeight,
   valveRuns,
+  weightOptimum,
   workingLimits,
 } from './model';
 import { siteGeo } from './site-geo';
 import { FakeElement, installFakeDom, textBoxes, textExtent } from './test-dom';
 import { nf } from './util';
 
-// The seven hydraulic and site sheets (RP-D07 … RP-D13) by script: the contract (ids, numbers, groups, worlds, parts), that
+// The seven hydraulic and site sheets (D07 … D13) by script: the contract (ids, numbers, groups, worlds, parts), that
 // every sheet renders in both languages without a NaN, that the texts stay inside the paper and do not pile up, that the
 // charts and the profile carry the model's values and the site's dimensions, and that FR and EN are both written.
 
 const CONTRACT: { id: string; number: string; group: string; scene: WorldId }[] = [
-  { id: 'principle-diagram', number: 'RP-D07', group: 'hydraulic', scene: 'site' },
-  { id: 'cycle-diagram', number: 'RP-D08', group: 'hydraulic', scene: 'ram' },
-  { id: 'performance-chart', number: 'RP-D09', group: 'hydraulic', scene: 'ram' },
-  { id: 'sizing-table', number: 'RP-D10', group: 'hydraulic', scene: 'ram' },
-  { id: 'site-plan', number: 'RP-D11', group: 'site', scene: 'site' },
-  { id: 'site-profile', number: 'RP-D12', group: 'site', scene: 'site' },
-  { id: 'catchment-layout', number: 'RP-D13', group: 'site', scene: 'catchment' },
+  { id: 'principle-diagram', number: 'D07', group: 'hydraulic', scene: 'site' },
+  { id: 'cycle-diagram', number: 'D08', group: 'hydraulic', scene: 'ram' },
+  { id: 'performance-chart', number: 'D09', group: 'hydraulic', scene: 'ram' },
+  { id: 'sizing-table', number: 'D10', group: 'hydraulic', scene: 'ram' },
+  { id: 'site-plan', number: 'D11', group: 'site', scene: 'site' },
+  { id: 'site-profile', number: 'D12', group: 'site', scene: 'site' },
+  { id: 'catchment-layout', number: 'D13', group: 'site', scene: 'catchment' },
 ];
 
 const LANGS = ['fr', 'en'] as const;
@@ -263,6 +264,42 @@ describe('the charts carry the model, not typed numbers', () => {
     }
     // the four phases tile the stroke
     expect(t.length.reduce((a, b) => a + b, 0)).toBeCloseTo(t.period, 0);
+  });
+
+  it('draws the four instants of the cycle where the simulation freezes them (RamSim.holdPhase), and its phase shares', () => {
+    const fr = textsOf('cycle-diagram', 'fr');
+    const num = (t: string, re: RegExp): number =>
+      Number((re.exec(t)?.[1] ?? 'NaN').replace(',', '.').replace('−', '-'));
+    const ps = fr.filter((t) => /^p = /.test(t));
+    const vs = fr.filter((t) => /^v = /.test(t));
+    const zs = fr.filter((t) => /^clapet \d+ %$/.test(t));
+    expect([ps.length, vs.length, zs.length]).toEqual([4, 4, 4]);
+    (['accel', 'close', 'deliver', 'recoil'] as const).forEach((phase, k) => {
+      const s = new RamSim('valve-1');
+      expect(s.holdPhase(phase), phase).toBe(true);
+      const st = s.state;
+      expect(Math.abs(num(ps[k] as string, /p = (\S+) bar/) - st.bodyPressure), `${phase} p`).toBeLessThan(0.051);
+      expect(Math.abs(num(vs[k] as string, /v = (\S+) m/) - st.driveVelocity), `${phase} v`).toBeLessThan(0.0051);
+      expect(Math.abs(num(zs[k] as string, /clapet (\d+)/) - 100 * st.wasteValve), `${phase} valve`).toBeLessThan(0.51);
+    });
+    // the duration and the share of each phase are the engine's (physics.md §8: 265, 61, 19, 203 ms; 3.5 % for the delivery)
+    const m = valveRuns()[2]?.means as (typeof valveRuns extends () => (infer R)[] ? R : never)['means'];
+    const durations = fr.filter((t) => /^durée \d+ ms · /.test(t));
+    expect(durations.length).toBe(4);
+    m.phaseShare.forEach((share, k) => {
+      expect(durations[k], `phase ${k}`).toContain(`${Math.round((share * 60000) / m.strokesPerMin)} ms`);
+    });
+    expect(durations[2]).toContain('3,5 %');
+  });
+
+  it('finds the peak of the delivery against the weight to the nearest 10 g, as a scan of the model would', () => {
+    const peak = weightOptimum();
+    expect(peak.weight % 10).toBe(0);
+    const at = (g: number): number => sim.sweep({ counterweight: g }).deliveredFlow * 1440;
+    expect(peak.perDay).toBeCloseTo(at(peak.weight), 9);
+    // no weight on a 5 g scan around it delivers more than 1 L/day above it, and the peak is above the 50 g grid's best
+    for (let g = peak.weight - 60; g <= peak.weight + 60; g += 5) expect(at(g)).toBeLessThanOrEqual(peak.perDay + 1);
+    expect(peak.perDay).toBeGreaterThanOrEqual(Math.max(...sweepWeight().map((q) => q.perDay)) - 1e-6);
   });
 
   it('writes the model numbers on the sheets (Joukowsky, the flows of valve n°1, the table, the example)', () => {

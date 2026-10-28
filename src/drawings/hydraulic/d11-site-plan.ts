@@ -9,7 +9,7 @@ import { partName } from './names';
 import { siteGeo, TERRACE, TOWER_GROUND } from './site-geo';
 import { balloon, cat, chip, flowArrow, gridTable, kindKey, nf, para, val, type Kind } from './util';
 
-// RP-D11 — Plan of the site: the whole hillside at 1:1000 (the 300 m delivery route with its numbered bends and its
+// D11 — Plan of the site: the whole hillside at 1:1000 (the 300 m delivery route with its numbered bends and its
 // stations every 50 m, the tower, the house, the contour lines of the lab's terrain) and, at 1:200, the zone of the
 // catchment, the drive pipe, the pit and the start of the waste-water drain. North up, scale bars, the main levels.
 // Geometry: src/three/site and dims.ts (the same functions as the 3D world); the terrain and the route are estimates.
@@ -218,12 +218,12 @@ function mainPlan(p: View): void {
     halo: true,
   });
   p.text([mx(-27), mz(-98)], partName('delivery-pipe'), { size: 1.7, weight: 'bold', halo: true });
-  p.text([mx(-27), mz(-98) + 3.4], cat(nf(g.pipeLength, 0), l(' m dans le modèle 3D', ' m in the 3D model')), {
+  p.text([mx(-27), mz(-98) + 3.4], cat(nf(g.pipeLength, 0), l(' m tracés sur ce plan', ' m drawn on this plan')), {
     size: 1.5,
     color: INK_2,
     halo: true,
   });
-  val(p, mx(-27), mz(-98) + 7, 'R', cat(nf(SITE.deliveryLength, 0), l(' m rapportés (K3)', ' m reported (K3)')), {
+  val(p, mx(-27), mz(-98) + 7, 'R', cat(nf(SITE.deliveryLength, 0), l(' m rapportés (vidéo)', ' m reported (video)')), {
     size: 1.5,
     color: INK,
   });
@@ -411,7 +411,7 @@ function insetA(p: View): void {
     });
   };
   spot(tx, 3, g.height(tx, 3), 1.2, 0);
-  spot(bx, 3, g.height(bx, 3), 1.2, 0);
+  spot(bx, 3, g.height(bx, 3), 1.2, 2.4);
   spot(pc, 3, g.height(pc, 3), 1.2, 0);
   spot(ws.outfall.x, ws.outfall.z + 0.6, g.height(ws.outfall.x, ws.outfall.z + 0.6), 1.6, 1.2);
   spot(ws.soakaway.x, ws.soakaway.z + 1.6, g.height(ws.soakaway.x, ws.soakaway.z + 1.6), 1.6, 0.6);
@@ -468,14 +468,14 @@ function levels(p: View, x: number, y: number): void {
   });
   const rows: { name: L; level: number; kind: Kind }[] = [
     { name: partName('water-tower'), level: SITE.deliveryHead, kind: 'R' },
-    { name: l('Sol sous le château d’eau', 'Ground under the water tower'), level: TOWER_GROUND, kind: 'D' },
+    { name: l('Sol sous le château d’eau', 'Ground under the water tower'), level: TOWER_GROUND, kind: 'E' },
     { name: l('Terrasse de la maison', 'House terrace'), level: TERRACE, kind: 'E' },
     {
       name: l('Sortie de la réserve (conduite motrice)', 'Tank outlet (drive pipe start)'),
       level: SITE.fall,
       kind: 'R',
     },
-    { name: l('Sol au regard du bélier', 'Ground at the ram pit'), level: SITE.groundAtRam, kind: 'E' },
+    { name: l('Sol à la fosse du bélier', 'Ground at the ram pit'), level: SITE.groundAtRam, kind: 'E' },
     { name: l('Axe d’entrée du bélier (repère)', 'Ram inlet axis (datum)'), level: 0, kind: 'R' },
     {
       name: l('Sortie du fossé (puisard)', 'Ditch end (soakaway)'),
@@ -550,8 +550,8 @@ function legendNotes(p: View, x: number, y: number): void {
     y + 20,
     94,
     l(
-      'Le terrain et le tracé sont ceux du modèle 3D : des estimations, pas un relevé. Hauteurs et longueurs écrites : h, H et les 300 m sont ceux de la vidéo.',
-      'The terrain and the route are those of the 3D model: estimates, not a survey. The written heights and lengths: h, H and the 300 m are the video’s.',
+      'Le terrain et le tracé sont ceux de la vue 3D : des estimations, pas un relevé. Hauteurs et longueurs écrites : h, H et les 300 m sont ceux de la vidéo.',
+      'The terrain and the route are those of the 3D view: estimates, not a survey. The written heights and lengths: h, H and the 300 m are the video’s.',
     ),
     1.5,
     INK_2,
@@ -560,12 +560,12 @@ function legendNotes(p: View, x: number, y: number): void {
 
 export const sitePlan: DrawingSheet = {
   id: 'site-plan',
-  number: 'RP-D11',
+  number: 'D11',
   group: 'site',
   title: l('Plan du site', 'Site plan'),
   description: l(
-    'Vue du dessus de la colline, nord en haut. À gauche, le plan d’ensemble au 1:1000 : la conduite de refoulement de 300 m avec ses coudes numérotés et ses repères tous les 50 m, le château d’eau, la maison, les courbes de niveau. Au centre, le détail A au 1:200 : captage, réserve, conduite motrice, regard du bélier et début de l’évacuation des eaux de rejet. À droite, les niveaux principaux et la liste des coudes. Le terrain et le tracé sont ceux du modèle 3D : des estimations, pas un relevé.',
-    'View from above, north up. On the left, the overall plan at 1:1000: the 300 m delivery pipe with its numbered bends and its marks every 50 m, the water tower, the house, the contour lines. In the middle, detail A at 1:200: spring box, tank, drive pipe, ram pit and the start of the waste-water drain. On the right, the main levels and the list of bends. The terrain and the route are those of the 3D model: estimates, not a survey.',
+    'Vue du dessus de la colline, nord en haut. À gauche, le plan d’ensemble au 1:1000 : la conduite de refoulement de 300 m avec ses coudes numérotés et ses repères tous les 50 m, le château d’eau, la maison, les courbes de niveau. Au centre, le détail A au 1:200 : captage, réserve, conduite motrice, fosse du bélier et début de l’évacuation des eaux de rejet. À droite, les niveaux principaux et la liste des coudes. Le terrain et le tracé sont ceux de la vue 3D : des estimations, pas un relevé.',
+    'View from above, north up. On the left, the overall plan at 1:1000: the 300 m delivery pipe with its numbered bends and its marks every 50 m, the water tower, the house, the contour lines. In the middle, detail A at 1:200: spring box, tank, drive pipe, ram pit and the start of the waste-water drain. On the right, the main levels and the list of bends. The terrain and the route are those of the 3D view: estimates, not a survey.',
   ),
   scene: 'site',
   parts: ['spring', 'buffer-tank', 'drive-pipe', 'ram-pit', 'waste-drain', 'delivery-pipe', 'water-tower', 'house'],
@@ -574,10 +574,10 @@ export const sitePlan: DrawingSheet = {
     d.frame({
       title: l('Plan du site', 'Site plan'),
       subtitle: l(
-        'Captage, réserve, conduite motrice, regard, conduite de refoulement, château d’eau, maison',
+        'Captage, réserve, conduite motrice, fosse, conduite de refoulement, château d’eau, maison',
         'Spring, tank, drive pipe, pit, delivery pipe, water tower, house',
       ),
-      number: 'RP-D11',
+      number: 'D11',
       scale: '1:1000 · 1:200',
     });
     const p = d.paper();
@@ -586,7 +586,7 @@ export const sitePlan: DrawingSheet = {
     p.text(
       [136, 25.4],
       l(
-        'DÉTAIL A — CAPTAGE, CONDUITE MOTRICE, REGARD ET ÉVACUATION — 1:200',
+        'DÉTAIL A — CAPTAGE, CONDUITE MOTRICE, FOSSE ET ÉVACUATION — 1:200',
         'DETAIL A — SPRING BOX, DRIVE PIPE, PIT AND DRAIN — 1:200',
       ),
       { size: 2.4, weight: 'bold' },
@@ -596,7 +596,7 @@ export const sitePlan: DrawingSheet = {
     northAndScales(p, 334, 36);
     levels(p, 312, 100);
     bends(p, 312, 154);
-    kindKey(p, 22, 252, { kinds: ['R', 'D', 'E'] });
+    kindKey(p, 22, 252, { kinds: ['R', 'E'] });
     legendNotes(p, 312, 216);
     return d;
   },

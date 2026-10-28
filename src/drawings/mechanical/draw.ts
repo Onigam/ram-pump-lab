@@ -24,7 +24,7 @@ export const hatched = (hatch: NonNullable<Stroke['hatch']>, w: number = W.mediu
 
 // ------------------------------------------------------------------------------------------------ items and the catalogue
 
-/** Item numbers of the bill of materials (RP-D06): the 13 parts of the `ram` world, then the 14 of the `valve` world. */
+/** Item numbers of the bill of materials (D06): the 13 parts of the `ram` world, then the 14 of the `valve` world. */
 export const ITEM: Record<string, number> = {};
 [...partIds('ram'), ...partIds('valve')].forEach((id, i) => {
   ITEM[id] = i + 1;
@@ -219,11 +219,14 @@ export function marksLegend(d: Drawing, x: number, y: number, w: number, extra: 
     (q, sx, sy) =>
       q.text([sx, sy], m, { size: 1.8, baseline: 'middle', mono: true, weight: 'bold' });
   const rows: LegendRow[] = [
-    { sym: mark('123'), text: l('donnée de la source (vidéo S1)', 'taken from the source (video S1)') },
-    { sym: mark('123†'), text: l('dérivée de données de la source', 'derived from the source’s figures') },
+    { sym: mark('123'), text: l('donnée par une source (la vidéo)', 'given by a source (the video)') },
+    {
+      sym: mark('123†'),
+      text: l('dérivée de chiffres de la source seulement', 'derived from the source’s figures only'),
+    },
     {
       sym: mark('123*'),
-      text: l('estimée : aucune source (cote du modèle 3D)', 'estimated: no source (dimension of the 3D model)'),
+      text: l('estimée, calibrée ou dérivée d’une estimation', 'estimated, calibrated or derived from an estimate'),
     },
     ...extra,
   ];
@@ -248,8 +251,8 @@ export function marksLegend(d: Drawing, x: number, y: number, w: number, extra: 
 
 /** The "generic ram, not the Walton n°3" notice shared by the sheets that draw the ram. */
 export const GENERIC_NOTE: L = l(
-  'Bélier générique de 1″ : ce n’est pas le Walton n°3 de la vidéo (aucune fiche du constructeur n’a été trouvée). Seul le clapet de choc suit la vidéo ; toutes les autres cotes sont des estimations.',
-  'Generic 1″ ram: this is not the video’s Walton n°3 (no maker data sheet was found). Only the waste valve follows the video; every other dimension is an estimate.',
+  'Bélier générique de 1″ : ce n’est pas le Walton n°3 de la vidéo (aucune fiche du constructeur n’a été trouvée). Seul le clapet de choc s’inspire de la vidéo, en version simplifiée ; toutes les autres cotes sont des estimations.',
+  'Generic 1″ ram: this is not the video’s Walton No. 3 (no maker data sheet was found). Only the waste valve is based on the video, in a simplified version; every other dimension is an estimate.',
 );
 
 /** A framed note box with a bold title; returns the y below it. */

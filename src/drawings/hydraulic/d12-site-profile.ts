@@ -3,14 +3,14 @@ import { COLORS, Drawing, INK, INK_2, W, type Pt, type View } from '@onigam/lab-
 import type { DrawingSheet } from '@onigam/lab-kit/drawings';
 import { SITE, TANK, TOWER } from '../../three/dims';
 import { G, RHO, area } from '../../sim/physics';
-import { HEAD_RATIO_MAX, LENGTH_RATIO_S4, LENGTH_RATIO_USUAL, sizeRam } from '../../sim/sizing';
+import { LENGTH_RATIO_S4, LENGTH_RATIO_USUAL, sizeRam } from '../../sim/sizing';
 import { gauge } from './gauge';
 import { valve1, workingLimits } from './model';
 import { partName } from './names';
 import { siteGeo, type Vec3 } from './site-geo';
 import { arrowLine, balloon, cat, chip, flowArrow, kindKey, levelMark, nf, notes, para, rotVal, val } from './util';
 
-// RP-D12 — Elevation profile along the pipes: the drive pipe (20 m, 7.5 m of fall) then the delivery pipe (300 m, 65 m of
+// D12 — Elevation profile along the pipes: the drive pipe (20 m, 7.5 m of fall) then the delivery pipe (300 m, 65 m of
 // rise), at one horizontal scale (1:1000, length of pipe from the ram) and a vertical scale 1.5 times larger (1:667). The
 // pipe is the very polyline of the 3D world (src/three/site), so the sheet and the 3D agree by construction. A detail
 // of the drive pipe at true scale (1:250), the ratios L/h and H/h against the rules, and a table under the profile.
@@ -186,14 +186,14 @@ function profile(p: View): void {
       halo: true,
     });
   }
-  // the bends of RP-D11, numbered under the line
+  // the bends of D11, numbered under the line
   for (const bnd of g.bends) {
     const c: Pt = [X(bnd.s), Y(bnd.y)];
     p.circle(c, 0.55, { w: 0, fill: INK });
     balloon(p, [c[0] + 1.2, c[1] + 6.4], String(bnd.n), 1.7, INK);
   }
   // names
-  p.text([XS0 + 5, Y(0) + 5.6], partName('ram-pit'), { size: 1.6, weight: 'bold' });
+  p.text([XS0 + 9, Y(0) + 5.6], partName('ram-pit'), { size: 1.6, weight: 'bold', anchor: 'end' });
   p.text([x0 - 6.4, Y(tankFloor) + 4], partName('buffer-tank'), { size: 1.6, anchor: 'middle', weight: 'bold' });
   p.text([tx0 + 8, Y(SITE.deliveryHead) - 3.4], partName('water-tower'), {
     size: 1.6,
@@ -203,7 +203,7 @@ function profile(p: View): void {
   p.text([X(150) - 6, Y(15) + 1], partName('delivery-pipe'), { size: 1.7, weight: 'bold', anchor: 'end', halo: true });
   p.text(
     [X(150) - 6, Y(15) + 4.4],
-    cat(nf(g.pipeLength, 0), l(' m de tuyau dans le modèle 3D', ' m of pipe in the 3D model')),
+    cat(nf(g.pipeLength, 0), l(' m de tuyau sur ce profil', ' m of pipe on this profile')),
     { size: 1.5, anchor: 'end', color: INK_2, halo: true },
   );
   p.text([XS0 - 9, Y(5.6)], partName('drive-pipe'), { size: 1.6, weight: 'bold' });
@@ -220,7 +220,7 @@ function guitar(p: View, y: number): void {
     [l('Longueur de tuyau depuis le bélier (m)', 'Pipe length from the ram (m)'), (q) => nf(q.s, 0)],
     [l('Altitude du tuyau (m)', 'Pipe level (m)'), (q) => nf(q.y, 1)],
     [
-      l('Pente du tronçon (m pour 100 m de tuyau)', 'Slope of the reach (m per 100 m of pipe)'),
+      l('Pente du tronçon (m pour 100 m de tuyau)', 'Slope of the section (m per 100 m of pipe)'),
       (q) => (q.slope === null ? l('—', '—') : nf(q.slope, 0)),
     ],
     [
@@ -262,7 +262,10 @@ function driveDetail(p: View): void {
   const d = s.drive;
   p.text(
     [20, 26],
-    l('DÉTAIL — CONDUITE MOTRICE À L’ÉCHELLE VRAIE (1:250)', 'DETAIL — DRIVE PIPE AT TRUE SCALE (1:250)'),
+    l(
+      'DÉTAIL — CONDUITE MOTRICE À L’ÉCHELLE RÉELLE (1:250, SANS EXAGÉRATION)',
+      'DETAIL — DRIVE PIPE AT TRUE SCALE (1:250, NO EXAGGERATION)',
+    ),
     { size: 2.4, weight: 'bold' },
   );
   p.line([20, 27.8], [150, 27.8], { w: W.thin, color: INK_2 });
@@ -311,7 +314,7 @@ function driveDetail(p: View): void {
     cat(l('course horizontale ', 'horizontal run '), nf(run, 1), ' m'),
     { size: 1.7, anchor: 'middle' },
   );
-  chip(p, [(dx(d.outlet.x) + dx(d.elbow.x)) / 2 + 22, dy(0) + 8.8], 'D');
+  chip(p, [(dx(d.outlet.x) + dx(d.elbow.x)) / 2 + 22, dy(0) + 8.8], 'E');
   const ang = (Math.atan2(d.outlet.y - d.elbow.y, run) * 180) / Math.PI;
   p.arc([dx(d.elbow.x), dy(0)], 7, 180 - ang, 180, { w: W.thin });
   p.text([dx(d.elbow.x) - 10.5, dy(0) - 1.7], cat(nf(ang, 1), '°'), { size: 1.7, anchor: 'middle', mono: true });
@@ -385,7 +388,9 @@ function rules(p: View): void {
     driveLength: SITE.driveLength,
   });
   const lim = workingLimits();
-  p.text([160, 26], l('LES RAPPORTS L/h ET H/h FACE AUX RÈGLES', 'THE RATIOS L/h AND H/h AGAINST THE RULES'), {
+  // the model's own limit for the n°1 valve set as in the video, not a rule of the sources
+  const modelRatio = lim.headCeiling / SITE.fall;
+  p.text([160, 26], l('LES RAPPORTS L/h ET H/h FACE AUX RÈGLES', 'THE RATIOS L/h AND H/h COMPARED WITH THE RULES'), {
     size: 2.4,
     weight: 'bold',
   });
@@ -395,8 +400,8 @@ function rules(p: View): void {
     max: 8,
     ticks: [0, 1, 2, 3, 4, 5, 6, 7, 8],
     band: [LENGTH_RATIO_USUAL[0], LENGTH_RATIO_USUAL[1]],
-    bandLabel: l('usuel 3 à 7 (S6)', 'usual 3 to 7 (S6)'),
-    marks: [{ v: LENGTH_RATIO_S4, label: l('S4 : ≥ 5', 'S4: ≥ 5'), kind: 'R', row: 1 }],
+    bandLabel: l('usuel 3 à 7 (Wikipédia)', 'usual 3 to 7 (Wikipedia)'),
+    marks: [{ v: LENGTH_RATIO_S4, label: l('NC State : ≥ 5', 'NC State: ≥ 5'), kind: 'R', row: 1 }],
     lab: {
       v: r.lengthRatio ?? 0,
       label: cat('L/h = ', nf(SITE.driveLength, 0), ' / ', nf(SITE.fall, 1), ' = ', nf(r.lengthRatio ?? 0, 1)),
@@ -407,10 +412,15 @@ function rules(p: View): void {
     title: l('Hauteur de refoulement : H/h', 'Delivery head: H/h'),
     max: 14,
     ticks: [0, 2, 4, 6, 8, 10, 12, 14],
-    over: HEAD_RATIO_MAX,
+    over: modelRatio,
     marks: [
-      { v: 10, label: l('vidéo ≈ 10 (K4)', 'video ≈ 10 (K4)'), kind: 'R', left: true, row: 1 },
-      { v: HEAD_RATIO_MAX, label: l('règle ≤ ~12', 'rule ≤ ~12'), kind: 'E', row: 0 },
+      { v: 10, label: l('vidéo ≈ 10', 'video ≈ 10'), kind: 'R', left: true, row: 1 },
+      {
+        v: modelRatio,
+        label: cat(l('limite du modèle ≈ ', 'model limit ≈ '), nf(modelRatio, 1)),
+        kind: 'M',
+        row: 0,
+      },
     ],
     lab: {
       v: r.liftRatio,
@@ -433,34 +443,36 @@ function rules(p: View): void {
         nf(r.lengthRatio ?? 0, 1),
         l(' × h, sous les ', ' × h, under the '),
         nf(r.minLength, 1),
-        l(' m de S4 (5 × h) et les ', ' m of S4 (5 × h) and the '),
+        l(' m de NC State (5 × h) et les ', ' m of NC State (5 × h) and the '),
         nf(r.usualLength[0], 1),
         '–',
         nf(r.usualLength[1], 1),
         l(
-          ' m usuels (3 à 7 × h) ; la vidéo la fait marcher quand même (K20).',
-          ' m usual (3 to 7 × h); the video makes it work anyway (K20).',
+          ' m usuels (3 à 7 × h) ; la vidéo la fait marcher quand même.',
+          ' m usual (3 to 7 × h); the video makes it work anyway.',
         ),
       ),
     ],
     [
-      'D',
+      'M',
       cat(
-        l('Hauteur : H/h = ', 'Head: H/h = '),
+        l('Hauteur de refoulement : H/h = ', 'Delivery head: H/h = '),
         nf(r.liftRatio, 1),
         l(
-          ' : sous le plafond ≈ 12 de la règle, et à la limite basse de la vidéo (≈ 10) ; ',
-          ': under the rule’s ceiling ≈ 12 and near the video’s ≈ 10; ',
+          ', sous le ≈ 10 que cite la vidéo ; le modèle ne refoule plus au-delà de ≈ ',
+          ', under the ≈ 10 the video quotes; the model stops delivering beyond ≈ ',
         ),
-        l('le modèle ne refoule plus au-delà de ', 'the model stops delivering beyond '),
         nf(lim.headCeiling, 0),
         ' m (H/h = ',
-        nf(lim.headCeiling / SITE.fall, 1),
-        ').',
+        nf(modelRatio, 1),
+        l(
+          '), limite du clapet n°1 tel que réglé : des béliers du commerce vont plus haut (Practical Action : jusqu’à H/h = 20).',
+          '), the limit of valve No. 1 as set: commercial rams go higher (Practical Action: up to H/h = 20).',
+        ),
       ),
     ],
     [
-      mono ? 'D' : 'E',
+      'E',
       mono
         ? cat(
             l(
@@ -504,12 +516,12 @@ type Kind2 = 'R' | 'D' | 'M' | 'C' | 'E';
 
 export const siteProfile: DrawingSheet = {
   id: 'site-profile',
-  number: 'RP-D12',
+  number: 'D12',
   group: 'site',
   title: l('Profil en long des conduites', 'Long profile of the pipes'),
   description: l(
-    'Coupe en long le long des tuyaux, d’abord la conduite motrice (20 m de tuyau, 7,5 m de chute), puis la conduite de refoulement (300 m, 65 m de montée), à la même échelle horizontale (1:1000) et à une échelle verticale 1,5 fois plus grande (1:667). Le tuyau suit le sol et ne repasse jamais plus bas ; les pastilles numérotées sont les coudes du plan RP-D11. Le tableau donne l’altitude, la pente et la pression statique tous les 50 m ; en haut, la conduite motrice à l’échelle vraie et les rapports L/h et H/h face aux règles.',
-    'Long section along the pipes, first the drive pipe (20 m of pipe, 7.5 m of fall), then the delivery pipe (300 m, 65 m of rise), at one horizontal scale (1:1000) and a vertical scale 1.5 times larger (1:667). The pipe follows the ground and never goes lower again; the numbered discs are the bends of plan RP-D11. The table gives the level, the slope and the static pressure every 50 m; at the top, the drive pipe at true scale and the ratios L/h and H/h against the rules.',
+    'Coupe en long le long des tuyaux, d’abord la conduite motrice (20 m de tuyau, 7,5 m de chute), puis la conduite de refoulement (300 m, 65 m de montée), à la même échelle horizontale (1:1000) et à une échelle verticale 1,5 fois plus grande (1:667). Le tuyau suit le sol et ne repasse jamais plus bas ; les pastilles numérotées sont les coudes du plan D11. Le tableau donne l’altitude, la pente et la pression statique tous les 50 m ; en haut, la conduite motrice à l’échelle vraie et les rapports L/h et H/h face aux règles.',
+    'Long section along the pipes, first the drive pipe (20 m of pipe, 7.5 m of fall), then the delivery pipe (300 m, 65 m of rise), at one horizontal scale (1:1000) and a vertical scale 1.5 times larger (1:667). The pipe follows the ground and never goes lower again; the numbered discs are the bends of plan D11. The table gives the level, the slope and the static pressure every 50 m; at the top, the drive pipe at true scale and the ratios L/h and H/h against the rules.',
   ),
   scene: 'site',
   parts: ['drive-pipe', 'delivery-pipe', 'buffer-tank', 'ram-pit', 'water-tower'],
@@ -521,7 +533,7 @@ export const siteProfile: DrawingSheet = {
         'Conduite motrice (chute h) et conduite de refoulement (hauteur H), altitudes et pentes',
         'Drive pipe (fall h) and delivery pipe (head H), levels and slopes',
       ),
-      number: 'RP-D12',
+      number: 'D12',
       scale: '1:1000 / 1:667',
     });
     const p = d.paper();
@@ -546,8 +558,8 @@ export const siteProfile: DrawingSheet = {
       null,
       [
         l(
-          'Hauteurs et longueurs de la vidéo : h = 7,5 m, 20 m de conduite motrice, H = 65 m, 300 m de refoulement (S1). Le relief, le tracé et le château d’eau sont ceux du modèle 3D : des estimations.',
-          'Heights and lengths from the video: h = 7.5 m, 20 m of drive pipe, H = 65 m, 300 m of delivery pipe (S1). The relief, the route and the water tower are those of the 3D model: estimates.',
+          'Hauteurs et longueurs de la vidéo : h = 7,5 m, 20 m de conduite motrice, H = 65 m, 300 m de refoulement. Le relief, le tracé et le château d’eau sont ceux de la vue 3D : des estimations.',
+          'Heights and lengths from the video: h = 7.5 m, 20 m of drive pipe, H = 65 m, 300 m of delivery pipe. The relief, the route and the water tower are those of the 3D view: estimates.',
         ),
       ],
       1.6,

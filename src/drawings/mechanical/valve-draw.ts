@@ -1,8 +1,21 @@
 // The waste valve in section on its axis, drawn from dims.ts (through geom.ts) exactly as the 3D builders (three/valve/parts.ts)
-// build it. Frame: model mm, origin on the axis at the top face of the base plate, Y up. The closed pose has the head on its
-// seat and the weight `s` above the guide; the open pose is the same stack lowered by `s`.
+// build it. Frame: model mm, origin on the axis at the top face of the base plate, Y up. The closed position has the head on
+// its seat and the stroke nut `s` above the guide (the weight rests on the nut); the open position is the same stack lowered by `s`.
 import { COLORS, W, type Pt, type Stroke, type View } from '@onigam/lab-kit/drawings';
-import { MOVING, WATER_FILL, hatched, med, nutSide, poly, thin, threadV, PAPER } from './draw';
+import {
+  MOVING,
+  WATER_FILL,
+  hatched,
+  med,
+  nutSide,
+  poly,
+  polyIn,
+  rectIn,
+  thin,
+  threadV,
+  PAPER,
+  type Box,
+} from './draw';
 import { CHAMFER_TOP, CONE_TOP, FINS_BOTTOM, NECK_BOTTOM, ROD_BOTTOM, SEAT_FOOT_R, V, corner, stack } from './geom';
 
 /** Right-hand profile of the reducer (three/valve/parts.ts reducerProfile), [radius, y]. */
@@ -148,8 +161,9 @@ export function fixedParts(v: View): void {
 }
 
 /**
- * The parts that follow the stem, with `dy` = 0 in the closed pose and -s in the open pose: head, fins nut, rod, stem sleeves,
- * counterweight and the two nuts. `s` is the stroke (the weight sits `s` above the guide when closed).
+ * The parts that follow the stem, with `dy` = 0 in the closed position and -s in the open position: head, fins nut, rod, stem
+ * sleeves, stroke nut, counterweight and lock nut. `s` is the stroke (the stroke nut stands `s` above the guide when closed, the
+ * weight rests on the nut, the lock nut on the weight).
  */
 export function movingParts(v: View, s: number, dy: number, o: { phantom?: boolean } = {}): void {
   const st = stack(s);
@@ -183,11 +197,12 @@ export function movingParts(v: View, s: number, dy: number, o: { phantom?: boole
     for (const sx of [1, -1])
       rect(v, sx * V.rodR, up(y0), sx * V.sleeveOnRodR, up(y0 + V.sleeveOnRodL), hatch('copper'));
   }
-  // counterweight (tapped on the axis, faced flat) and the two M6 nuts
+  // stroke nut (stands s above the guide), counterweight (tapped on the axis, faced flat) resting on it, lock nut on the weight
   const bore = V.rodR + 0.4;
+  const nutStroke: Stroke = phantom ? { ...line, fill: 'none' } : med();
+  nutSide(v, 0, up(st.nut0), V.nutAF / 2, V.nutT, nutStroke, V.rodR);
   for (const sx of [1, -1]) rect(v, sx * bore, up(st.weight0), sx * V.weightR, up(st.weight1), hatch('plastic'));
-  nutSide(v, 0, up(st.weight1), V.nutAF / 2, V.nutT, phantom ? { ...line, fill: 'none' } : med(), V.rodR);
-  nutSide(v, 0, up(st.stroke1), V.nutAF / 2, V.nutT, phantom ? { ...line, fill: 'none' } : med(), V.rodR);
+  nutSide(v, 0, up(st.weight1), V.nutAF / 2, V.nutT, nutStroke, V.rodR);
   // the rod: whole, not hatched, with its thread
   const y0 = up(ROD_BOTTOM);
   const y1 = up(st.rodTop);
@@ -206,4 +221,23 @@ export function drawValveSection(v: View, s: number): void {
   waterColumn(v, -V.plateT - 14);
   fixedParts(v);
   movingParts(v, s, 0);
+}
+
+/**
+ * Detail of the stroke at the guide, right half, seen through the window `win`: the guide, the stroke nut standing `s` above
+ * its end face, the weight resting on the nut and the rod; in dashed copper the open position, the stack lowered by `s` with
+ * the nut landed on the guide. The caller adds the dimension, the leaders and the caption.
+ */
+export function strokeAtGuide(cv: View, s: number, win: Box): void {
+  const st = stack(s);
+  const open: Stroke = { w: W.medium, dash: 'phantom', color: MOVING, fill: 'none' };
+  const top = win.y1;
+  polyIn(cv, GUIDE, hatched('alu'), win);
+  rectIn(cv, [V.rodR + 0.4, st.weight0], [V.weightR, top], hatched('plastic'), win);
+  rectIn(cv, [V.rodR, st.nut0], [V.nutAF / 2, st.nut1], hatched('steel'), win);
+  rectIn(cv, [V.rodR + 0.4, V.guideTop + V.nutT], [V.weightR, top], open, win);
+  rectIn(cv, [V.rodR, V.guideTop], [V.nutAF / 2, V.guideTop + V.nutT], open, win);
+  rectIn(cv, [0, win.y0], [V.rodR, top], { w: W.medium, fill: PAPER }, win);
+  threadV(cv, 0, V.rodR, win.y0, top, true);
+  cv.center([0, win.y0 - 1], [0, top + 1]);
 }

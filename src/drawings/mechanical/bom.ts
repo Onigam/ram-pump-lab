@@ -10,7 +10,7 @@ import { ITEM, box, grid, heading, marksLegend, note, partOf, type Cell } from '
 import { CONE_DEG, CONE_TOP, CV, R, ROD_BOTTOM, V, cat, k, lab, stack } from './geom';
 import { partIds, type WorldId } from '../../part-ids';
 
-const NUMBER = 'RP-D06';
+const NUMBER = 'D06';
 const TITLE = l('Nomenclature : bélier et clapet de choc', 'Bill of materials: ram and waste valve');
 
 const N = (x: number, digits = 0): L => l(nFr(x, digits), nEn(x, digits));
@@ -25,7 +25,7 @@ const DIMS: Record<string, L> = {
     lab(R.inletFlangeT, 'E'),
     ' · 4 × M10 · ',
     l('tube Ø', 'pipe Ø'),
-    lab(R.pipeOR * 2, 'D'),
+    lab(R.pipeOR * 2, 'E'),
   ),
   'inlet-valve': cat('DN25 · L ', lab(R.v1L, 'E'), ' · 4 × M10'),
   strainer: cat('DN25 · L ', lab(R.strainerL, 'E'), l(' · tamis inox', ' · stainless screen')),
@@ -50,7 +50,7 @@ const DIMS: Record<string, L> = {
     'Ø',
     lab(k(CHAMBER.diameter), 'E'),
     ' × ',
-    lab(k(CHAMBER.shellHeight), 'D'),
+    lab(k(CHAMBER.shellHeight), 'E'),
     ' · ',
     N(CHAMBER.volumeL),
     ' L*',
@@ -66,7 +66,7 @@ const DIMS: Record<string, L> = {
   'delivery-union': cat('DN15 · L ', lab(R.unionL, 'E'), l(' · tuyau PE', ' · PE pipe')),
   'outlet-valve': cat('DN15 · L ', lab(R.smallValveL, 'E')),
   'drain-valve': cat('DN15 · L ', lab(R.smallValveL, 'E'), l(' · embout cannelé', ' · hose tail')),
-  foundation: cat(lab(R.padL, 'D'), ' × ', lab(R.padW, 'E'), ' × ', lab(R.padT, 'E'), ' · 4 × M10*'),
+  foundation: cat(lab(R.padL, 'E'), ' × ', lab(R.padW, 'E'), ' × ', lab(R.padT, 'E'), ' · 4 × M10*'),
   'base-plate': cat(
     lab(V.plateHalf * 2, 'E'),
     ' × ',
@@ -83,7 +83,7 @@ const DIMS: Record<string, L> = {
   'valve-reducer': cat('26×34 → 15×21 · ', lab(V.redR * 2, 'E', 'Ø'), ' × ', lab(V.redTop, 'E')),
   'valve-nipple': cat(
     '15×21 · ',
-    lab(V.nippleTop - V.nippleBottom, 'R'),
+    lab(V.nippleTop - V.nippleBottom, 'E'),
     ' · 4 × ',
     lab(V.portW, 'E'),
     '×',
@@ -95,18 +95,18 @@ const DIMS: Record<string, L> = {
     l(' · cône ', ' · cone '),
     `${2 * CONE_DEG}°*`,
     ' · ',
-    lab(V.seatBoreR * 2, 'R', 'Ø'),
+    lab(V.seatBoreR * 2, 'D', 'Ø'),
   ),
   'valve-head': cat(
     lab(V.headR * 2, 'E', 'Ø'),
     ' · h ',
-    lab(CONE_TOP - V.headBase, 'D'),
+    lab(CONE_TOP - V.headBase, 'E'),
     l(' · cône ', ' · cone '),
     `${2 * CONE_DEG}°*`,
   ),
   'valve-stem': cat('M6 · L ', lab(stack(STROKE).rodTop - ROD_BOTTOM, 'E')),
   'stem-sleeves': cat(
-    lab(V.sleeveOnRodR * 2, 'D', 'Ø'),
+    lab(V.sleeveOnRodR * 2, 'E', 'Ø'),
     ' × ',
     lab(V.sleeveOnRodL, 'E'),
     ' · ',
@@ -124,9 +124,9 @@ const DIMS: Record<string, L> = {
   ),
   'valve-fins': cat(lab(V.finsR * 2, 'E', 'Ø'), ' · h ', lab(V.finsH, 'E'), ' · 4 ', l('ailettes', 'fins')),
   counterweight: cat(
-    lab(V.weightR * 2, 'R', 'Ø'),
+    lab(V.weightR * 2, 'E', 'Ø'),
     ' × ',
-    lab(V.weightL, 'D'),
+    lab(V.weightL, 'E'),
     ' · ',
     N(WEIGHT),
     l(' g (calibré)', ' g (calibrated)'),
@@ -135,59 +135,74 @@ const DIMS: Record<string, L> = {
   'lock-nut': cat('M6 · ', lab(V.nutAF, 'E'), l(' s/plats × ', ' a/f × '), lab(V.nutT, 'E')),
 };
 
-/** Status of each part: what the video says about it, and what the lab had to estimate. */
+/**
+ * Status of each part: what the video says about it, and what the lab had to estimate. Nothing is said to be the video's
+ * unless the video shows it (fact review F05, F07, F09): the 14-part valve is the lab's simplified version.
+ */
 const STATUS_OVERRIDE: Record<string, L> = {
   ram: l('estimation : aucune fiche du constructeur', 'estimate: no maker data sheet'),
-  'waste-valve': l('suit la vidéo (S1) : voir 14 à 27', 'follows the video (S1): see 14 to 27'),
+  'waste-valve': l(
+    'd’après la vidéo, en version simplifiée : voir 14 à 27',
+    'after the video, in a simplified version: see 14 to 27',
+  ),
   'valve-socket': l(
-    'taille 26×34 rapportée (S1 03:54), longueurs estimées',
-    '26×34 size reported (S1 03:54), lengths estimated',
+    'raccord soudé 20×27 dans la vidéo (vidéo 06:49) ; 26×34 : version simplifiée (vidéo 06:58), longueurs estimées',
+    '20×27 welded fitting in the video (video 06:49); 26×34: simplified version (video 06:58), lengths estimated',
   ),
   'valve-reducer': l(
     'tailles 26×34 et 15×21 rapportées, longueurs estimées',
     '26×34 and 15×21 sizes reported, lengths estimated',
   ),
   'valve-nipple': l(
-    '7–8 cm et 15×21 rapportés (S1 07:53), lumières estimées',
-    '7–8 cm and 15×21 reported (S1 07:53), ports estimated',
+    '7–8 cm et 15×21 rapportés (vidéo 07:53), 75 mm retenu, lumières estimées',
+    '7–8 cm and 15×21 reported (video 07:53), 75 mm taken, ports estimated',
   ),
   'valve-sleeve': l(
-    'taille 15×21 rapportée (S1 08:09), longueur estimée',
-    '15×21 size reported (S1 08:09), length estimated',
+    'taille 15×21 rapportée (vidéo 08:09), longueur estimée',
+    '15×21 size reported (video 08:09), length estimated',
   ),
   'valve-seat': l(
-    'fraisée au cône de la tête (S1 09:37), épaisseur estimée',
-    'milled to the head’s cone (S1 09:37), thickness estimated',
+    'fraisée au cône de la tête (vidéo 18:54), épaisseur estimée',
+    'milled to the head’s cone (video 18:54), thickness estimated',
   ),
   'valve-head': l(
-    'vis inox raccourcie (S1 09:47), cotes estimées',
-    'shortened stainless screw (S1 09:47), dimensions estimated',
+    'vis inox raccourcie (vidéo 09:47), cotes estimées',
+    'shortened stainless screw (video 09:47), dimensions estimated',
   ),
-  'valve-stem': l('tige M6 rapportée (S1 08:38), longueur estimée', 'M6 rod reported (S1 08:38), length estimated'),
-  'stem-sleeves': l('jeu de 0,1 mm rapporté (S1 09:02), Ø dérivé', '0.1 mm fit reported (S1 09:02), Ø derived'),
+  'valve-stem': l(
+    'tige M6 rapportée (vidéo 08:38), longueur estimée',
+    'M6 rod reported (video 08:38), length estimated',
+  ),
+  'stem-sleeves': l('jeu de 0,1 mm rapporté (vidéo 09:02), Ø estimé', '0.1 mm fit reported (video 09:02), Ø estimated'),
   'valve-guide': l(
-    'doigt de gant inox (S1 08:18), cotes estimées',
-    'stainless thermowell (S1 08:18), dimensions estimated',
+    'doigt de gant inox (vidéo 08:18), cotes estimées',
+    'stainless thermowell (video 08:18), dimensions estimated',
   ),
-  'valve-fins': l('ailettes limées (S1 12:02), cotes estimées', 'filed fins (S1 12:02), dimensions estimated'),
+  'valve-fins': l(
+    'les ailettes du Walton font tourner son clapet (vidéo 12:02) ; l’auteur prévoit de limer les siennes (vidéo 12:35), effet non vérifié ; cotes estimées',
+    'the Walton’s fins turn its valve (video 12:02); the author plans to file his own (video 12:35), effect not checked; dimensions estimated',
+  ),
   counterweight: l(
-    'barre de 30–32 mm rapportée (S1 15:59), masse calibrée',
-    '30–32 mm bar reported (S1 15:59), mass calibrated',
+    'barre de 30–32 mm rapportée (vidéo 15:59), Ø 31 retenu, masse calibrée ; posé sur l’écrou de course',
+    '30–32 mm bar reported (video 15:59), Ø 31 taken, mass calibrated; rests on the stroke nut',
   ),
-  'stroke-nut': l('rôle rapporté (S1 12:55), course calibrée', 'role reported (S1 12:55), stroke calibrated'),
-  'lock-nut': l('rôle rapporté (S1 13:29), épaisseur estimée', 'role reported (S1 13:29), thickness estimated'),
+  'stroke-nut': l(
+    'posé sur le guide à la course s : sa hauteur sur la tige fixe la course (calibrée). Dans la vidéo, le poids est lui-même l’écrou principal (vidéo 17:40) ; le labo sépare les deux rôles pour qu’on les voie',
+    'stands s above the guide: its height on the rod sets the stroke (calibrated). In the video the weight itself is the main nut (video 17:40); the lab keeps the two roles apart so that each can be seen',
+  ),
+  'lock-nut': l(
+    'sur le poids, il bloque la pile ; rôle rapporté (vidéo 13:29), épaisseur estimée',
+    'on top of the weight, it locks the stack; role reported (video 13:29), thickness estimated',
+  ),
   'delivery-valve': l(
-    'situé dans la vidéo (S1 03:26), cotes estimées',
-    'placed in the video (S1 03:26), dimensions estimated',
+    'situé dans la vidéo (03:26), cotes estimées',
+    'placed in the video (03:26), dimensions estimated',
   ),
-  'air-chamber': l(
-    'vue dans la vidéo (S1 03:26), cotes estimées',
-    'seen in the video (S1 03:26), dimensions estimated',
-  ),
-  foundation: l('estimation : la vidéo ne montre qu’une dalle', 'estimate: the video only shows a slab'),
+  'air-chamber': l('vue dans la vidéo (03:26), cotes estimées', 'seen in the video (03:26), dimensions estimated'),
+  foundation: l('estimation : la vidéo ne donne aucun massif', 'estimate: the video gives no block'),
   'base-plate': l(
-    'découpée comme celle du Walton (S1 06:36), cotes estimées',
-    'cut like the Walton’s (S1 06:36), dimensions estimated',
+    'découpée comme celle du Walton (vidéo 06:36), cotes estimées',
+    'cut like the Walton’s (video 06:36), dimensions estimated',
   ),
 };
 
@@ -211,12 +226,11 @@ function ranges(items: number[]): string {
 const SIZE = 1.95;
 const COLS = [
   { label: l('Rep.', 'Item'), w: 9, align: 'middle' as const },
-  { label: l('Id 3D', '3D id'), w: 31, mono: true },
-  { label: l('Désignation', 'Part'), w: 45 },
+  { label: l('Désignation', 'Part'), w: 52 },
   { label: l('Matière', 'Material'), w: 62 },
   { label: l('Qté', 'Qty'), w: 8, align: 'middle' as const },
-  { label: l('Cotes principales (mm)', 'Main dimensions (mm)'), w: 56, mono: true },
-  { label: l('Statut', 'Status'), w: 68 },
+  { label: l('Cotes principales (mm)', 'Main dimensions (mm)'), w: 62, mono: true },
+  { label: l('Statut', 'Status'), w: 85 },
 ];
 
 function rowsOf(world: WorldId): Cell[][] {
@@ -224,7 +238,6 @@ function rowsOf(world: WorldId): Cell[][] {
     const p = partOf(id);
     return [
       { t: String(ITEM[id]), bold: true },
-      { t: id, mono: true, color: INK_2 },
       { t: p.name, bold: true },
       { t: p.material },
       { t: String(p.qty ?? 1) },
@@ -242,8 +255,8 @@ export function makeBom(others: DrawingSheet[]): DrawingSheet {
     group: 'ram',
     title: TITLE,
     description: l(
-      `Nomenclature des ${total} pièces du bélier générique de 1″ et de son clapet de choc, construite à partir du catalogue des pièces du labo : repère, identifiant du modèle 3D, désignation, matière et quantité ne peuvent donc pas s’en écarter. Les repères 1 à 13 sont ceux de la feuille RP-D01, 14 à 27 ceux des feuilles du clapet ; la dernière colonne dit, pour chaque pièce, ce que la vidéo donne et ce qui est estimé. Aucune source ne donne de couple de serrage : aucun n’est indiqué.`,
-      `Bill of materials of the ${total} parts of the generic 1″ ram and its waste valve, built from the lab’s parts catalogue: item, 3D model id, name, material and quantity cannot drift from it. Items 1 to 13 are those of sheet RP-D01, 14 to 27 those of the valve sheets; the last column says, for each part, what the video gives and what is estimated. No source gives a tightening torque: none is shown.`,
+      `Nomenclature des ${total} pièces du bélier générique de 1″ et de son clapet de choc, construite à partir du catalogue des pièces du labo : repère, désignation, matière et quantité ne peuvent donc pas s’en écarter. Les repères 1 à 13 sont ceux de la feuille D01, 14 à 27 ceux des feuilles du clapet ; la dernière colonne dit, pour chaque pièce, ce que la vidéo donne et ce qui est estimé. Aucune source ne donne de couple de serrage : aucun n’est indiqué.`,
+      `Bill of materials of the ${total} parts of the generic 1″ ram and its waste valve, built from the lab’s parts catalogue: item, name, material and quantity cannot drift from it. Items 1 to 13 are those of sheet D01, 14 to 27 those of the valve sheets; the last column says, for each part, what the video gives and what is estimated. No source gives a tightening torque: none is shown.`,
     ),
     scene: 'ram',
     parts: partIds('ram'),
@@ -252,8 +265,8 @@ export function makeBom(others: DrawingSheet[]): DrawingSheet {
       d.frame({
         title: TITLE,
         subtitle: l(
-          `${total} repères · bélier générique de 1″ (monde ram) et clapet de choc de la vidéo (monde valve)`,
-          `${total} items · generic 1″ ram (ram world) and the video’s waste valve (valve world)`,
+          `${total} repères · bélier générique de 1″ et clapet de choc d’après la vidéo, simplifié`,
+          `${total} items · generic 1″ ram and waste valve after the video’s, simplified`,
         ),
         number: NUMBER,
         scale: tr(l('SO', 'NTS')),
@@ -294,15 +307,15 @@ export function makeBom(others: DrawingSheet[]): DrawingSheet {
           {
             bullet: '1',
             t: l(
-              'Bélier générique de 1″ : ce n’est pas le Walton n°3 de la vidéo, dont aucune fiche n’a été trouvée. Seul le clapet de choc (repères 14 à 27) suit la vidéo.',
-              'Generic 1″ ram: not the video’s Walton n°3, for which no data sheet was found. Only the waste valve (items 14 to 27) follows the video.',
+              'Bélier générique de 1″ : ce n’est pas le Walton n°3 de la vidéo, dont aucune fiche n’a été trouvée. Seul le clapet de choc (repères 14 à 27) s’inspire de la vidéo, en version simplifiée : voir la colonne Statut.',
+              'Generic 1″ ram: not the video’s Walton No. 3, for which no data sheet was found. Only the waste valve (items 14 to 27) is based on the video, in a simplified version: see the Status column.',
             ),
           },
           {
             bullet: '2',
             t: l(
-              'Les cotes marquées * sont des estimations du modèle 3D, † des dérivés : voir la légende. Les longueurs du clapet sont estimées d’après les noms des raccords.',
-              'Dimensions marked * are estimates of the 3D model, † derived: see the key. The valve lengths are estimated from the fittings’ names.',
+              'Les cotes marquées * sont des estimations (ou en dérivent), † des dérivés de chiffres de la source : voir la légende. Les longueurs du clapet sont estimées d’après les noms des raccords.',
+              'Dimensions marked * are estimates (or derive from one), † derived from the source’s figures: see the key. The valve lengths are estimated from the fittings’ names.',
             ),
           },
           {
@@ -347,7 +360,7 @@ export function makeBom(others: DrawingSheet[]): DrawingSheet {
         refRows,
         { size: 1.65, pad: 0.6, lineH: 2.5 },
       );
-      p.text([x, ny + 3], l('RP-D06 : nomenclature (cette feuille).', 'RP-D06: bill of materials (this sheet).'), {
+      p.text([x, ny + 3], l('D06 : nomenclature (cette feuille).', 'D06: bill of materials (this sheet).'), {
         size: 1.6,
         color: INK_2,
         baseline: 'top',

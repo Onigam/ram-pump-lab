@@ -5,11 +5,11 @@ import { SITE } from '../../three/dims';
 import { G, RHO, WAVE_SPEED } from '../../sim/physics';
 import type { StrokeTrace } from '../../sim/types';
 import { Chart } from './chart';
-import { ram, REPORTED, stroke1, surgeBar, valve1 } from './model';
+import { frozenInstants, ram, type FrozenInstant, REPORTED, stroke1, surgeBar, valve1 } from './model';
 import { airChamber, wasteValve } from './symbols';
 import { arrowLine, balloon, cat, flowArrow, kindKey, nf, para, val, type Kind } from './util';
 
-// RP-D08 — The four-beat cycle of the ram (acceleration, closing, delivery, recoil): four small schematics with the position
+// D08 — The four-phase cycle of the ram (acceleration, closing, delivery, recoil): four small schematics with the position
 // of the waste valve and of the check valve, and under them the pressure and velocity of ONE stroke computed from
 // RamSim.strokeTrace() (the n°1 valve of the video at its site), the phases marked on the time axis. Joukowsky's surge
 // Δp = ρ·a·v is written with the model's numbers. Everything on the traces is a model result.
@@ -33,7 +33,7 @@ const PHASES: { fr: string; en: string; text: L }[] = [
     fr: 'Fermeture',
     en: 'Closing',
     text: l(
-      'Le courant, devenu assez rapide, entraîne le clapet qui claque sur son siège : la colonne d’eau est stoppée net et la pression monte (coup de bélier).',
+      'Le courant, devenu assez rapide, entraîne le clapet qui claque sur sa portée : la colonne d’eau est stoppée net et la pression monte (coup de bélier).',
       'The flow, now fast enough, drags the valve onto its seat with a slam: the water column is stopped dead and the pressure surges (water hammer).',
     ),
   },
@@ -41,8 +41,8 @@ const PHASES: { fr: string; en: string; text: L }[] = [
     fr: 'Refoulement',
     en: 'Delivery',
     text: l(
-      'La surpression soulève le clapet anti-retour : un peu d’eau entre dans la cloche à air, qui la pousse dans la conduite de refoulement.',
-      'The surge lifts the check valve: a little water enters the air chamber, which pushes it into the delivery pipe.',
+      'La surpression soulève le clapet de refoulement : un peu d’eau entre dans la cloche à air, qui la pousse dans la conduite de refoulement.',
+      'The surge lifts the delivery check valve: a little water enters the air chamber, which pushes it into the delivery pipe.',
     ),
   },
   {
@@ -64,7 +64,24 @@ interface Instant {
   z: number;
 }
 
-/** The instant drawn for each phase: the same choices as RamSim's frozen phases (docs/physics.md §8). */
+/** The trace at time `t` (ms), linearly interpolated between its two samples. */
+function atTime(tr: StrokeTrace, t: number): Instant {
+  const n = tr.t.length;
+  let j = 1;
+  while (j < n - 1 && (tr.t[j] as number) < t) j++;
+  const t0 = tr.t[j - 1] as number;
+  const t1 = tr.t[j] as number;
+  const f = t1 > t0 ? Math.min(1, Math.max(0, (t - t0) / (t1 - t0))) : 0;
+  const lerp = (a: number[]): number => (a[j - 1] as number) + f * ((a[j] as number) - (a[j - 1] as number));
+  return { i: j, t, p: lerp(tr.pressure), v: lerp(tr.velocity), z: lerp(tr.valve) };
+}
+
+/**
+ * Where the four numbered dots go on the trace: the rules of `RamSim.holdPhase` (docs/physics.md §8). Acceleration at 95 % of
+ * its duration, closing at the peak of the pressure, delivery at 50 % of its duration, recoil when the waste valve is half
+ * open (the trace is sampled every 1.8 ms: the crossing is interpolated). The numbers written under the schematics are not
+ * read here but taken from the simulation itself (`frozenInstants`).
+ */
 function instants(tr: StrokeTrace): Instant[] {
   const at = (i: number): Instant => ({
     i,
@@ -74,21 +91,23 @@ function instants(tr: StrokeTrace): Instant[] {
     z: tr.valve[i] as number,
   });
   const inPhase = (k: number) => tr.phase.map((q, i) => (q === k ? i : -1)).filter((i) => i >= 0);
-  const a = inPhase(0);
   const c = inPhase(1);
-  const d = inPhase(2);
   const r = inPhase(3);
-  const accel = a.reduce(
-    (best, i) => ((tr.t[i] as number) <= tr.start[0] + 0.95 * tr.length[0] ? i : best),
-    a[0] as number,
+  const accel = atTime(tr, tr.start[0] + 0.95 * tr.length[0]);
+  const close = at(
+    c.reduce((best, i) => ((tr.pressure[i] as number) > (tr.pressure[best] as number) ? i : best), c[0] as number),
   );
-  const close = c.reduce(
-    (best, i) => ((tr.pressure[i] as number) > (tr.pressure[best] as number) ? i : best),
-    c[0] as number,
-  );
-  const deliver = d.length ? (d[Math.floor(d.length / 2)] as number) : close;
-  const recoil = r.find((i) => (tr.valve[i] as number) >= 0.5) ?? (r[Math.floor(r.length / 2)] as number);
-  return [at(accel), at(close), at(deliver), at(recoil)];
+  const deliver = tr.length[2] > 0 ? atTime(tr, tr.start[2] + 0.5 * tr.length[2]) : close;
+  const half = r.find((i) => (tr.valve[i] as number) >= 0.5);
+  let recoil: Instant;
+  if (half !== undefined && half > 0) {
+    const z0 = tr.valve[half - 1] as number;
+    const z1 = tr.valve[half] as number;
+    const t0 = tr.t[half - 1] as number;
+    const t1 = tr.t[half] as number;
+    recoil = atTime(tr, z1 > z0 ? t0 + ((0.5 - z0) / (z1 - z0)) * (t1 - t0) : t1);
+  } else recoil = at(r[Math.floor(r.length / 2)] as number);
+  return [accel, close, deliver, recoil];
 }
 
 interface Beat {
@@ -185,11 +204,14 @@ const BEATS: Beat[] = [
 
 const num = (n: number, d = 0) => nf(n, d);
 
-function panels(p: View, tr_: StrokeTrace, ins: Instant[]): void {
+function panels(p: View): void {
   const w = 98;
   PHASES.forEach((ph, k) => {
     const px = 14 + w * k;
-    const inst = ins[k] as Instant;
+    const inst = frozenInstants()[k] as FrozenInstant;
+    // the cycle averages of the engine give the duration of each phase (the sampled trace rounds them to 1.8 ms)
+    const means = valve1().means;
+    const share = means.phaseShare[k] as number;
     // heading: balloon, name, share of the cycle
     balloon(p, [px + 4, 25.5], String(k + 1), 3, PHASE_INK[k]);
     p.text([px + 9.5, 25.5], l(ph.fr, ph.en), { size: 2.7, weight: 'bold', baseline: 'middle' });
@@ -199,18 +221,18 @@ function panels(p: View, tr_: StrokeTrace, ins: Instant[]): void {
       [px + 1.5, 88.5],
       cat(
         l('durée ', 'lasts '),
-        nf(tr_.length[k] as number, 0),
+        nf((share * 60000) / means.strokesPerMin, 0),
         ' ms · ',
-        nf((100 * (tr_.length[k] as number)) / tr_.period, 0),
+        nf(100 * share, share < 0.1 ? 1 : 0),
         l(' % du cycle', ' % of the cycle'),
       ),
       { size: 1.7, color: BLUE, weight: 'bold' },
     );
     para(p, px + 1.5, 93, w - 7, ph.text, 1.7);
     // the model's numbers at the instant drawn in the traces
-    val(p, px + 1.5, 109, 'M', cat('p = ', num(inst.p, 1), ' bar'), { size: 1.7, bold: true });
-    val(p, px + 30, 109, 'M', cat('v = ', num(inst.v, 2), ' m/s'), { size: 1.7, bold: true });
-    val(p, px + 62, 109, 'M', cat(l('clapet ', 'valve '), num(100 * inst.z, 0), ' %'), { size: 1.7, bold: true });
+    val(p, px + 1.5, 109, 'M', cat('p = ', num(inst.pressure, 1), ' bar'), { size: 1.7, bold: true });
+    val(p, px + 30, 109, 'M', cat('v = ', num(inst.velocity, 2), ' m/s'), { size: 1.7, bold: true });
+    val(p, px + 62, 109, 'M', cat(l('clapet ', 'valve '), num(100 * inst.valve, 0), ' %'), { size: 1.7, bold: true });
   });
   for (let k = 1; k < 4; k++) p.line([14 + w * k - 1.5, 21], [14 + w * k - 1.5, 113], { w: W.thin, color: '#cfc8b8' });
 }
@@ -320,7 +342,7 @@ function traces(p: View, tr_: StrokeTrace, ins: Instant[]): void {
     tr_.t.map((t, i): Pt => [t, tr_.pressure[i] as number]),
     { w: 0.55, color: BLUE },
   );
-  // velocity: zero line, the minimum closing velocity of K15 as a band, the trace
+  // velocity: zero line, the lab's estimated range of the minimum closing velocity as a band, the trace
   V.hline(0, { color: INK, w: W.thin });
   V.band(0, T, { fill: '#e2dccb', opacity: 0.9 }, 0.5, 0.65);
   V.hline(st.minClosingVelocity, { dash: [1.2, 0.8], color: INK });
@@ -337,8 +359,8 @@ function traces(p: View, tr_: StrokeTrace, ins: Instant[]): void {
     T * 0.63,
     1.0,
     l(
-      'Vitesse minimale de fermeture 0,5–0,65 m/s (dérivé dans la recherche)',
-      'Minimum closing velocity 0.5–0.65 m/s (derived in the research notes)',
+      'Vitesse minimale de fermeture : plage 0,5–0,65 m/s estimée par le labo (la vidéo n’en donne pas)',
+      'Minimum closing velocity: 0.5–0.65 m/s range estimated by the lab (the video gives none)',
     ),
     { size: 1.5, color: INK_2, dy: 0 },
   );
@@ -418,7 +440,7 @@ function hammer(p: View): void {
     ['ρ', l('masse volumique de l’eau', 'density of water'), cat(nf(RHO, 0), ' kg/m³'), null],
     [
       'a',
-      l('vitesse du son du tuyau d’acier', 'wave speed of the steel pipe'),
+      l('vitesse de l’onde dans le tuyau d’acier', 'wave speed in the steel pipe'),
       cat(nf(WAVE_SPEED.steel, 0), ' m/s'),
       'C',
     ],
@@ -448,8 +470,8 @@ function hammer(p: View): void {
   p.text(
     [x, y + 38.5],
     l(
-      'Pour ouvrir le clapet anti-retour, il faut atteindre la pression de refoulement :',
-      'To open the check valve it must reach the delivery pressure:',
+      'Pour ouvrir le clapet de refoulement, il faut atteindre la pression de refoulement :',
+      'To open the delivery check valve it must reach the delivery pressure:',
     ),
     { size: 1.6, baseline: 'middle' },
   );
@@ -483,14 +505,17 @@ function hammer(p: View): void {
   p.line([x, y + 59.4], [x + w - 6, y + 59.4], { w: W.thin, color: '#cfc8b8' });
   p.text(
     [x, y + 64.4],
-    l('Vitesse minimale qui suffit : v = g·(H − h)/a', 'Smallest velocity that is enough: v = g·(H − h)/a'),
+    l('Vitesse minimale nécessaire : v = g·(H − h)/a', 'Minimum velocity needed: v = g·(H − h)/a'),
     { size: 1.6, baseline: 'middle' },
   );
-  val(p, x, y + 69.2, 'D', cat(nf(st.minClosingVelocity, 2), ' m/s'), { size: 1.9, bold: true });
+  val(p, x, y + 69.2, 'M', cat(nf(st.minClosingVelocity, 2), ' m/s'), { size: 1.9, bold: true });
   p.text(
     [x + 24, y + 69.2],
     cat(
-      l('(dérivé : 0,5–0,65 m/s) ; le modèle ferme à ', '(derived: 0.5–0.65 m/s); the model closes at '),
+      l(
+        '(le labo estimait 0,5–0,65 m/s) ; le modèle ferme à ',
+        '(the lab estimated 0.5–0.65 m/s); the model closes at ',
+      ),
       nf(st.closingVelocity, 2),
     ),
     { size: 1.5, color: INK_2, baseline: 'middle' },
@@ -519,8 +544,8 @@ function hammer(p: View): void {
     x,
     y + 88.2,
     l(
-      'rien n’est refoulé : voir le scénario « tuyau plastique »',
-      'nothing is delivered: see the “plastic pipe” scenario',
+      'rien n’est refoulé : voir le scénario « Conduite en PVC »',
+      'nothing is delivered: see the “PVC drive pipe” scenario',
     ),
   );
   p.line([x, y + 92.6], [x + w - 6, y + 92.6], { w: W.thin, color: '#cfc8b8' });
@@ -553,30 +578,30 @@ function chipLine(p: View, x: number, y: number, text: L): void {
 
 export const cycleDiagram: DrawingSheet = {
   id: 'cycle-diagram',
-  number: 'RP-D08',
+  number: 'D08',
   group: 'hydraulic',
-  title: l('Le cycle du bélier en quatre temps', 'The four-beat cycle of the ram'),
+  title: l('Le cycle du bélier en quatre temps', 'The four-phase cycle of the ram'),
   description: l(
-    'Un coup de bélier dure environ une demi-seconde : accélération, fermeture, refoulement, recul. En haut, la position du clapet de choc et du clapet anti-retour à chaque temps ; en dessous, la pression et la vitesse d’un coup complet, calculées par le modèle pour le clapet n°1 de la vidéo, avec les quatre temps marqués sur l’axe du temps et les instants choisis repérés par des points numérotés. À droite, la formule de Joukowsky Δp = ρ·a·v écrite avec les valeurs du modèle.',
-    'A ram stroke lasts about half a second: acceleration, closing, delivery, recoil. At the top, the position of the waste valve and of the check valve in each beat; below, the pressure and the velocity of one whole stroke, computed by the model for the video’s n°1 valve, with the four beats marked on the time axis and the chosen instants shown by numbered dots. On the right, Joukowsky’s formula Δp = ρ·a·v written with the model’s values.',
+    'Un coup complet du bélier dure environ une demi-seconde : accélération, fermeture, refoulement, recul. En haut, la position du clapet de choc et du clapet de refoulement à chaque phase ; en dessous, la pression et la vitesse d’un coup complet, calculées par le modèle pour le clapet n°1 de la vidéo, avec les quatre phases marquées sur l’axe du temps et les instants choisis repérés par des points numérotés. À droite, la formule de Joukowsky Δp = ρ·a·v écrite avec les valeurs du modèle.',
+    'A ram stroke lasts about half a second: acceleration, closing, delivery, recoil. At the top, the position of the waste valve and of the delivery check valve in each phase; below, the pressure and the velocity of one whole stroke, computed by the model for the video’s valve No. 1, with the four phases marked on the time axis and the chosen instants shown by numbered dots. On the right, Joukowsky’s formula Δp = ρ·a·v written with the model’s values.',
   ),
   scene: 'ram',
   parts: ['waste-valve', 'delivery-valve', 'air-chamber', 'snifter', 'ram'],
   render(): Drawing {
     const d = new Drawing();
     d.frame({
-      title: l('Le cycle du bélier en quatre temps', 'The four-beat cycle of the ram'),
+      title: l('Le cycle du bélier en quatre temps', 'The four-phase cycle of the ram'),
       subtitle: l(
         'Pression et vitesse d’un coup complet — clapet n°1, site de la vidéo',
-        'Pressure and velocity of one whole stroke — n°1 valve, the video’s site',
+        'Pressure and velocity of one whole stroke — valve No. 1, the video’s site',
       ),
-      number: 'RP-D08',
+      number: 'D08',
       scale: tr(l('sans échelle', 'not to scale')),
     });
     const p = d.paper();
     const t = stroke1();
     const ins = instants(t);
-    panels(p, t, ins);
+    panels(p);
     traces(p, t, ins);
     hammer(p);
     kindKey(p, 14, 266);
@@ -586,8 +611,8 @@ export const cycleDiagram: DrawingSheet = {
       249,
       200,
       l(
-        'Les points numérotés sont les instants figés par la simulation (écran « cycle pas à pas ») ; p, v et le clapet sont lus sur la trace à ces instants.',
-        'The numbered dots are the instants the simulation freezes (the “cycle step by step” panel); p, v and the valve are read on the trace at those instants.',
+        'Les points numérotés sont les instants figés par la simulation (section « Le cycle, pas à pas ») ; p, v et le clapet sont les valeurs de la simulation à ces instants, les points sont placés sur la trace.',
+        'The numbered dots are the instants the simulation freezes (the section “The cycle, step by step”); p, v and the valve are the simulation’s values at those instants, the dots are placed on the trace.',
       ),
       1.7,
       INK_2,

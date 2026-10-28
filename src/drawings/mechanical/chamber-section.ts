@@ -28,7 +28,7 @@ import {
 } from './draw';
 import { AIR_FRACTION_NOMINAL, CH_MM, CHECK_BASE, CV, R, cat, chamberSection, k, lab, labN, labOf, dim } from './geom';
 
-const NUMBER = 'RP-D05';
+const NUMBER = 'D05';
 const TITLE = l('Clapet de refoulement, cloche, reniflard', 'Delivery check valve, air chamber, snifter');
 
 const SNIFTER = {
@@ -275,7 +275,7 @@ function render(): Drawing {
       baseline: 'middle',
       color: WATER,
     });
-    dimV(v, [xD - CH_MM.R, 0], [xD - CH_MM.R, levelAbs], xD - CH_MM.R - 55, labN(levelAbs, 0, 'D'), 2.1);
+    dimV(v, [xD - CH_MM.R, 0], [xD - CH_MM.R, levelAbs], xD - CH_MM.R - 55, labN(levelAbs, 0, 'E'), 2.1);
     dimH(v, [xD - CH_MM.R, sh + 300], [xD + CH_MM.R, sh + 300], sh + 300, labOf(dim('CHAMBER', 'diameter'), 'Ø'), 2.1);
     dimH(v, [xS, -R.bodyR], [xD, -R.bodyR], -R.bodyR - 14, lab(xD - xS, 'E'), 2.1);
     // balloons
@@ -358,7 +358,7 @@ function render(): Drawing {
       2,
     );
     dimH(v, [-CV.rv, 56], [CV.rv, 56], -17, labOf(dim('CHECK_VALVE', 'acrossFlats'), 'Ø'), 2);
-    dimV(v, [-CV.rv, 0], [-CV.rv, 80], -CV.rv - 7, labOf(dim('CHECK_VALVE', 'height')), 2);
+    dimV(v, [-CV.rv, 0], [-CV.rv, 80], -CV.rv - 16, labOf(dim('CHECK_VALVE', 'height')), 2);
     dimV(
       v,
       [CV.rv, CV.seatY + CV.discT],
@@ -372,7 +372,7 @@ function render(): Drawing {
     v.leader([CV.seatBoreR, CV.seatY - 1], 16, 12, l('siège', 'seat'), { size: 1.75 });
     v.leader([0, CV.seatY + CV.discT + 4], -12, -6, l('tige du disque', 'disc stem'), { size: 1.75 });
     v.leader([11.5, 82], 12, -4, l('sortie vers la cloche', 'outlet to the chamber'), { size: 1.75 });
-    v.caption([0, -22.5], l('DÉTAIL E · CLAPET', 'DETAIL E · CHECK VALVE'), '2:1');
+    v.caption([0, -22.5], l('DÉTAIL E · CLAPET DE REFOULEMENT', 'DETAIL E · DELIVERY CHECK VALVE'), '2:1');
   }
 
   // ------------------------------------------------------------------ detail F: the snifter, 2:1 (principle)
@@ -471,8 +471,8 @@ function render(): Drawing {
       {
         bullet: '3',
         t: l(
-          `À chaque coup le disque se soulève d’environ ${nFr(CHECK_VALVE.lift * 1000)} mm* et laisse passer ${nFr(MODEL.mlPerStroke, 1)} mL (dérivé) ; au recul, la pression du corps tombe à −${nFr(MODEL.recoilDipBar, 2)} bar : le reniflard s’ouvre sous −${nFr(SNIFTER_CRACK / 1e5, 2)} bar (modèle) et laisse entrer un peu d’air.`,
-          `At each stroke the disc lifts about ${nEn(CHECK_VALVE.lift * 1000)} mm* and passes ${nEn(MODEL.mlPerStroke, 1)} mL (derived); on the recoil the body pressure falls to −${nEn(MODEL.recoilDipBar, 2)} bar: the snifter opens under −${nEn(SNIFTER_CRACK / 1e5, 2)} bar (model) and lets a little air in.`,
+          `À chaque coup le disque se soulève d’environ ${nFr(CHECK_VALVE.lift * 1000)} mm* et laisse passer ${nFr(MODEL.mlPerStroke, 1)} mL (résultat du modèle) ; au recul, la pression du corps tombe à −${nFr(MODEL.recoilDipBar, 2)} bar : le reniflard s’ouvre sous −${nFr(SNIFTER_CRACK / 1e5, 2)} bar (modèle) et laisse entrer un peu d’air.`,
+          `At each stroke the disc lifts about ${nEn(CHECK_VALVE.lift * 1000)} mm* and passes ${nEn(MODEL.mlPerStroke, 1)} mL (model result); on the recoil the body pressure falls to −${nEn(MODEL.recoilDipBar, 2)} bar: the snifter opens under −${nEn(SNIFTER_CRACK / 1e5, 2)} bar (model) and lets a little air in.`,
         ),
       },
       {
@@ -511,7 +511,7 @@ function render(): Drawing {
     [14, 276],
     l(
       'Bélier générique de 1″ : pas le Walton n°3 de la vidéo. Toutes les cotes de cette feuille sont des estimations ou des dérivés.',
-      'Generic 1″ ram: not the video’s Walton n°3. Every dimension on this sheet is an estimate or derived.',
+      'Generic 1″ ram: not the video’s Walton No. 3. Every dimension on this sheet is an estimate or derived.',
     ),
     { size: 1.7, color: INK_2, baseline: 'middle' },
   );

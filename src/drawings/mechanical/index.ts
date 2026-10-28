@@ -14,5 +14,5 @@ const DRAWN: DrawingSheet[] = [
   chamberSectionSheet,
 ];
 
-/** Mechanical sheets (groups `ram` and `valve`) in reading order: RP-D01 … RP-D06. */
+/** Mechanical sheets (groups `ram` and `valve`) in reading order: D01 … D06. */
 export const MECHANICAL_SHEETS: DrawingSheet[] = [...DRAWN, makeBom(DRAWN)];

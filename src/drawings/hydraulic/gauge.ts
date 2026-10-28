@@ -4,7 +4,7 @@ import { nf, val, type Kind } from './util';
 
 const COPPER = COLORS.copper;
 
-// A horizontal bullet gauge for a ratio (RP-D10 and RP-D12): a scale with ticks, an optional usual band, an optional zone to
+// A horizontal bullet gauge for a ratio (D10 and D12): a scale with ticks, an optional usual band, an optional zone to
 // avoid, dashed marks of the rules and a copper marker for the lab's own value.
 
 /** A horizontal gauge from 0 to `max` with a usual band, marks and a marker for the lab. */

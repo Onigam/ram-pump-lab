@@ -16,7 +16,10 @@ export const mm = (m: number): number => Math.round(m * 1e4) / 10;
 /** Metres to millimetres, exact (what the sheets draw). */
 export const k = (m: number): number => m * 1000;
 
-/** reported by the source (no mark), derived from reported figures (†), estimate: no source gives it (*). */
+/**
+ * What a sheet prints after a dimension: reported by a source (no mark), computed from reported figures only (†), or an
+ * estimate (*). A value computed from an estimate or from the calibrated mass or stroke is an estimate: no source gives it.
+ */
 export type Status = 'R' | 'D' | 'E';
 export const MARK: Record<Status, string> = { R: '', D: '†', E: '*' };
 
@@ -56,6 +59,26 @@ export const STATUS: Record<string, Status> = {
   'CHAMBER.shellBottom': 'D',
 };
 
+/**
+ * Constants whose JSDoc in dims.ts says "reported" or "derived" but which a sheet must print as estimates (*): derived from
+ * other estimated lengths or from the calibrated mass (fact review F16), or a mid-point picked in a range the video gives
+ * ("7 or 8 cm", "30–32 mm": F23). `STATUS` above stays the faithful copy of dims.ts that the test checks.
+ */
+const MARKED_ESTIMATE = new Set([
+  'SITE.deliveryBore',
+  'SITE.driveOuterDiameter',
+  'FOUNDATION.length',
+  'VALVE.nippleLength',
+  'VALVE.guideTop',
+  'VALVE.stemSleeveDiameter',
+  'VALVE.headHeight',
+  'VALVE.headClosedY',
+  'VALVE.counterweightDiameter',
+  'VALVE.counterweightLength',
+  'CHAMBER.shellHeight',
+  'CHAMBER.shellBottom',
+]);
+
 /** A length of dims.ts: metres, millimetres to the tenth and status. */
 export interface Dim {
   m: number;
@@ -65,7 +88,8 @@ export interface Dim {
 
 export function dim<S extends keyof Sections>(section: S, key: NumKey<Sections[S]>): Dim {
   const m = (SECTIONS[section] as unknown as Record<string, number>)[key] as number;
-  return { m, mm: mm(m), status: STATUS[`${section}.${key}`] ?? 'E' };
+  const id = `${section}.${key}`;
+  return { m, mm: mm(m), status: MARKED_ESTIMATE.has(id) ? 'E' : (STATUS[id] ?? 'E') };
 }
 
 /** Concatenation of bilingual pieces (plain strings stay as they are in both languages). */
@@ -166,13 +190,26 @@ export const CHAMFER_TOP = V.nippleBottom + (SEAT_FOOT_R - V.seatBoreR);
 /** Corner radius of a hexagon of the given across-flats (the section plane passes through the corners). */
 export const corner = (af: number): number => af / Math.sqrt(3);
 
-/** Top of the weight and of the nuts above the guide, closed pose with the stroke `s` between the weight and the guide. */
-export function stack(s: number): { weight0: number; weight1: number; stroke1: number; lock1: number; rodTop: number } {
-  const weight0 = V.guideTop + s;
+/**
+ * The stack on the rod above the guide, closed position, from the guide's end face upwards (fact review F12): the STROKE NUT
+ * stands `s` above the guide (its height on the rod sets the stroke: when the valve opens, the rod drops by `s` and the nut lands
+ * on the guide), the COUNTERWEIGHT rests on the nut, the LOCK NUT on top of the weight locks the stack. `nut0`/`nut1` are the
+ * bottom and top faces of the stroke nut, `weight0`/`weight1` those of the weight, `lock1` the top of the lock nut.
+ */
+export function stack(s: number): {
+  nut0: number;
+  nut1: number;
+  weight0: number;
+  weight1: number;
+  lock1: number;
+  rodTop: number;
+} {
+  const nut0 = V.guideTop + s;
+  const nut1 = nut0 + V.nutT;
+  const weight0 = nut1;
   const weight1 = weight0 + V.weightL;
-  const stroke1 = weight1 + V.nutT;
-  const lock1 = stroke1 + V.nutT;
-  return { weight0, weight1, stroke1, lock1, rodTop: lock1 + V.tailProud };
+  const lock1 = weight1 + V.nutT;
+  return { nut0, nut1, weight0, weight1, lock1, rodTop: lock1 + V.tailProud };
 }
 
 // ------------------------------------------------------------------------------------------------ the ram

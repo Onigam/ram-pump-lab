@@ -234,10 +234,14 @@ export class Chart {
     this.view.text([this.X(x) + (o.dx ?? 0), this.Y(y) + (o.dy ?? 0)], str, { size: 1.7, ...o });
   }
 
-  /** Chart title above the box, left aligned. */
-  title(str: Text, sub?: Text): void {
-    this.view.text([this.box.x, this.box.y - 4.2], str, { size: 2.2, weight: 'bold' });
+  /** Chart title above the box, left aligned (`lift` raises it, for a chart that has a scale along its top edge). */
+  title(str: Text, sub?: Text, lift = 0): void {
+    this.view.text([this.box.x, this.box.y - 4.2 - lift], str, { size: 2.2, weight: 'bold' });
     if (sub && tr(sub) !== '')
-      this.view.text([this.box.x + this.box.w, this.box.y - 4.2], sub, { size: 1.6, anchor: 'end', color: INK_2 });
+      this.view.text([this.box.x + this.box.w, this.box.y - 4.2 - lift], sub, {
+        size: 1.6,
+        anchor: 'end',
+        color: INK_2,
+      });
   }
 }

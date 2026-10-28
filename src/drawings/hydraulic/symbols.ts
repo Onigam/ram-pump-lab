@@ -1,6 +1,6 @@
 import { COLORS, INK, INK_2, W, type Pt, type View } from '@onigam/lab-kit/drawings';
 
-// Hydraulic symbols of the diagrams (RP-D07, RP-D08, RP-D13), in the spirit of ISO 10628 / ISA S5.1 and simplified like
+// Hydraulic symbols of the diagrams (D07, D08, D13), in the spirit of ISO 10628 / ISA S5.1 and simplified like
 // Pelton Lab's P&ID. Each one is drawn in paper space in a small group (local origin = its connection point or centre,
 // y pointing down), so it can be rotated and scaled. Positions are paper millimetres.
 
