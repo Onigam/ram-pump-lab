@@ -30,7 +30,10 @@ export const CONSUMPTION_VALVE_3 = 17;
 export const TANK_HOURS_VALVE_3 = 10;
 /**
  * Buffer tank volume, L. DERIVED from K8: the tank lasted ≈ 10 h at the deficit (17 − 7.5) L/min, so
- * V = 9.5 L/min × 600 min = 5 700 L. Not stated in the video; this is the volume the other figures imply.
+ * V = 9.5 L/min × 600 min = 5 700 L. Not stated in the video; this is the volume the other figures imply, and it
+ * ASSUMES that the spring gave today's 7.5 L/min when the 17 L/min draw emptied the tank: the video does not date that
+ * observation (it says the spring gave 10 L/min two years earlier). With 10 L/min the same ten hours give
+ * (17 − 10) × 600 = 4 200 L. The "10.0 h" of the n°3 preset is then true by construction (docs/physics.md §6).
  */
 export const TANK_VOLUME_DERIVED = (CONSUMPTION_VALVE_3 - SOURCE_FLOW_TODAY) * TANK_HOURS_VALVE_3 * 60;
 
@@ -103,6 +106,16 @@ export const SCENARIO_PACE: Partial<Record<ScenarioId, number>> = {
   'source-drop': 600,
   'stroke-nut': 600,
   'snifter-blocked': 3600,
+};
+
+/**
+ * Time scale a preset needs to tell its story within a minute of watching: the n°3 valve empties the tank in 10 simulated
+ * hours (a minute at ×600), the n°2 in 27 (half a minute at ×3600). The n°1 valve is steady and plays at the pace chosen.
+ * Like a scenario's pace, it is only ever raised, never lowered below a faster pace the visitor chose.
+ */
+export const PRESET_PACE: Partial<Record<PresetId, number>> = {
+  'valve-3': 600,
+  'valve-2': 3600,
 };
 
 export function scenarioSetup(id: ScenarioId): ScenarioSetup {

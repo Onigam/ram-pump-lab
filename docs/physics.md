@@ -67,7 +67,7 @@ Backward Euler with one scalar monotone equation per step in the body pressure (
 cannot make it unstable); the chamber is eliminated analytically (`p_a' = α + β·Q_d`, closed-form check valve flow). Step
 = `min(0.2 ms, T_ring/300)` with `T_ring = 2πL/a`. First-order accuracy: halving the step moves the stroke rate by
 < 0.2 % and the delivered flow by ≈ 2 % (the values below were calibrated at the step in use). A solve of the cycle
-averages (7 strokes) takes 8–15 ms.
+averages (7 strokes) takes about 6 ms since the wave 4 rewrite (§11; 8–15 ms before).
 
 ### 1.3 Cycle averages: `solveSteady`
 
@@ -99,23 +99,23 @@ reopens** (recoil too weak: `H` barely above `h`).
 
 ## 2. Parameters (all editable live, `RamSim.set`)
 
-| Parameter (`RamParams`)          | Unit  | Range          | Default (video)           | Status                                 |
-| -------------------------------- | ----- | -------------- | ------------------------- | -------------------------------------- |
-| `fall` h                         | m     | 2–30           | 7.5                       | reported K1                            |
-| `driveLength` L                  | m     | 5–60           | 20 (never shorter than h) | reported K2                            |
-| `driveDiameter` D                | mm    | 15–54          | 27 (1", DN25 inner bore)  | assumed (K5: a 1" ram)                 |
-| `pipeMaterial`                   | –     | steel, PVC, PE | steel                     | wave speed 900 / 500 / 350 m/s, see §3 |
-| `deliveryHead` H                 | m     | 5–150          | 65                        | reported K3                            |
-| `deliveryLength`                 | m     | 20–1000        | 300                       | reported K3                            |
-| `sourceFlow`                     | L/min | 1–40           | 7.5                       | reported K6 (10 two years earlier)     |
-| `tankVolume`                     | L     | 200–20000      | 5 700                     | **derived** from K8                    |
-| `valve`                          | –     | n°1, 2, 3      | per preset                | reported K7 (seat bore 15, 20, 26 mm)  |
-| `stroke`                         | mm    | 0.5–8          | 2.2 / 2.0 / 2.7           | **calibrated** (K8, K10, K11)          |
-| `counterweight`                  | g     | 0–1000         | 360 / 720 / 640           | **calibrated** (K8, K10, K11)          |
-| `chamberVolume`                  | L     | 0.5–20         | 4                         | assumed                                |
-| `waterLogged`                    | –     | on/off         | off                       | fault                                  |
-| `snifterBlocked`                 | –     | on/off         | off                       | fault                                  |
-| `slowMo`, `timeScale`, `running` | –     | kit            | 1, 1, true                | kit time controls                      |
+| Parameter (`RamParams`)          | Unit  | Range          | Default (video)           | Status                                                                           |
+| -------------------------------- | ----- | -------------- | ------------------------- | -------------------------------------------------------------------------------- |
+| `fall` h                         | m     | 2–30           | 7.5                       | reported K1                                                                      |
+| `driveLength` L                  | m     | 5–60           | 20 (never shorter than h) | reported K2                                                                      |
+| `driveDiameter` D                | mm    | 15–54          | 27 (1", DN25 inner bore)  | assumed (K5: the n°3 is reported, the 1" drive pipe is assumed)                  |
+| `pipeMaterial`                   | –     | steel, PVC, PE | steel                     | wave speed 900 / 500 / 350 m/s, see §3                                           |
+| `deliveryHead` H                 | m     | 5–150          | 65                        | reported K3                                                                      |
+| `deliveryLength`                 | m     | 20–1000        | 300                       | reported K3                                                                      |
+| `sourceFlow`                     | L/min | 1–40           | 7.5                       | reported K6 (10 two years earlier)                                               |
+| `tankVolume`                     | L     | 200–20000      | 5 700                     | **derived** from K8, assuming the spring gave 7.5 L/min (§3)                     |
+| `valve`                          | –     | n°1, 2, 3      | per preset                | sizes reported K7; seat bores 15, 20, 26 mm taken from the nominal fitting sizes |
+| `stroke`                         | mm    | 0.5–8          | 2.2 / 2.0 / 2.7           | **calibrated** (K8, K10, K11)                                                    |
+| `counterweight`                  | g     | 0–1000         | 360 / 720 / 640           | **calibrated** (K8, K10, K11)                                                    |
+| `chamberVolume`                  | L     | 0.5–20         | 4                         | assumed                                                                          |
+| `waterLogged`                    | –     | on/off         | off                       | fault                                                                            |
+| `snifterBlocked`                 | –     | on/off         | off                       | fault                                                                            |
+| `slowMo`, `timeScale`, `running` | –     | kit            | 1, 1, true                | kit time controls                                                                |
 
 Every value set is clamped to its range. Editing anything but the time controls makes the preset `custom`; scripted
 events of a scenario are cancelled when the user edits the quantity they change.
@@ -125,8 +125,9 @@ events of a scenario are cancelled when the user edits the quantity they change.
 The video does not give the weight, stroke or geometry of any valve. Three things were chosen, in this order, and all
 three are named constants.
 
-1. **Wave speed of the lumped circuit, steel: 900 m/s** (`WAVE_SPEED.steel`). The research quotes 1 000–1 200 m/s for a
-   rigid steel pipe (K15); a bare 27 × 3 mm tube is ≈ 1 400. The lumped LC circuit rings 1.57 times slower than the real
+1. **Wave speed of the lumped circuit, steel: 900 m/s** (`WAVE_SPEED.steel`). The research notes quote 1 000–1 200 m/s for a
+   rigid steel pipe and derive from it the minimum closing velocity K15 (**derived in the research, not stated in the
+   video**); a bare 27 × 3 mm tube is ≈ 1 400. The lumped LC circuit rings 1.57 times slower than the real
    pipe of the same wave speed (`2πL/a` against `4L/a`) and one constant serves both the amplitude of the surge and the
    timing of the recoil. Re-calibrating the n°1 valve for exactly K10 (500 L/day) at each wave speed gives:
 
@@ -152,12 +153,16 @@ three are named constants.
    snifter (0.6) are assumptions that the calibration absorbs: the weight and stroke found are valid _with_ them.
 
 3. **Buffer tank volume: 5 700 L**, derived from K8: it lasted ≈ 10 h at the deficit (17 − 7.5) L/min →
-   9.5 × 600 = 5 700 L. Not in the video.
+   9.5 × 600 = 5 700 L. Not in the video. **The derivation assumes that the spring gave today's 7.5 L/min when the 17 L/min
+   draw emptied the tank**: the video does not date that observation and says the spring gave 10 L/min two years earlier. With
+   10 L/min the same ten hours give (17 − 10) × 600 = 4 200 L. The volume is therefore an inference, and the "10.0 h" of
+   the n°3 preset is true by construction (§6).
 
 Other **assumed** constants (see `physics.ts`): drive pipe inner Ø 27 mm, roughness 0.1 mm, minor losses K = 3,
-delivery check valve area = ½ drive pipe section, delivery pipe Ø 0.6 × drive Ø (≈ ½" for the 1" ram, S4), air chamber 4 L
+delivery check valve area = ½ drive pipe section, delivery pipe Ø 0.6 × drive Ø (≈ ½" for the 1" ram; S4 says half, 13.5 mm, the model takes 0.6), air chamber 4 L
 with 60 % air at working pressure, polytropic exponent 1.2, snifter Ø 1.5 mm cracking at 1 kPa, air time constants
-(6 h loss, 20 min refill), alarms at L/h < 2.5 (K20) and H/h > 12 (research §5).
+(6 h loss, 20 min refill). The alarms are thresholds of the lab, not of a source: L/h < 2.5 (rules of thumb say 3 to 7, K20;
+the video's own 2.7 must not carry an alarm) and H/h > 12 (the model's cutoff, §7).
 
 ## 4. What the 3D role reads (`RamState`, every field is documented with units in `types.ts`)
 
@@ -202,12 +207,17 @@ feed the panel's charts; `sim.sweep(patch)` solves the averages for other parame
 | `valve-1`         | the new valve: 109 strokes/min, Q = 6.7 L/min (below the 7.5 of the spring, so it never stops), 500 L/day (K10, K11)            |
 | `source-drop`     | valve n°3, spring 10 L/min, falls to 7.5 L/min after 1 h (K6)                                                                   |
 | `stroke-nut`      | valve n°1, the nut is turned in by 0.1 mm every 10 simulated minutes: consumption falls, delivery stops near 1.5 mm (13:13)     |
-| `water-logged`    | valve n°1, no air in the chamber: peaks 7.2 bar instead of 6.5, delivery −40 %                                                  |
+| `water-logged`    | valve n°1, no air in the chamber: peaks 7.3 bar (7.26) instead of 6.5, delivery −40 %                                           |
 | `short-pipe`      | valve n°1, L = 8 m (L/h = 1.1): 259 strokes/min, η_D 0.42 instead of 0.45, uses more than the spring                            |
 | `high-lift`       | valve n°1, H = 100 m (H/h = 13): the surge cannot open the check valve, nothing is delivered                                    |
 | `snifter-blocked` | valve n°1: the air share falls with τ = 6 h; after ≈ 15 simulated hours the chamber is water-logged                             |
 | `plastic-pipe`    | valve n°1, PVC drive pipe (500 m/s): surge 4.4 bar against 5.6 needed, nothing delivered, 3.2 L/min used (§5.1)                 |
 | `heavy-weight`    | valve n°1, counterweight 720 g instead of 360: 75 strokes/min, 15.5 L/min, 788 L/day, η_D 0.31, the tank empties in 12 h (§5.2) |
+
+**Pace.** The stories of the n°3 and n°2 valves unfold over hours (the tank of the n°3 lasts 10 simulated hours, the n°2's 27),
+so `applyPreset('valve-3')` raises the time scale to ×600 and `applyPreset('valve-2')` to ×3600 (`PRESET_PACE` in `presets.ts`:
+a minute and half a minute of watching), and a scenario does the same with `SCENARIO_PACE`. A pace is only ever raised: a faster
+one chosen by the visitor is kept, and the n°1 valve, which is steady, plays at the pace chosen.
 
 ### 5.1 `plastic-pipe`: a drive pipe that is too soft
 
@@ -220,7 +230,7 @@ of steel's 6.7 (a model result: the rate falls to 91 and each stroke passes less
 
 | Drive pipe (valve n°1, h = 7.5 m) | a (m/s) | strokes/min | Q (L/min) | peak (bar) | delivered at H = 65 m | highest head that still delivers |
 | --------------------------------- | ------- | ----------- | --------- | ---------- | --------------------- | -------------------------------- |
-| steel                             | 900     | 109         | 6.7       | 6.5        | 500 L/day             | ≈ 85 m (H/h = 11.3)              |
+| steel                             | 900     | 109         | 6.7       | 6.5        | 500 L/day             | ≈ 86 m (H/h ≈ 11.4)              |
 | PVC (the scenario)                | 500     | 91          | 3.2       | 5.1        | 0                     | ≈ 50 m (H/h = 6.7)               |
 | polyethylene                      | 350     | 82          | 3.0       | 3.8        | 0                     | ≈ 35 m (H/h = 4.7)               |
 
@@ -231,9 +241,12 @@ check valve will not open. Putting steel back (the material select) restores 500
 lesson. With PVC, a lower head works (730 L/day at H = 40 m, η_D 0.46), and a much heavier counterweight partly makes up for
 the soft pipe (80 L/day at 920 g, but for 17 L/min, twice the spring: not a recommendation).
 
-**Honesty.** The sources give no figure for plastic: the video and the press article only say that plastic is discouraged
-(research §7, S7), and no wave-speed or pressure was found for a plastic drive pipe. Everything above is **a model result for an
-assumed wave speed**. 500 m/s is the Korteweg estimate for a PVC-U 32 × 3 mm (K = 2.2 GPa, E = 3 GPa gives ≈ 550 m/s), rounded
+**Honesty.** The sources give no figure for plastic and do not agree on it: Wikipedia (S6) says that PVC "will work in some
+installations, but steel pipe is preferred", Practical Action (S8) names steel as the normal choice, a press article (S7) says
+plastic is to be avoided; no wave speed or pressure was found for a plastic drive pipe. Everything above is **a model result
+for an assumed wave speed, with the valve left at its steel setting**: "nothing delivered" is what this valve does with
+this pipe, not a verdict on every plastic installation (a heavier weight partly compensates, as above, and S6 reports PVC
+that works). The mechanism the lab teaches is the wave speed, not the wall that "flexes": a slower wave gives a smaller surge ρ·a·v. 500 m/s is the Korteweg estimate for a PVC-U 32 × 3 mm (K = 2.2 GPa, E = 3 GPa gives ≈ 550 m/s), rounded
 down; polyethylene takes the kit's 350 m/s. The lumped circuit's steel value (900) was calibrated _below_ the real steel pipe
 (≈ 1 400, §3) so that one constant serves the surge and the recoil timing; the plastic values are not scaled the same way,
 so the model's plastic/steel ratio (0.56) is higher than the real one (≈ 0.4): **if anything the model is kind to plastic**.
@@ -268,24 +281,24 @@ chart draws the two curves.
 
 Tolerances are those of the brief. "Model" is the value of the preset after the calibration of §3.
 
-| K            | Figure (source)                                               | Target                          | Model                                               | Tolerance         | Test (`src/sim/…`)                                                             |
-| ------------ | ------------------------------------------------------------- | ------------------------------- | --------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------ |
-| K1–3, K5, K6 | fall 7.5 m, L 20 m, H 65 m, 300 m, 7.5 L/min, 1" ram          | as reported                     | presets use them                                    | exact             | `engine.test.ts` › the site of the video › K1, K2, K3, K5, K6                  |
-| K4           | 1 m of fall lifts 10 m, any length (S1 01:00)                 | lifts at H/h = 10 for L 12–40 m | delivers, closing velocity ±10 %                    | ±10 %             | › K4: the ram lifts to H/h = 10 whatever the length                            |
-| K7           | valves 15×21, 20×27, 26×34                                    | seat bores 15, 20, 26 mm        | `VALVES`                                            | exact             | `physics.test.ts` › K7                                                         |
-| K8           | n°3 valve: ≈ 17 L/min, tank empty after ≈ 10 h, ram stops     | 17 L/min; 10 h                  | 17.0 L/min; 10.0 h; stalled, restart OK             | Q ±20 %, 8–12 h   | › K8 (four tests: Q, hours, run at ×3600, K21 cross-check) and › state machine |
-| K9           | n°2 valve works badly, still consumes too much                | Q > 7.5 L/min                   | 11.0 L/min, empty after 27 h                        | qualitative       | › K9                                                                           |
-| K10          | n°1 valve: ≈ 500 L/day                                        | 500 L/day                       | 500 L/day                                           | ±25 %             | › K10                                                                          |
-| K11          | 100–110 strokes/min (n°1); 70–80 (old)                        | 100–110; 70–80                  | 109; 78                                             | ±10 %             | › K11 (n°1) and › K8 / K21 › K11 (n°3)                                         |
-| K12          | 3.2–3.5 mL per stroke (derived)                               | 3.2–3.5 mL                      | 3.2 mL                                              | ±25 %             | › K12                                                                          |
-| K13          | η_D = 0.30 / 0.40 / 0.60 for Q = 10 / 7.5 / 5 L/min (derived) | 0.3–0.6                         | 0.45 (Q = 6.7)                                      | range             | › K13; arithmetic in `physics.test.ts` › K13                                   |
-| K14          | q ≤ Q·h/H (η ≤ 1); 1 250 L/day at 7.5 L/min                   | bound                           | η_D < 1 in every case (0.54 at most in the presets) | strict            | › K14 / energy (9 cases + 16-site sweep); `physics.test.ts` › K14              |
-| K15          | min. closing velocity 0.5–0.65 m/s (Joukowsky)                | 0.5–0.65 m/s                    | 0.63 m/s (a = 900); no delivery below               | ±15 % on the edge | › K15 (five tests); `physics.test.ts` › K15                                    |
-| K16          | second installation (S2)                                      | –                               | not modelled (owner decision, research §8.5)        | –                 | –                                                                              |
-| K17, K18     | efficiency 0.6, up to 0.8; q = η·Q·h/H (S4, S6)               | 0.6–0.85 reached                | best tuned n°3: 0.71                                | range             | › K17, K18; `physics.test.ts` › K18                                            |
-| K19          | 20–100 /min (S4), 40–120 /min (S5)                            | 40–120                          | 78–109 /min (presets)                               | range             | › K19                                                                          |
-| K20          | drive pipe ≥ 3–5 × the fall                                   | short pipe: lower efficiency    | L = 8 m: η_D 0.42 vs 0.45 at 20 m                   | ≥ 3 % lower       | › monotone behaviours › K20                                                    |
-| K21          | S4 sizing table, 1": 22.7 L/min → 7.6 m³/day                  | n°3 consumption 17–23 L/min     | 17.0 L/min, 1.5 m³/day                              | range             | › K8 and K21 agree                                                             |
+| K            | Figure (source)                                                                                             | Target                          | Model                                                                                                | Tolerance         | Test (`src/sim/…`)                                                             |
+| ------------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------ |
+| K1–3, K5, K6 | fall 7.5 m, L 20 m, H 65 m, 300 m, 7.5 L/min; K5: reported for the n°3 valve, assumed for the 1" drive pipe | as reported (K5: assumed)       | presets use them                                                                                     | exact             | `engine.test.ts` › the site of the video › K1, K2, K3, K5, K6                  |
+| K4           | 1 m of fall lifts 10 m, any length (S1 01:00)                                                               | lifts at H/h = 10 for L 12–40 m | delivers, closing velocity ±10 %                                                                     | ±10 %             | › K4: the ram lifts to H/h = 10 whatever the length                            |
+| K7           | valves 15×21, 20×27, 26×34                                                                                  | seat bores 15, 20, 26 mm        | `VALVES`                                                                                             | exact             | `physics.test.ts` › K7                                                         |
+| K8           | n°3 valve: ≈ 17 L/min, tank empty after ≈ 10 h, ram stops                                                   | 17 L/min; 10 h                  | 17.0 L/min; 10.0 h (by construction: the volume is derived from those 10 h, §3); stalled, restart OK | Q ±20 %, 8–12 h   | › K8 (four tests: Q, hours, run at ×3600, K21 cross-check) and › state machine |
+| K9           | n°2 valve works badly, still consumes too much                                                              | Q > 7.5 L/min                   | 11.0 L/min, empty after 27 h                                                                         | qualitative       | › K9                                                                           |
+| K10          | n°1 valve: ≈ 500 L/day                                                                                      | 500 L/day                       | 500 L/day                                                                                            | ±25 %             | › K10                                                                          |
+| K11          | 100–110 strokes/min (n°1); 70–80 (old)                                                                      | 100–110; 70–80                  | 109; 78                                                                                              | ±10 %             | › K11 (n°1) and › K8 / K21 › K11 (n°3)                                         |
+| K12          | 3.2–3.5 mL per stroke (derived)                                                                             | 3.2–3.5 mL                      | 3.2 mL                                                                                               | ±25 %             | › K12                                                                          |
+| K13          | η_D = 0.30 / 0.40 / 0.60 for Q = 10 / 7.5 / 5 L/min (derived)                                               | 0.3–0.6                         | 0.45 (Q = 6.7)                                                                                       | range             | › K13; arithmetic in `physics.test.ts` › K13                                   |
+| K14          | q ≤ Q·h/H (η ≤ 1); 1 250 L/day at 7.5 L/min                                                                 | bound                           | η_D < 1 in every case (0.54 at most in the presets)                                                  | strict            | › K14 / energy (9 cases + 16-site sweep); `physics.test.ts` › K14              |
+| K15          | min. closing velocity 0.5–0.65 m/s (Joukowsky), **derived (research)**, not a figure of the video           | 0.5–0.65 m/s                    | 0.63 m/s (a = 900); no delivery below                                                                | ±15 % on the edge | › K15 (five tests); `physics.test.ts` › K15                                    |
+| K16          | second installation (S2)                                                                                    | –                               | not modelled (owner decision, research §8.5)                                                         | –                 | –                                                                              |
+| K17, K18     | efficiency 0.6, up to 0.8; q = η·Q·h/H (S4, S6)                                                             | 0.6–0.85 reached                | best tuned n°3: 0.71                                                                                 | range             | › K17, K18; `physics.test.ts` › K18                                            |
+| K19          | 20–100 /min (S4), 40–120 /min (S5)                                                                          | 40–120                          | 78–109 /min (presets)                                                                                | range             | › K19                                                                          |
+| K20          | drive pipe ≥ 3–5 × the fall                                                                                 | short pipe: lower efficiency    | L = 8 m: η_D 0.42 vs 0.45 at 20 m                                                                    | ≥ 3 % lower       | › monotone behaviours › K20                                                    |
+| K21          | S4 sizing table, 1": 22.7 L/min → 7.6 m³/day                                                                | n°3 consumption 17–23 L/min     | 17.0 L/min, 1.5 m³/day                                                                               | range             | › K8 and K21 agree                                                             |
 
 Other behaviours tested in `engine.test.ts`: status transitions running → stalled → restart (and refusal without water,
 and the "stuck" stall); a simulated day at ×3600 equals the mean rate × 1 day within 2 % (and equals an independent solve
@@ -293,6 +306,10 @@ and the stroke-by-stroke live run within 10 %); independence from the frame size
 midnight rollover; monotone behaviours (bigger H/h → less delivery; smaller stroke → less consumption until the ram
 stops pumping; water-logged → harsher peaks and less delivery); every scenario and its alarms; clamping of `set`; no
 non-finite value under random live edits. `physics.test.ts` checks the arithmetic of the derived figures by hand.
+
+Wave 4 tests: `determinism.test.ts` (figures of the cycle model recorded before the allocation-free rewrite of §11, for a
+spread of settings, a long live run, a stall at ×3600, the eight scenarios and the four frozen phases) and
+`sweep-cache.test.ts` (the cache, the spread solves and the prefetch of §11).
 
 Wave 3 tests (all in `src/sim`): `scenarios.test.ts` (what each of the two new scenarios must show, with tolerances: the
 cause, the numbers of §5.1 and §5.2, the non-monotonic delivery, the alarms), `cycle-steps.test.ts` (each phase is reached
@@ -309,12 +326,20 @@ conversions, the length and ratio rules, K18, and the K8 ↔ K21 sanity check ag
   little): the model delivers slightly more than a real ram would for the same strokes.
 - **No valve bounce**, no added mass or damping of the valve in its guide, no wear.
 - **No mechanical lower stop on the stroke, and the valve size matters less than its tuning.** Turning the nut in cuts
-  the consumption of _any_ valve down to ≈ 2–3 L/min before the delivery stops. In the video the stock n°3 valve could
-  not be tamed that way (K8, 13:13: "each ram size has a minimum consumption"). In this model a n°3 valve with a long
-  stroke (4.2 mm) and no counterweight uses 7 L/min and delivers 830 L/day at η_D = 0.71, better than the n°1 preset: the
-  story n°3 → n°1 is told by the presets (the stock Walton valve is heavy), the physics alone would let a well-tuned n°3
-  work on the 7.5 L/min spring. The mechanical limits of the real valves are unknown; the lesson "tuning matters as much
-  as sizing" is true to the model.
+  the consumption of _any_ valve down to ≈ 2–3 L/min before the delivery stops. In the video each ram size has a minimum
+  consumption (13:13) and the author changed the valve size; whether the nut alone could have tamed the n°3 is not shown.
+  In this model a n°3 valve with a long stroke (4.2 mm) and no counterweight uses 7 L/min and delivers 830 L/day at
+  η_D = 0.71, better than the n°1 preset: the story n°3 → n°1 is told by the presets (the stock Walton valve is heavy),
+  the physics alone would let a well-tuned n°3 work on the 7.5 L/min spring. The mechanical limits of the real valves are
+  unknown; the lesson "tuning matters as much as sizing" is true to the model.
+- **The drive pipe length is not re-tuned.** With the n°1 settings calibrated at 20 m, η_D is 0.44–0.46 from 10 to 22 m
+  and falls beyond (0.39 at 37.5 m = 5 × h, 0.34 at 50 m; 428 L/day and 59 strokes/min at 37.5 m): the valve is not
+  re-tuned for the pipe, so the benefit of a longer pipe (NC State: at least 5 × the fall) is not reproduced. The rule
+  assumes a valve set for that length.
+- **The H/h > 12 alarm is the model's own cutoff**, not a rule of the sources. The n°1 valve as calibrated delivers
+  nothing above H = 86 m (H/h ≈ 11.4; 15 L/day at 85 m), and the alarm is set at the round figure 12. The sources give
+  performance for larger ratios (NC State lists lift/fall ratios up to 100 and lifts of 400 ft; Practical Action gives the
+  performance of commercial rams at ratios 5 to 20): the limit depends on the setting and the size of the ram.
 - **K9 (n°2 "works badly")** is modelled only by its consumption: build quality (flat seal, loose fit) is not.
 - A ram below its **minimum stroke** keeps striking (high rate, ≈ 2 L/min) but delivers nothing; it does not "stop" as a
   mechanism. It is flagged by the alarm `noDelivery` and the status stays `running`.
@@ -382,8 +407,8 @@ puts them back to normal): `setDriveGate`, `holdValveShut`, `setTankDrain`, read
 | Part (id)                   | Button                         | What the model does                                                                                                                                                                                                                                                  | Visible in                                                           | Time  |
 | --------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ----- |
 | `stroke-nut`                | turn in / out by 0.1 mm        | `stroke` ∓ 0.1 mm (clamped to 0.5–8): −11 % water used, −15 % delivered per step at the video's setting                                                                                                                                                              | 3D valve travel, strip (rate, delivered, uses)                       | –     |
-| `air-chamber`               | drown / refill                 | `waterLogged` (the fault of the scenario): air share 0.4 % at once, peaks 7.2 bar, delivery −40 %                                                                                                                                                                    | 3D water level, alarm `waterLogged`, strip                           | –     |
-| `snifter`                   | block / unblock                | `snifterBlocked`: the air dissolves with τ = 6 h (assumed), water-logged after ≈ 15 h                                                                                                                                                                                | alarm `snifterBlocked` then `waterLogged`, 3D level                  | ×3600 |
+| `air-chamber`               | drown / refill                 | `waterLogged` (the fault of the scenario): air share 0.4 % at once, peaks 7.3 bar, delivery −40 %                                                                                                                                                                    | 3D water level, alarm `waterLogged`, strip                           | –     |
+| `snifter`                   | block / unblock                | `snifterBlocked`: the air dissolves with τ = 6 h (assumed), water-logged after ≈ 15 h (a model result that rests on that assumed 6 h)                                                                                                                                | alarm `snifterBlocked` then `waterLogged`, 3D level                  | ×3600 |
 | `waste-valve`               | hold shut / let go and restart | `holdValveShut`: the column stops, the ram is stalled (reason `hand`), the tank fills at the full spring flow; letting go pushes the valve open once, like `restart()`                                                                                               | alarm `heldShut`, 3D valve shut, no jet, strip at 0                  | –     |
 | `drive-gate-valve`          | close / open                   | `setDriveGate`: no water, the ram is stalled (reason `gate`), the tank fills; reopened, the ram restarts by itself (assumed: the pipe drained through the open valve and the snifter, so nothing holds the valve shut); `restart()` refuses while the gate is closed | alarm `gateClosed`, tank level, strip                                | ×600  |
 | `tank-drain`, `buffer-tank` | open / close                   | `setTankDrain`: 150 L/min leave the tank while it holds water (assumed); the 5 700 L tank empties in ≈ 38 min; the n°1 valve does not care (it takes less than the spring), the n°3 valve stops for lack of water                                                    | tank level, alarm `drainOpen`, then `stalledTank` with the n°3 valve | ×600  |
@@ -393,8 +418,8 @@ needs minutes or hours); it never slows it. Closing the gate valve in time saves
 (tested: closed at 8 h of a 10 h tank, 6 h later the tank is 67 % full); reopened on a tank that cannot sustain it, the ram
 stops again for lack of water, reason `tank`.
 
-**Assumed** (the sources are silent on all of these): the 150 L/min of the drain (`TANK_DRAIN_FLOW`: a DN40 valve under about
-1 m of water, 200 L/min by the orifice formula, rounded down), the automatic restart after the gate, the priority of the ram
+**Assumed** (the sources are silent on all of these): the 150 L/min of the drain (`TANK_DRAIN_FLOW`: a DN40 to DN50 valve under
+about 1 m of water, 200 to 310 L/min by the orifice formula, rounded well down), the automatic restart after the gate, the priority of the ram
 over the drain. The stroke nut step is **derived**: the video's stem is a 6 mm threaded rod (research §3), M6 coarse has a 1 mm
 pitch, so 0.1 mm is a tenth of a turn. Holding the waste valve by hand is shown as a _simulation_: never a finger in the valve
 of a running ram (the button's tooltip and the status line say so).
@@ -413,7 +438,7 @@ simulation's efficiency).
 | table's maximum pumping               | ¾″ 3.8, 1″ 7.6, 1½″ 15.1, 2″ 26.5 m³/day (1 000, 2 000, 4 000, 7 000 gpd × 3.785 L)                          | **reported** S4 table 2; the table states no head, fall or efficiency |
 | expected delivery                     | q = η·Q·h/H, η = 0.6, Q = the spring flow, in L/day × 1440                                                   | **reported** S4 (Q = 1440·E·S/(L/F)), S6; K17, K18                    |
 | verdict                               | spring ≥ minimum of the pipe size ("enough") or not, with the ratio and the largest size the spring can feed | derived from the table                                                |
-| warnings                              | H/h > 12 too high; H/h < 1.5 stuck (model); L/h < 3 too short; 3 ≤ L/h < 5 under S4's minimum                | research §5; physics.md §7; S6; S4                                    |
+| warnings                              | H/h > 12 too high; H/h < 1.5 stuck (model); L/h < 3 too short; 3 ≤ L/h < 5 under S4's minimum                | the model's own cutoffs (physics.md §7); S6; S4                       |
 
 The units are converted explicitly (`GPM_TO_LPM`, `GPD_TO_M3_DAY`; the minimum flows are rounded to 0.1 L/min like K21).
 The inner diameters of the four sizes (21, 27, 41, 53 mm, schedule 40 steel, rounded) are an **assumption** (the lab's 27 mm
@@ -426,6 +451,29 @@ length to the live simulation and leaves the pipe size alone (the model is a 1�
 the spring gives 33 % of it, "not enough", and no size of the table is fed (7.5 is a hair under the ¾″'s 7.6; the 7.5–7.8 of
 K6 straddles it). The 20 m of pipe is L/h = 2.7, "too short" (K20). The closed form gives 748 L/day at η = 0.6 (K18, ≈ 750),
 and 500 L/day is η = 0.4 (K10). In the model the n°3 valve takes 17 L/min, three quarters of the 22.7 of the table (K8 ↔ K21
-agree), and starves the 7.5 L/min spring; **what the video did was not to find more water but to retune the valve** (the n°1
-preset) so that the ram takes 6.7 L/min, less than the spring gives: that is the whole point of the "tune it to the water you
-have" lesson, and the calculator says so in its tip.
+agree), and starves the 7.5 L/min spring; **what the video shows is a smaller valve** (the n°1 preset) that makes the ram
+take 6.7 L/min, less than the spring gives: that is the point of the "tune it to the water you have" lesson, and the
+calculator says so in its tip.
+
+## 11. Speed and memory of the solver (wave 4)
+
+The cycle model is stepped about 5 000 times per simulated second at ×1 (and 19 000 times per solve of the averages), so
+allocation in `RamCycle.step` is a steady source of garbage. The audit measured 55 to 65 % of everything the page allocated
+in `cycle.ts` and about 100 ms of main-thread work each time the simulation panel or the performance sheet opened. Changes,
+none of which moves a figure (`determinism.test.ts` holds the figures recorded before):
+
+- **No allocation in the hot loop.** The body-pressure equation is a method that reads its inputs from, and writes its
+  results to, one preallocated `Float64Array` (`RamCycle.r`), instead of a closure created at every step whose arguments
+  and results were each a boxed number; the root finder is a method too, without array swaps; the class fields that start
+  as numbers start at 0, not `undefined` (that alone was 40 of the 60 bytes allocated per step, and half of the time of a
+  step). Measured on 98 sweeps (the work of sheet RP-D09): **1 504 → 40 minor garbage collections** (1 MB young
+  generation), **520–800 → 360–490 ms**; a live run of 10 s at 60 fps: 58 → 3 collections. The numbers vary with the load
+  of the machine, the ratios do not.
+- **`RamSim.sweep` and `strokeTrace` are cached** by the settings the cycle reads and the air share of the chamber (up to
+  1 000 results and 24 traces, least recently used first, shared by every simulation and sheet). Opening the panel
+  again, a second visit of a sheet or a change of language costs 0.1 ms instead of 430–760 ms. Results are frozen: read them, never change them.
+- **A solve can be spread over frames.** `SteadyRun` (cycle.ts) is `solveSteady` that can be paused every 500 steps;
+  `RamSim.sweepTask(patch)` wraps it (`advance(budgetMs)`), and the simulation panel advances its curves 4 ms per frame
+  (median 4.1 ms, 63 solves in about 105 frames) instead of one whole solve of 12 ms per frame. `RamSim.prefetch(patches)` queues sweeps for the idle periods of the browser
+  (`requestIdleCallback`, 4 ms slices) so that a sheet opened later finds them in the cache; `isSweepCached(patch)` tells
+  whether a sweep is already known. `panelPatches()` (`src/panels/model.ts`) lists the solves the simulation panel asks for.

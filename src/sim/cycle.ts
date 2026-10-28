@@ -187,6 +187,28 @@ export interface CycleSnapshot {
 const PHASE_INDEX: Record<string, number> = { accel: 0, close: 1, deliver: 2, recoil: 3 };
 const DELIVER_ON = 2e-5; // m³/s: 1.2 L/min through the check valve counts as "delivering"
 
+// Scratch slots of the body-pressure equation (see `RamCycle.r`). The equation is evaluated several times per step by the
+// root finder: its inputs and outputs travel through a preallocated Float64Array instead of closure variables, arguments
+// and return values, which would each allocate a boxed number (this was most of the garbage of the simulation).
+const R_X = 0; // input: the body pressure tried, Pa
+const R_F = 1; // output: the residual of the node equation, m³/s
+const R_DT = 2;
+const R_V0 = 3;
+const R_ACCEL0 = 4;
+const R_FRIC = 5;
+const R_KWASTE = 6;
+const R_SNIFTER = 7;
+const R_ALPHA = 8;
+const R_BETA = 9;
+const R_KD2 = 10;
+const R_P0 = 11;
+const R_VNEW = 12; // output: the column velocity that goes with the pressure tried, m/s
+const R_QW = 13; // output: flow out of the waste valve (negative: air in), m³/s
+const R_QS = 14; // output: flow through the snifter (negative: air in), m³/s
+const R_QD = 15; // output: flow through the delivery check valve, m³/s
+const R_ROOT = 16; // output of the root finder, Pa
+const R_COUNT = 17;
+
 export class RamCycle {
   cfg: CycleConfig;
   /** Time since the creation of the cycle, s. */
@@ -195,10 +217,12 @@ export class RamCycle {
   v = 0;
   /** Pressure of the ram body, Pa gauge. */
   p = 0;
+  // The numbers below start at 0, not undefined: a field declared without a value is first `undefined`, which makes the
+  // engine store every later number in it as a new boxed object (one allocation per step) instead of in place.
   /** Pressure of the air chamber, Pa gauge. */
-  pa: number;
+  pa = 0;
   /** Waste valve lift, m (0 = on its seat), and speed, m/s (+ opening). */
-  z: number;
+  z = 0;
   zd = 0;
   /** Volume of the water-vapour cavity at the body, m³ (column separation). */
   cavity = 0;
@@ -206,7 +230,7 @@ export class RamCycle {
   /** Time spent in the present phase so far, s (0 at the step that entered it). */
   phaseTime = 0;
   /** Air share of the chamber (fraction of its volume at working pressure). */
-  airFraction: number;
+  airFraction = 0;
   strokeCount = 0;
   /** Delivery valve opening, 0..1 (visual lag). */
   deliveryValve = 0;
@@ -216,6 +240,8 @@ export class RamCycle {
   qDeliver = 0;
   qOut = 0;
   qSnifter = 0;
+  /** Scratch numbers of the step (see the R_ slots): reused by every step so that the hot loop allocates nothing. */
+  private readonly r = new Float64Array(R_COUNT);
   // running record of the stroke in progress
   private acc = this.newAcc();
   /** Strokes finished so far (last 32 kept). */
@@ -321,7 +347,20 @@ export class RamCycle {
    * Advance by dt (≤ cfg.dtMax). Returns true when the waste valve has just closed on its seat (a new stroke starts).
    */
   step(dt: number): boolean {
+    this.r[R_DT] = dt;
+    return this.advance();
+  }
+
+  /** `step(cfg.dtMax)`: the loops that run at the largest step call this one, which takes no number to box. */
+  stepMax(): boolean {
+    this.r[R_DT] = this.cfg.dtMax;
+    return this.advance();
+  }
+
+  /** One step of the length in `r[R_DT]`. */
+  private advance(): boolean {
     const c = this.cfg;
+    const dt = this.r[R_DT];
     const A = c.areaPipe;
     const v0 = this.v;
     const p0 = this.p;
@@ -347,30 +386,37 @@ export class RamCycle {
     const kd = CD_DELIVERY * c.deliveryArea * Math.sqrt(2 / RHO);
     const kd2 = kd * kd;
 
-    // body-pressure residual: storage − inflow + outflows (monotone increasing in x)
-    let vNew = v0;
-    let qw = 0;
-    let qs = 0;
-    let qd = 0;
-    const residual = (x: number): number => {
-      vNew = (v0 + dt * (accel0 - x / (RHO * c.length))) / fricDen;
-      const qin = A * vNew;
-      qw = x >= 0 ? kWaste * Math.sqrt((2 * x) / RHO) : -kWaste * Math.sqrt((-2 * x) / RHO_AIR);
-      qs = aSnif > 0 && x < -SNIFTER_CRACK ? -CD_SNIFTER * aSnif * Math.sqrt((2 * (-x - SNIFTER_CRACK)) / RHO_AIR) : 0;
-      qd = x > alpha ? 0.5 * (-kd2 * beta + Math.sqrt(kd2 * kd2 * beta * beta + 4 * kd2 * (x - alpha))) : 0;
-      return (c.bodyCompliance * (x - p0)) / dt - qin + qw + qd + qs;
-    };
+    // body-pressure residual: storage − inflow + outflows (monotone increasing in x), see `residual`
+    const r = this.r;
+    r[R_V0] = v0;
+    r[R_ACCEL0] = accel0;
+    r[R_FRIC] = fricDen;
+    r[R_KWASTE] = kWaste;
+    r[R_SNIFTER] = aSnif;
+    r[R_ALPHA] = alpha;
+    r[R_BETA] = beta;
+    r[R_KD2] = kd2;
+    r[R_P0] = p0;
 
-    let x: number;
-    const fLow = residual(P_VAPOUR);
+    r[R_X] = P_VAPOUR;
+    this.residual();
+    const fLow = r[R_F];
     if (fLow >= 0 || this.cavity > 0) {
       // the water cannot go below its vapour pressure: a cavity opens (column separation) and closes again later
-      x = P_VAPOUR;
+      r[R_ROOT] = P_VAPOUR;
       this.cavity = Math.max(0, this.cavity + fLow * dt);
     } else {
-      x = solveMonotone(residual, p0, P_VAPOUR);
-      residual(x);
+      this.solveBody(p0, P_VAPOUR);
+      r[R_X] = r[R_ROOT];
+      this.residual();
     }
+    // read back from the scratch array, always as a plain number (a pressure that is sometimes a whole-number constant
+    // and sometimes a fraction would be boxed to be stored)
+    const x = r[R_ROOT];
+    const vNew = r[R_VNEW];
+    const qw = r[R_QW];
+    const qs = r[R_QS];
+    const qd = r[R_QD];
 
     // --- chamber and delivery pipe
     const paNew = alpha + beta * qd;
@@ -402,10 +448,10 @@ export class RamCycle {
     this.p = x;
     this.pa = paNew;
     this.qDrive = A * vNew;
-    this.qWaste = qw > 0 ? qw : 0;
+    this.qWaste = Math.max(qw, 0);
     this.qDeliver = qd;
     this.qOut = qOut;
-    this.qSnifter = qs < 0 ? -qs : 0;
+    this.qSnifter = Math.max(-qs, 0);
     this.t += dt;
     this.sinceClosure += dt;
 
@@ -474,59 +520,114 @@ export class RamCycle {
     }
     return closed;
   }
-}
 
-/** Root of an increasing function: expand a bracket around `start`, then Illinois. `floor` is a known lower bound. */
-function solveMonotone(f: (x: number) => number, start: number, floor: number): number {
-  let xa = Math.max(start, floor);
-  let fa = f(xa);
-  if (fa === 0) return xa;
-  let xb: number;
-  let fb: number;
-  let step = 2000;
-  if (fa < 0) {
-    xb = xa + step;
-    fb = f(xb);
-    for (let i = 0; fb < 0 && i < 60; i++) {
-      xa = xb;
-      fa = fb;
-      step *= 3;
+  /**
+   * The node equation of the ram body for the pressure `r[R_X]`: storage − inflow + outflows, increasing in x. Leaves
+   * the residual in `r[R_F]` and the column velocity and the three orifice flows that go with x in `r[R_VNEW]`,
+   * `r[R_QW]`, `r[R_QS]` and `r[R_QD]`. Reads the constants of the step from the other slots. Called many times per step
+   * by `solveBody`: no argument and no return value, so that nothing is allocated.
+   */
+  private residual(): void {
+    const c = this.cfg;
+    const r = this.r;
+    const x = r[R_X];
+    const dt = r[R_DT];
+    const kWaste = r[R_KWASTE];
+    const aSnif = r[R_SNIFTER];
+    const alpha = r[R_ALPHA];
+    const beta = r[R_BETA];
+    const kd2 = r[R_KD2];
+    const vNew = (r[R_V0] + dt * (r[R_ACCEL0] - x / (RHO * c.length))) / r[R_FRIC];
+    const qin = c.areaPipe * vNew;
+    const qw = x >= 0 ? kWaste * Math.sqrt((2 * x) / RHO) : -kWaste * Math.sqrt((-2 * x) / RHO_AIR);
+    const qs =
+      aSnif > 0 && x < -SNIFTER_CRACK ? -CD_SNIFTER * aSnif * Math.sqrt((2 * (-x - SNIFTER_CRACK)) / RHO_AIR) : 0;
+    const qd = x > alpha ? 0.5 * (-kd2 * beta + Math.sqrt(kd2 * kd2 * beta * beta + 4 * kd2 * (x - alpha))) : 0;
+    r[R_VNEW] = vNew;
+    r[R_QW] = qw;
+    r[R_QS] = qs;
+    r[R_QD] = qd;
+    r[R_F] = (c.bodyCompliance * (x - r[R_P0])) / dt - qin + qw + qd + qs;
+  }
+
+  /**
+   * Root of `residual` (increasing in x): expand a bracket around `start`, then Illinois. `floor` is a known lower bound.
+   * The root goes to `r[R_ROOT]`.
+   */
+  private solveBody(start: number, floor: number): void {
+    const r = this.r;
+    let xa = Math.max(start, floor);
+    r[R_X] = xa;
+    this.residual();
+    let fa = r[R_F];
+    if (fa === 0) {
+      r[R_ROOT] = xa;
+      return;
+    }
+    let xb: number;
+    let fb: number;
+    let step = 2000;
+    if (fa < 0) {
       xb = xa + step;
-      fb = f(xb);
-    }
-  } else {
-    xb = Math.max(floor, xa - step);
-    fb = f(xb);
-    for (let i = 0; fb > 0 && xb > floor && i < 60; i++) {
-      xa = xb;
-      fa = fb;
-      step *= 3;
-      xb = Math.max(floor, xa - step);
-      fb = f(xb);
-    }
-    // xa is the upper end (fa > 0), xb the lower end (fb < 0 or at the floor)
-    [xa, xb] = [xb, xa];
-    [fa, fb] = [fb, fa];
-  }
-  // now fa <= 0 <= fb with xa < xb
-  let side = 0;
-  for (let i = 0; i < 80; i++) {
-    const xm = fb - fa !== 0 ? (xa * fb - xb * fa) / (fb - fa) : 0.5 * (xa + xb);
-    const fm = f(xm);
-    if (Math.abs(fm) < 1e-12 || xb - xa < 2) return xm;
-    if (fm < 0) {
-      xa = xm;
-      fa = fm;
-      if (side === -1) fb *= 0.5;
-      side = -1;
+      r[R_X] = xb;
+      this.residual();
+      fb = r[R_F];
+      for (let i = 0; fb < 0 && i < 60; i++) {
+        xa = xb;
+        fa = fb;
+        step *= 3;
+        xb = xa + step;
+        r[R_X] = xb;
+        this.residual();
+        fb = r[R_F];
+      }
     } else {
-      xb = xm;
-      fb = fm;
-      if (side === 1) fa *= 0.5;
-      side = 1;
+      xb = Math.max(floor, xa - step);
+      r[R_X] = xb;
+      this.residual();
+      fb = r[R_F];
+      for (let i = 0; fb > 0 && xb > floor && i < 60; i++) {
+        xa = xb;
+        fa = fb;
+        step *= 3;
+        xb = Math.max(floor, xa - step);
+        r[R_X] = xb;
+        this.residual();
+        fb = r[R_F];
+      }
+      // xa is the upper end (fa > 0), xb the lower end (fb < 0 or at the floor)
+      let swap = xa;
+      xa = xb;
+      xb = swap;
+      swap = fa;
+      fa = fb;
+      fb = swap;
     }
+    // now fa <= 0 <= fb with xa < xb
+    let side = 0;
+    for (let i = 0; i < 80; i++) {
+      const xm = fb - fa !== 0 ? (xa * fb - xb * fa) / (fb - fa) : 0.5 * (xa + xb);
+      r[R_X] = xm;
+      this.residual();
+      const fm = r[R_F];
+      if (Math.abs(fm) < 1e-12 || xb - xa < 2) {
+        r[R_ROOT] = xm;
+        return;
+      }
+      if (fm < 0) {
+        xa = xm;
+        fa = fm;
+        if (side === -1) fb *= 0.5;
+        side = -1;
+      } else {
+        xb = xm;
+        fb = fm;
+        if (side === 1) fa *= 0.5;
+        side = 1;
+      }
+    }
+    r[R_ROOT] = 0.5 * (xa + xb);
   }
-  return 0.5 * (xa + xb);
 }
 
 /**
@@ -543,29 +644,68 @@ export function solveSteady(
   deliveryHead: number,
   opts: { warm?: number; measure?: number; tMax?: number } = {},
 ): Means {
-  const warm = opts.warm ?? 3;
-  const measure = opts.measure ?? 4;
-  const tMax = opts.tMax ?? 30;
-  const cyc = new RamCycle(cfg, airFraction);
-  const dt = cfg.dtMax;
-  let vMark = -1;
-  let tMark = 0;
-  while (cyc.t < tMax && cyc.cycles.length < warm + measure) {
-    const closed = cyc.step(dt);
-    if (closed && cyc.cycles.length > 0) {
-      const r = cyc.cycles[cyc.cycles.length - 1];
-      const q = r.delivered / r.period;
-      cyc.pa = cfg.pStatic + lineResistance(cfg, q) * q;
-    }
-    if (cyc.strokeCount > 0 && cyc.sinceClosure > 3) break; // closed and never reopened
-    if (cyc.strokeCount === 0 && cyc.t - tMark >= 0.5) {
-      // never closes: the column has reached its terminal velocity with the valve wide open
-      if (cyc.t > 1 && Math.abs(cyc.v - vMark) < 0.002) break;
-      vMark = cyc.v;
-      tMark = cyc.t;
-    }
+  const run = new SteadyRun(cfg, airFraction, deliveryHead, opts);
+  while (!run.advance(1 << 30)) {
+    // the whole solve in one go
   }
-  return summarise(cyc, cfg, deliveryHead, warm);
+  return run.means as Means;
+}
+
+/**
+ * `solveSteady` that can be paused: `advance(maxSteps)` integrates a slice of the solve and says whether it has finished,
+ * so that a page can spread a solve (about 6 ms of work) over several frames, a millisecond or two at a time. The steps
+ * and their order are those of `solveSteady`, which is this class run to the end: same figures to the last digit.
+ */
+export class SteadyRun {
+  /** The averages, once `advance` has returned true. */
+  means: Means | null = null;
+  private readonly cyc: RamCycle;
+  private readonly warm: number;
+  private readonly measure: number;
+  private readonly tMax: number;
+  private vMark = -1;
+  private tMark = 0;
+
+  constructor(
+    private readonly cfg: CycleConfig,
+    airFraction: number,
+    private readonly deliveryHead: number,
+    opts: { warm?: number; measure?: number; tMax?: number } = {},
+  ) {
+    this.warm = opts.warm ?? 3;
+    this.measure = opts.measure ?? 4;
+    this.tMax = opts.tMax ?? 30;
+    this.cyc = new RamCycle(cfg, airFraction);
+  }
+
+  /** Integrate at most `maxSteps` steps (0.2 ms each at most). True when the averages are ready in `means`. */
+  advance(maxSteps: number): boolean {
+    if (this.means) return true;
+    const cyc = this.cyc;
+    const cfg = this.cfg;
+    for (let n = 0; n < maxSteps; n++) {
+      if (!(cyc.t < this.tMax && cyc.cycles.length < this.warm + this.measure)) return this.finish();
+      const closed = cyc.stepMax();
+      if (closed && cyc.cycles.length > 0) {
+        const r = cyc.cycles[cyc.cycles.length - 1];
+        const q = r.delivered / r.period;
+        cyc.pa = cfg.pStatic + lineResistance(cfg, q) * q;
+      }
+      if (cyc.strokeCount > 0 && cyc.sinceClosure > 3) return this.finish(); // closed and never reopened
+      if (cyc.strokeCount === 0 && cyc.t - this.tMark >= 0.5) {
+        // never closes: the column has reached its terminal velocity with the valve wide open
+        if (cyc.t > 1 && Math.abs(cyc.v - this.vMark) < 0.002) return this.finish();
+        this.vMark = cyc.v;
+        this.tMark = cyc.t;
+      }
+    }
+    return false;
+  }
+
+  private finish(): true {
+    this.means = summarise(this.cyc, this.cfg, this.deliveryHead, this.warm);
+    return true;
+  }
 }
 
 /**
@@ -594,7 +734,7 @@ export function recordStroke(
   let n = 0;
   while (cyc.t < tMax) {
     const before = cyc.phase;
-    const closed = cyc.step(dt);
+    const closed = cyc.stepMax();
     if (closed && cyc.cycles.length > 0) {
       const r = cyc.cycles[cyc.cycles.length - 1];
       const q = r.delivered / r.period;

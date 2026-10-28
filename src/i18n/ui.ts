@@ -18,12 +18,12 @@ const LAB = {
   groupHydraulic: ['Hydraulique', 'Hydraulics'],
   groupSite: ['Le site', 'The site'],
   plansIntro: [
-    'Planches A3 générées à partir des cotes du modèle 3D.',
-    'A3 sheets generated from the 3D model dimensions.',
+    'Planches A3 tracées d’après les cotes du bélier du laboratoire.',
+    'A3 sheets drawn from the dimensions of the lab’s ram.',
   ],
   lessonsIntro: [
-    'Six leçons courtes : chacune ouvre la 3D ou la simulation sur ce dont elle parle, puis un petit quiz.',
-    'Six short lessons: each opens the 3D view or the simulation on what it talks about, then a small quiz.',
+    'Six leçons, à lire dans l’ordre (environ 3 minutes chacune) : chacune ouvre la 3D ou la simulation sur ce dont elle parle, puis un quiz de deux questions. Les premières expliquent le principe, les dernières les réglages, le dimensionnement et le choix du site.',
+    'Six lessons, to read in order (about 3 minutes each): each opens the 3D view or the simulation on what it talks about, then a two-question quiz. The first ones explain the principle, the last ones the tuning, the sizing and the choice of site.',
   ],
   groupDevice: ['Dispositif', 'Device'],
   disclaimer: [
@@ -31,12 +31,21 @@ const LAB = {
     'Independent educational reconstruction. It is not an official drawing.',
   ],
 
-  // ---- simulation panel: presets, scenarios, actions
+  // ---- simulation panel: what it is for, the story of the video, presets, scenarios
   simTitle: ['Simulation', 'Simulation'],
+  simIntro: [
+    'Ici, vous réglez le bélier du site de la vidéo : changez le clapet, jouez une panne ou réglez le site, et suivez les chiffres de la barre du bas. Pour voir ce qui se passe à chaque coup, ouvrez « Le cycle, pas à pas » juste en dessous.',
+    'Here you run the ram of the video’s site: change the valve, play a fault or set up the site, and follow the figures in the bottom bar. To see what happens at each stroke, open “The cycle, step by step” just below.',
+  ],
+  story: ['L’histoire de la vidéo', 'The video’s story'],
   preset: ['Préréglage', 'Preset'],
-  presetValve3: ['Clapet n°3 : consomme trop', 'Valve n°3: uses too much water'],
-  presetValve2: ['Clapet n°2 : fonctionne mal', 'Valve n°2: works badly'],
-  presetValve1: ['Clapet n°1 : 500 L par jour', 'Valve n°1: 500 L a day'],
+  presetHint: [
+    'D’après la vidéo, le clapet n°3 prend plus d’eau que la source n’en donne : la réserve se vide en une dizaine d’heures et le bélier s’arrête. Le n°1 en prend moins et refoule environ 500 L par jour. Avec le n°3 ou le n°2, le temps accélère tout seul pour que vous voyiez la réserve baisser.',
+    'According to the video, the No. 3 valve takes more water than the spring gives: the tank empties in about ten hours and the ram stops. The No. 1 takes less and delivers about 500 L a day. With the No. 3 or the No. 2, time speeds up by itself so that you can watch the tank fall.',
+  ],
+  presetValve3: ['Clapet n°3 : consomme trop', 'Valve No. 3: uses too much water'],
+  presetValve2: ['Clapet n°2 : fonctionne mal', 'Valve No. 2: works badly'],
+  presetValve1: ['Clapet n°1 : 500 L par jour', 'Valve No. 1: 500 L a day'],
   custom: ['Personnalisé', 'Custom'],
   reset: ['Recommencer', 'Start over'],
   restart: ['Remettre en marche', 'Restart the ram'],
@@ -48,10 +57,46 @@ const LAB = {
   scenarioHighLift: ['Refoulement trop haut', 'Delivery head too high'],
   scenarioSnifterBlocked: ['Reniflard bouché', 'Blocked snifter'],
   scenarioPlasticPipe: ['Conduite en PVC', 'PVC drive pipe'],
-  scenarioHeavyWeight: ['Contrepoids plus lourd', 'Heavier counterweight'],
+  scenarioHeavyWeight: ['Poids doublé', 'Doubled weight'],
+  scenarioPrompt: [
+    'Un scénario met le bélier dans une situation et dit ce qu’il faut regarder.',
+    'A scenario puts the ram in a situation and says what to look at.',
+  ],
   scenarioHint: [
-    'Réglez la vitesse du temps en bas de l’écran (×60, ×600, ×3600) pour voir les heures défiler.',
-    'Set the time speed at the bottom of the screen (×60, ×600, ×3600) to watch the hours go by.',
+    'Les scénarios accélèrent le temps tout seuls pour qu’on voie les heures passer. Pour revoir les coups, revenez à ×1 en bas de l’écran et activez Ralenti.',
+    'Scenarios speed time up by themselves so that you can watch the hours go by. To see the strokes again, go back to ×1 at the bottom of the screen and switch on Slow-mo.',
+  ],
+  capSourceDrop: [
+    'La source passe de 10 à 7,5 L/min au bout d’une heure, avec le clapet n°3. Regardez la courbe « Niveau de la réserve tampon » : elle tombe à zéro et le bélier s’arrête.',
+    'The spring falls from 10 to 7.5 L/min after an hour, with the No. 3 valve. Watch the “Buffer tank level” curve: it falls to zero and the ram stops.',
+  ],
+  capStrokeNut: [
+    'Le clapet n°1, dont l’écrou est vissé de 0,1 mm toutes les 10 minutes simulées. Regardez la consommation baisser, puis le refoulé tomber à zéro sous la course minimale.',
+    'Valve No. 1, its nut turned in 0.1 mm every 10 simulated minutes. Watch the drive flow fall, then the delivery drop to zero below the minimum stroke.',
+  ],
+  capWaterLogged: [
+    'La cloche n’a plus d’air. Regardez « Dernier pic » (dans « Plus de chiffres ») et le refoulé : les coups sont plus durs (plus de 7 bar) et on refoule environ 40 % de moins (résultats du modèle).',
+    'The chamber has no air left. Watch “Last peak” (in “More figures”) and the delivery: harder strokes (over 7 bar) and about 40% less delivered (model results).',
+  ],
+  capShortPipe: [
+    'Une conduite motrice de 8 m seulement pour 7,5 m de chute. Regardez la cadence (plus rapide) et l’alerte « Conduite trop courte ».',
+    'A drive pipe of only 8 m for a 7.5 m fall. Watch the stroke rate (faster) and the “Drive pipe too short” alarm.',
+  ],
+  capHighLift: [
+    'On veut monter à 100 m avec la même chute (H/h = 13). Regardez l’alerte « Refoulement trop haut » : dans le modèle, le bélier ne refoule plus.',
+    'The water must go up 100 m with the same fall (H/h = 13). Watch the “Delivery head too high” alarm: in the model the ram no longer delivers.',
+  ],
+  capSnifterBlocked: [
+    'Le reniflard ne laisse plus entrer d’air. Le temps passe à ×3600 : regardez « Air (cloche) » (dans « Plus de chiffres ») baisser pendant des heures, puis le refoulé chuter.',
+    'The snifter no longer lets air in. Time runs at ×3600: watch “Chamber air” (in “More figures”) fall over hours, then the delivery drop.',
+  ],
+  capPlasticPipe: [
+    'Conduite en PVC au lieu d’acier. Le clapet se ferme aussi vite mais le choc ρ·a·v est plus faible : lisez le message en rouge, le bélier frappe sans rien refouler (résultat du modèle, pour une vitesse d’onde supposée).',
+    'A PVC drive pipe instead of steel. The valve closes just as fast but the surge ρ·a·v is weaker: read the red message, the ram strikes without delivering (model result, for an assumed wave speed).',
+  ],
+  capHeavyWeight: [
+    'Un poids deux fois plus lourd (720 g). Regardez la consommation dépasser la source, puis la réserve se vider.',
+    'A weight twice as heavy (720 g). Watch the drive flow exceed the spring, then the tank empty.',
   ],
 
   // ---- status line
@@ -66,16 +111,16 @@ const LAB = {
     'Stopped: the tank ran dry and no more water comes down the pipe. In the video the ram then had to be restarted by hand.',
   ],
   statusStalledStuck: [
-    'Arrêté : le clapet de choc reste fermé, le recul est trop faible pour le rouvrir (refoulement trop proche de la chute).',
-    'Stopped: the waste valve stays shut, the recoil is too weak to reopen it (delivery head too close to the fall).',
+    'Arrêté : le clapet de choc reste fermé ; le recul est trop faible pour le rouvrir (refoulement trop proche de la chute).',
+    'Stopped: the waste valve stays shut; the recoil is too weak to reopen it (delivery head too close to the fall).',
   ],
   statusNoDelivery: [
-    'Le bélier frappe mais ne refoule rien : le clapet se ferme trop lentement pour que le coup de bélier ouvre le clapet de refoulement.',
-    'The ram strikes but delivers nothing: the valve closes too slowly for the water hammer to open the delivery check valve.',
+    'Le bélier frappe mais ne refoule rien : quand le clapet se ferme, l’eau va trop lentement (ou la hauteur est trop grande) pour que le coup de bélier ouvre le clapet de refoulement.',
+    'The ram strikes but delivers nothing: when the valve shuts, the water is moving too slowly (or the head is too high) for the water hammer to open the delivery check valve.',
   ],
   statusSoftPipe: [
-    'Conduite trop souple : à {a} m/s, l’onde donne un choc de {surge} bar (ρ·a·v), or il en faut {need} bar pour ouvrir le clapet de refoulement. Le clapet de choc se ferme pourtant à {v} m/s, assez vite pour une conduite rigide (acier, 900 m/s). Le bélier frappe mais ne refoule rien.',
-    'Pipe too soft: at {a} m/s the wave gives a surge of {surge} bar (ρ·a·v), but {need} bar are needed to open the delivery check valve. The waste valve does close at {v} m/s, fast enough for a rigid pipe (steel, 900 m/s). The ram strikes but delivers nothing.',
+    'Conduite trop souple : à {a} m/s, l’onde donne un choc de {surge} bar (ρ·a·v), or il en faut {need} bar pour ouvrir le clapet de refoulement. Le clapet de choc se ferme pourtant à {v} m/s, assez vite pour une conduite rigide (acier, 900 m/s). Le bélier frappe mais ne refoule rien. Ce « rien » est un résultat du modèle pour ce clapet réglé pour l’acier ; Wikipédia note que le PVC fonctionne dans certaines installations, l’acier restant préféré.',
+    'Pipe too flexible: at {a} m/s the wave gives a surge of {surge} bar (ρ·a·v), but {need} bar are needed to open the delivery check valve. The waste valve does close at {v} m/s, fast enough for a rigid pipe (steel, 900 m/s). The ram strikes but delivers nothing. That “nothing” is a model result for this valve set for steel; Wikipedia notes that PVC works in some installations, steel remaining preferred.',
   ],
   statusStalledGate: [
     'Arrêté : la vanne de départ de la conduite motrice est fermée, plus d’eau ne descend. La réserve se remplit. Rouvrez la vanne pour relancer le bélier.',
@@ -99,7 +144,7 @@ const LAB = {
   secRam: ['Bélier : clapet et cloche', 'Ram: valve and air chamber'],
   fall: ['Chute h', 'Fall h'],
   driveLength: ['Longueur de la conduite motrice L', 'Drive pipe length L'],
-  driveDiameter: ['Ø intérieur de la conduite motrice', 'Drive pipe inner Ø'],
+  driveDiameter: ['Ø intérieur de la conduite motrice', 'Drive pipe inner diameter'],
   pipeMaterial: ['Matière de la conduite motrice', 'Drive pipe material'],
   matSteel: ['Acier', 'Steel'],
   matPvc: ['PVC', 'PVC'],
@@ -109,43 +154,53 @@ const LAB = {
   sourceFlow: ['Débit de la source', 'Spring flow'],
   tankVolume: ['Réserve tampon', 'Buffer tank'],
   valve: ['Clapet de choc', 'Waste valve'],
+  valveOption1: ['n°1 · DN15', 'No. 1 · DN15'],
+  valveOption2: ['n°2 · DN20', 'No. 2 · DN20'],
+  valveOption3: ['n°3 · DN25', 'No. 3 · DN25'],
   stroke: ['Course (écrou de réglage)', 'Stroke (stroke nut)'],
-  counterweight: ['Contrepoids', 'Counterweight'],
+  counterweight: ['Poids du clapet', 'Valve weight'],
   chamberVolume: ['Cloche à air', 'Air chamber'],
   waterLogged: ['Cloche noyée (plus d’air)', 'Water-logged (no air left)'],
   snifterBlocked: ['Reniflard bouché', 'Snifter blocked'],
   valveHint: [
-    'Le changement de clapet reprend ses réglages de la vidéo (course et contrepoids, calibrés sur ses chiffres).',
-    'Changing the valve loads its settings from the video (stroke and counterweight, calibrated on its figures).',
+    'Changer de clapet recharge sa course et son poids, calibrés sur les chiffres de la vidéo (la vidéo ne donne pas ces réglages).',
+    'Changing the valve loads its stroke and weight, calibrated on the figures of the video (the video does not give these settings).',
   ],
 
-  // ---- live readouts
-  liveStrokes: ['Coups / min', 'Strokes / min'],
-  liveDrive: ['Eau prise Q', 'Drive flow Q'],
-  liveWaste: ['Eau perdue', 'Lost at valve'],
+  // ---- live readouts (the six main ones, then the nine behind "More figures"); labels stay under 16 characters
+  readouts: ['Les chiffres', 'The figures'],
+  moreFigures: ['Plus de chiffres', 'More figures'],
+  readFigures: ['Lire les chiffres', 'Reading the figures'],
+  readoutsHelp: [
+    '**Coups/min** : combien de fois par minute le clapet de choc claque.\n\n**Consommation** (Q) : l’eau qui descend de la réserve dans la conduite motrice.\n\n**Eau rejetée** : la part qui ressort par le clapet de choc ; c’est elle qui fait le travail.\n\n**Refoulé q** : l’eau qui monte au château d’eau, par minute puis par jour.\n\n**Rendement** : énergie de l’eau montée divisée par celle de l’eau prise (rendement d’Aubuisson). **η Rankine** : le même rapport, en ne comptant que l’eau rejetée comme eau qui tombe.\n\nDans « Plus de chiffres » : **Vit. fermeture**, la vitesse de l’eau quand le clapet claque ; **Vit. minimale**, celle qu’il faut pour ouvrir le clapet de refoulement ; **Choc ρ·a·v**, la surpression du coup de bélier si l’eau ne pouvait pas s’échapper ; **Dernier pic**, la plus haute pression du corps du bélier atteinte au dernier coup ; **P. cloche**, la pression dans la cloche à air ; **Réserve**, l’eau qui reste dans la cuve tampon ; **Air (cloche)**, la part d’air dans la cloche ; **Vit. de l’onde**, la vitesse du coup de bélier dans la conduite (valeur du modèle). 1 bar ≈ 10 m de hauteur d’eau.',
+    '**Strokes/min**: how many times a minute the waste valve slams.\n\n**Drive flow** (Q): the water that comes down from the tank into the drive pipe.\n\n**Waste flow**: the share that leaves through the waste valve; it is what does the work.\n\n**Delivered q**: the water that rises to the water tower, per minute and then per day.\n\n**Efficiency**: energy of the water lifted divided by that of the water taken (D’Aubuisson efficiency). **η Rankine**: the same ratio, counting only the waste water as the water that falls.\n\nIn “More figures”: **Closing speed**, the water speed when the valve slams; **Speed needed**, the one required to open the delivery check valve; **Surge ρ·a·v**, the water-hammer overpressure if the water could not escape; **Last peak**, the highest pressure reached in the ram body during the last stroke; **Chamber P.**, the pressure in the air chamber; **Buffer tank**, the water left in the tank; **Chamber air**, the share of air in the chamber; **Wave speed**, the speed of the water hammer along the pipe (a model value). 1 bar ≈ 10 m of water height.',
+  ],
+  liveStrokes: ['Coups/min', 'Strokes/min'],
+  liveDrive: ['Consommation', 'Drive flow'],
+  liveWaste: ['Eau rejetée', 'Waste flow'],
   liveDelivered: ['Refoulé q', 'Delivered q'],
-  liveDeliveredDay: ['Refoulé/jour', 'Daily output'],
-  liveEtaD: ['η Aubuisson', 'η Aubuisson'],
+  liveDeliveredDay: ['Refoulé/jour', 'Delivered/day'],
+  liveEtaD: ['Rendement', 'Efficiency'],
   liveEtaR: ['η Rankine', 'η Rankine'],
-  liveClosing: ['V. fermeture', 'Close speed'],
-  liveClosingMin: ['V. requise', 'Min. speed'],
+  liveClosing: ['Vit. fermeture', 'Closing speed'],
+  liveClosingMin: ['Vit. minimale', 'Speed needed'],
   liveSurge: ['Choc ρ·a·v', 'Surge ρ·a·v'],
-  liveBody: ['P. du corps', 'Body press.'],
+  livePeak: ['Dernier pic', 'Last peak'],
   liveChamber: ['P. cloche', 'Chamber P.'],
   liveTank: ['Réserve', 'Buffer tank'],
-  liveAir: ['Air cloche', 'Chamber air'],
+  liveAir: ['Air (cloche)', 'Chamber air'],
   liveWave: ['Vit. de l’onde', 'Wave speed'],
-  liveRate: ['Cadence', 'Rate'],
+  liveRate: ['Cadence', 'Stroke rate'],
   liveDeliveredStrip: ['Refoulé', 'Delivered'],
   liveEfficiency: ['Rendement', 'Efficiency'],
   liveTankStrip: ['Réserve', 'Tank'],
-  liveDriveStrip: ['Consomme', 'Uses'],
+  liveDriveStrip: ['Consommation', 'Drive flow'],
   clockDay: ['Jour', 'Day'],
   unitPerDay: ['L/jour', 'L/day'],
   unitPerMin: ['coups/min', 'strokes/min'],
 
   // ---- charts
-  chartScope: ['Dernier coup : pression du corps (bar)', 'Last strokes: body pressure (bar)'],
+  chartScope: ['Derniers coups : pression du corps (bar)', 'Last strokes: body pressure (bar)'],
   chartScopeSpeed: ['Vitesse dans la conduite motrice (m/s)', 'Drive pipe velocity (m/s)'],
   chartScopeHint: [
     'La pression monte au coup de bélier jusqu’à celle du refoulement ; la vitesse devient négative au recul, ce qui rouvre le clapet.',
@@ -156,36 +211,33 @@ const LAB = {
     'Delivered water (L/day) against the delivery head',
   ],
   chartHeadHint: [
-    'Les trois clapets avec leurs réglages de la vidéo, pour le site ci-dessus. Le point est votre réglage actuel.',
-    'The three valves with the settings of the video, for the site above. The dot is your present setting.',
+    'Les trois clapets avec leurs réglages calibrés sur la vidéo, pour le site ci-dessus. Le point est votre réglage actuel.',
+    'The three valves with their settings calibrated on the video, for the site above. The dot is your current setting.',
   ],
-  chartStroke: ['Consommation selon la course (L/min)', 'Water used against the stroke (L/min)'],
+  chartStroke: ['Consommation selon la course (L/min)', 'Drive flow against the stroke (L/min)'],
   chartStrokeDelivered: ['Eau refoulée selon la course (L/jour)', 'Delivered water against the stroke (L/day)'],
   chartStrokeHint: [
     'Visser l’écrou réduit la consommation, mais en dessous d’une course minimale le bélier ne refoule plus (vidéo, 13:13).',
-    'Turning the nut in cuts the water use, but below a minimum stroke the ram no longer delivers (video, 13:13).',
+    'Turning the nut in cuts the drive flow, but below a minimum stroke the ram no longer delivers (video, 13:13).',
   ],
   chartTank: ['Niveau de la réserve tampon (%)', 'Buffer tank level (%)'],
   chartTankHint: [
-    'Dernières 48 h simulées. Quand la courbe touche zéro, le bélier s’arrête.',
-    'Last 48 simulated hours. When the curve reaches zero the ram stops.',
+    'Les 48 dernières heures simulées. Quand la courbe touche zéro, le bélier s’arrête.',
+    'The last 48 simulated hours. When the curve reaches zero the ram stops.',
   ],
   sweepBy: ['Courbes selon', 'Curves against'],
   sweepStroke: ['la course', 'the stroke'],
-  sweepWeight: ['le contrepoids', 'the counterweight'],
-  chartWeight: ['Consommation selon le contrepoids (L/min)', 'Water used against the counterweight (L/min)'],
-  chartWeightDelivered: [
-    'Eau refoulée selon le contrepoids (L/jour)',
-    'Delivered water against the counterweight (L/day)',
-  ],
+  sweepWeight: ['le poids', 'the weight'],
+  chartWeight: ['Consommation selon le poids (L/min)', 'Drive flow against the weight (L/min)'],
+  chartWeightDelivered: ['Eau refoulée selon le poids (L/jour)', 'Delivered water against the weight (L/day)'],
   chartWeightHint: [
-    'Un contrepoids plus lourd refoule plus d’eau au début, mais consomme bien plus : le refoulé passe par un maximum puis retombe, et vers 1 000 g le clapet ne se ferme plus.',
-    'A heavier counterweight delivers more water at first but uses a lot more: the delivery goes through a maximum and then falls, and around 1,000 g the valve no longer closes.',
+    'Un poids plus lourd refoule plus d’eau au début, mais consomme bien plus : le refoulé passe par un maximum puis retombe, et au-delà de ≈ 900 g le clapet ne se ferme plus.',
+    'A heavier weight delivers more water at first but uses a lot more: the delivery goes through a maximum and then falls, and above ≈ 900 g the valve no longer closes.',
   ],
-  seriesValve1: ['Clapet n°1', 'Valve n°1'],
-  seriesValve2: ['Clapet n°2', 'Valve n°2'],
-  seriesValve3: ['Clapet n°3', 'Valve n°3'],
-  seriesConsumption: ['Consommation Q', 'Water used Q'],
+  seriesValve1: ['Clapet n°1', 'Valve No. 1'],
+  seriesValve2: ['Clapet n°2', 'Valve No. 2'],
+  seriesValve3: ['Clapet n°3', 'Valve No. 3'],
+  seriesConsumption: ['Consommation Q', 'Drive flow Q'],
   seriesSource: ['Source', 'Spring'],
   seriesDelivered: ['Refoulé', 'Delivered'],
   seriesTank: ['Réserve', 'Tank'],
@@ -199,11 +251,11 @@ const LAB = {
   alarm_tankLow: ['La réserve se vide', 'Tank draining'],
   alarm_noDelivery: ['Ne refoule rien', 'Nothing delivered'],
   alarm_valveOpen: ['Le clapet ne se ferme pas', 'Valve never closes'],
-  alarm_pipeShort: ['Conduite motrice courte', 'Drive pipe short'],
+  alarm_pipeShort: ['Conduite trop courte', 'Drive pipe too short'],
   alarm_headHigh: ['Refoulement trop haut', 'Delivery head too high'],
   alarm_waterLogged: ['Cloche noyée', 'Water-logged chamber'],
   alarm_snifterBlocked: ['Reniflard bouché', 'Snifter blocked'],
-  alarm_softPipe: ['Conduite trop souple', 'Pipe too soft'],
+  alarm_softPipe: ['Conduite trop souple', 'Pipe too flexible'],
   alarm_gateClosed: ['Vanne de départ fermée', 'Gate valve closed'],
   alarm_heldShut: ['Clapet tenu fermé', 'Valve held shut'],
   alarm_drainOpen: ['Vidange ouverte', 'Drain open'],
@@ -214,6 +266,22 @@ const LAB = {
   phaseClose: ['Fermeture', 'Closing'],
   phaseDeliver: ['Refoulement', 'Delivery'],
   phaseRecoil: ['Recul', 'Recoil'],
+  headAccel: [
+    'L’eau dévale et s’échappe par le clapet resté ouvert.',
+    'The water rushes down and escapes through the open valve.',
+  ],
+  headClose: [
+    'Le clapet claque : l’eau est stoppée net et la pression bondit.',
+    'The valve slams: the water is stopped dead and the pressure jumps.',
+  ],
+  headDeliver: [
+    'Le choc ouvre le clapet de refoulement : un peu d’eau entre dans la cloche.',
+    'The shock opens the delivery check valve: a little water goes into the chamber.',
+  ],
+  headRecoil: [
+    'L’eau rebondit en arrière, le clapet de choc se rouvre : tout recommence.',
+    'The water bounces back and the waste valve reopens: it all starts again.',
+  ],
   cycleStep: ['Phase suivante', 'Next phase'],
   cycleResume: ['Reprendre', 'Resume'],
   cycleHint: [
@@ -233,19 +301,19 @@ const LAB = {
     'This phase does not happen with these settings: the delivery check valve never opens.',
   ],
   cycleNow: ['À cet instant', 'At this instant'],
-  cardValve: ['Clap. choc', 'Waste v.'],
-  cardCheck: ['Anti-retour', 'Check v.'],
-  cardSpeed: ['Vitesse eau', 'Flow speed'],
+  cardValve: ['Clapet de choc', 'Waste valve'],
+  cardCheck: ['Clapet refoul.', 'Delivery valve'],
+  cardSpeed: ['Vitesse eau', 'Water speed'],
   cardBody: ['P. du corps', 'Body P.'],
-  cardJet: ['Jet clapet', 'Waste jet'],
-  cardInto: ['Vers cloche', 'Inflow'],
-  cardInPhase: ['Écoulé', 'Elapsed'],
+  cardJet: ['Jet du clapet', 'Waste jet'],
+  cardInto: ['Vers la cloche', 'Into chamber'],
+  cardInPhase: ['Temps écoulé', 'Elapsed time'],
   descAccel: [
     'Le clapet de choc est ouvert, retombé sur son écrou. L’eau de la conduite motrice, entraînée par la chute de {h} m, accélère et s’échappe par le clapet ({v} m/s, jet de {jet} L/min). Plus elle va vite, plus elle pousse le clapet vers sa portée. Le clapet de refoulement est fermé : rien n’est refoulé.',
     'The waste valve is open, resting on its nut. The water in the drive pipe, pulled by the {h} m fall, speeds up and runs out through the valve ({v} m/s, a jet of {jet} L/min). The faster it goes, the harder it pushes the valve towards its seat. The delivery check valve is shut: nothing is delivered.',
   ],
   descClose: [
-    'Le jet a vaincu le poids : le clapet de choc vient de claquer sur sa portée. La colonne d’eau, lancée à {vc} m/s, est stoppée net, c’est le coup de bélier. La pression du corps monte à {p} bar, jusqu’à celle du refoulement ({head} bar) ; si elle ne pouvait pas s’échapper, le choc serait de {surge} bar (ρ·a·v).',
+    'Le jet a vaincu le poids : le clapet de choc vient de claquer sur sa portée. La colonne d’eau, lancée à {vc} m/s, est stoppée net : c’est le coup de bélier. La pression du corps monte à {p} bar, jusqu’à celle du refoulement ({head} bar) ; si elle ne pouvait pas s’échapper, le choc serait de {surge} bar (ρ·a·v).',
     'The jet has overcome the weight: the waste valve has just slammed onto its seat. The column of water, launched at {vc} m/s, is stopped dead: that is the water hammer. The body pressure climbs to {p} bar, up to the delivery pressure ({head} bar); if it could not escape, the surge would be {surge} bar (ρ·a·v).',
   ],
   descCloseWeak: [
@@ -276,51 +344,51 @@ const LAB = {
   ],
   sizePipe: ['Diamètre de la conduite motrice', 'Drive pipe size'],
   sizeLength: ['Longueur prévue de la conduite', 'Planned pipe length'],
-  sizeLoad: ['Valeurs du site', 'Site values'],
+  sizeLoad: ['Reprendre le site simulé', 'Use the simulated site'],
   sizeApply: ['Essayer dans la simulation', 'Try it in the simulation'],
   sizeMinLength: ['Conduite minimale', 'Minimum pipe'],
   sizeUsualLength: ['Longueur courante', 'Usual length'],
-  sizeTable: ['Tableau S4 pour', 'S4 table for'],
+  sizeTable: ['Tableau NC State pour', 'NC State table for'],
   sizeDelivery: ['Refoulé attendu (η {eta})', 'Expected delivery (η {eta})'],
   sizeDeliveryLive: ['Avec le η de la simulation ({eta})', 'With the simulation’s η ({eta})'],
   sizeVerdictOk: [
     'Source suffisante : {src} L/min contre {min} L/min demandés par une conduite de {pipe}.',
-    'Enough spring: {src} L/min against the {min} L/min a {pipe} drive pipe asks for.',
+    'The spring is enough: {src} L/min against the {min} L/min that a {pipe} drive pipe asks for.',
   ],
   sizeVerdictShort: [
     'Source insuffisante : {src} L/min contre {min} L/min demandés par une conduite de {pipe} ({pct} %).',
-    'Not enough spring: {src} L/min against the {min} L/min a {pipe} drive pipe asks for ({pct} %).',
+    'The spring is too small: {src} L/min against the {min} L/min that a {pipe} drive pipe asks for ({pct} %).',
   ],
   sizeTipSmaller: [
     'Une conduite de {pipe} conviendrait à cette source. Sinon, comme dans la vidéo, réglez le clapet pour qu’il consomme moins d’eau que la source n’en donne (préréglage « Clapet n°1 »).',
-    'A {pipe} pipe would suit this spring. Otherwise, as in the video, tune the valve so that it uses less than the spring gives (the “Valve n°1” preset).',
+    'A {pipe} pipe would suit this spring. Otherwise, as in the video, tune the valve so that it uses less than the spring gives (the “Valve No. 1” preset).',
   ],
   sizeTipNone: [
     'Aucun diamètre du tableau ne convient : la source donne moins que les {min} L/min du plus petit. Comme dans la vidéo, il faut régler le clapet pour qu’il consomme moins d’eau que la source n’en donne (préréglage « Clapet n°1 »).',
-    'No size of the table fits: the spring gives less than the {min} L/min of the smallest. As in the video, the valve has to be tuned to use less than the spring gives (the “Valve n°1” preset).',
+    'None of the sizes in the table fits: the spring gives less than the {min} L/min of the smallest. As in the video, the valve has to be tuned to use less than the spring gives (the “Valve No. 1” preset).',
   ],
   sizeWarnHeadHigh: [
-    'H/h = {r} : au-delà de 12, le coup de bélier ne suffit plus à monter l’eau (la règle est d’environ 10 m de refoulement par mètre de chute).',
-    'H/h = {r}: above 12 the water hammer is no longer enough to lift the water (the rule is about 10 m of lift per metre of fall).',
+    'H/h = {r} : au-delà d’environ 12, le bélier du modèle (clapet n°1 réglé comme dans la vidéo) ne refoule plus. La vidéo parle d’environ 10 m de refoulement par mètre de chute, et Practical Action donne des performances de béliers du commerce jusqu’à H/h = 20 : la limite dépend du réglage et de la taille.',
+    'H/h = {r}: above about 12, the model’s ram (No. 1 valve set as in the video) no longer delivers. The video talks of about 10 m of lift per metre of fall, and Practical Action gives the performance of commercial rams up to H/h = 20: the limit depends on the setting and the size.',
   ],
   sizeWarnHeadLow: [
     'H/h = {r} : le refoulement est trop près de la chute, le recul ne rouvre plus le clapet de choc (dans le modèle, le bélier reste bloqué sous 1,5).',
     'H/h = {r}: the delivery head is too close to the fall, the recoil no longer reopens the waste valve (in the model, the ram stays shut below 1.5).',
   ],
   sizeWarnLengthShort: [
-    'L/h = {r} : conduite plus courte que 3 fois la chute (S6), coups trop rapides et rendement plus faible. Visez au moins {min} m (5 × h, S4).',
-    'L/h = {r}: pipe shorter than 3 times the fall (S6), strokes too fast and a lower efficiency. Aim for at least {min} m (5 × h, S4).',
+    'L/h = {r} : conduite plus courte que 3 fois la chute (Wikipédia), coups trop rapides et rendement plus faible. Visez au moins {min} m (5 × h, NC State).',
+    'L/h = {r}: pipe shorter than 3 times the fall (Wikipedia), strokes too fast and a lower efficiency. Aim for at least {min} m (5 × h, NC State).',
   ],
   sizeWarnLengthS4: [
-    'L/h = {r} : sous les 5 fois la chute que demande S4 ({min} m), mais dans l’usage courant (3 à 7 fois, S6).',
-    'L/h = {r}: under the 5 times the fall that S4 asks for ({min} m), but within common practice (3 to 7 times, S6).',
+    'L/h = {r} : sous les 5 fois la chute que demande NC State ({min} m), mais dans l’usage courant (3 à 7 fois, Wikipédia).',
+    'L/h = {r}: under the 5 times the fall that NC State asks for ({min} m), but within common practice (3 to 7 times, Wikipedia).',
   ],
   sizeNote: [
-    'Ordres de grandeur de NC State (S4, tableau 2 : les conditions du tableau ne sont pas précisées) et de Wikipédia (S6) : ce n’est pas un plan de réalisation. Le refoulé est q = η·Q·h/H. La simulation modélise un bélier de 1″.',
-    'Orders of magnitude from NC State (S4, table 2: the conditions of the table are not stated) and Wikipedia (S6): this is not a build plan. The delivery is q = η·Q·h/H. The simulation models a 1″ ram.',
+    'Ordres de grandeur de NC State (tableau 2 : les conditions du tableau ne sont pas précisées) et de Wikipédia : ce n’est pas un plan de réalisation. Le refoulé est q = η·Q·h/H. La simulation modélise un bélier de 1″.',
+    'Orders of magnitude from NC State (table 2: the conditions of the table are not stated) and Wikipedia: this is not a build plan. The delivery is q = η·Q·h/H. The simulation models a 1″ ram.',
   ],
 
-  // ---- "test" buttons on the part sheets
+  // ---- "test" buttons on the part sheets: the label, a tooltip, and a line saying what to look at
   actNutIn: ['Visser l’écrou −0,1 mm', 'Turn the nut in −0.1 mm'],
   actNutInTitle: [
     'Un dixième de tour d’une tige de 6 mm : la course diminue, le bélier consomme moins d’eau et frappe plus vite, jusqu’à ne plus rien refouler.',
@@ -333,7 +401,7 @@ const LAB = {
   ],
   actDrown: ['Noyer la cloche', 'Drown the chamber'],
   actDrownTitle: [
-    'Toute l’air de la cloche disparaît : les coups deviennent plus durs et le refoulé baisse.',
+    'Tout l’air de la cloche disparaît : les coups deviennent plus durs et le refoulé baisse.',
     'All the air of the chamber is gone: the strokes get harsher and the delivery falls.',
   ],
   actRefill: ['Remettre de l’air', 'Refill with air'],
@@ -351,7 +419,7 @@ const LAB = {
   actHold: ['Tenir le clapet fermé', 'Hold the valve shut'],
   actHoldTitle: [
     'Simulation seulement : ne mettez jamais un doigt dans le clapet d’un bélier qui tourne. Le clapet tenu fermé, la colonne s’arrête et le bélier avec elle.',
-    'A simulation only: never put a finger in the valve of a running ram. With the valve held shut the column stops, and the ram with it.',
+    'Simulation only: never put a finger in the valve of a running ram. With the valve held shut the column stops, and the ram with it.',
   ],
   actRelease: ['Relâcher et relancer', 'Let go and restart'],
   actReleaseTitle: [
@@ -365,16 +433,40 @@ const LAB = {
   ],
   actOpenGate: ['Rouvrir la vanne', 'Open the gate valve'],
   actOpenGateTitle: [
-    'L’eau redescend et le bélier repart de lui-même.',
-    'The water comes down again and the ram starts by itself.',
+    'L’eau redescend et le bélier repart de lui-même (hypothèse du modèle ; sur le terrain, il faudra peut-être le relancer à la main).',
+    'The water comes down again and the ram starts by itself (model assumption; in the field it may need a hand restart).',
   ],
   actOpenDrain: ['Ouvrir la vidange ×600', 'Open the drain ×600'],
   actOpenDrainTitle: [
-    'La réserve se vide en 40 minutes environ (le temps passe à ×600). Le clapet n°1 s’en moque, le n°3 s’arrête faute d’eau.',
-    'The tank empties in about 40 minutes (time runs at ×600). Valve n°1 does not care, valve n°3 stops for lack of water.',
+    'La réserve se vide en 40 minutes environ (vidange de 150 L/min supposée ; le temps passe à ×600). Le clapet n°1 s’en moque, le n°3 s’arrête faute d’eau.',
+    'The tank empties in about 40 minutes (a 150 L/min drain assumed; time runs at ×600). Valve No. 1 does not care, valve No. 3 stops for lack of water.',
   ],
   actCloseDrain: ['Fermer la vidange', 'Close the drain'],
   actCloseDrainTitle: ['La réserve ne se vide plus.', 'The tank no longer empties.'],
+  hintAirChamber: [
+    'Regardez l’eau envahir la cloche, puis le refoulé par jour baisser dans la barre du bas (environ 40 % de moins, résultat du modèle) et l’alerte « Cloche noyée » s’allumer.',
+    'Watch the water fill the chamber, then the delivery per day fall in the bottom bar (about 40% less, model result) and the “Water-logged chamber” alarm light up.',
+  ],
+  hintSnifter: [
+    'Regardez le niveau d’eau monter dans la cloche pendant des heures simulées, puis le refoulé chuter dans la barre du bas.',
+    'Watch the water level rise in the chamber over simulated hours, then the delivery drop in the bottom bar.',
+  ],
+  hintWasteValve: [
+    'Regardez le jet s’arrêter et le bélier avec lui (alerte « Clapet tenu fermé »). Simulation seulement : jamais un doigt dans le clapet d’un bélier qui tourne.',
+    'Watch the jet stop and the ram with it (“Valve held shut” alarm). A simulation only: never a finger in the valve of a running ram.',
+  ],
+  hintDriveGate: [
+    'Regardez la réserve se remplir dans la barre du bas pendant que le bélier s’arrête.',
+    'Watch the tank fill in the bottom bar while the ram stops.',
+  ],
+  hintTankDrain: [
+    'Regardez la réserve baisser dans la barre du bas : avec le clapet n°3 le bélier s’arrête faute d’eau, le n°1 continue.',
+    'Watch the tank level fall in the bottom bar: with the No. 3 valve the ram stops for lack of water, the No. 1 carries on.',
+  ],
+  hintStrokeNut: [
+    'Regardez la consommation baisser et la cadence monter dans la barre du bas ; sous la course minimale, le refoulé tombe à zéro.',
+    'Watch the drive flow fall and the stroke rate rise in the bottom bar; below the minimum stroke the delivery drops to zero.',
+  ],
 
   // ---- sources panel and guides (data role): wording shared by the notes of the lab
   legal: [
@@ -382,14 +474,14 @@ const LAB = {
     'In France, taking water from a spring or a stream is regulated (water rights, ecological continuity): check with the DDT (departmental land directorate) and the OFB (French biodiversity office) before any project. Spring water is not guaranteed potable: have it tested before drinking it. Rules differ from one country to another: check locally.',
   ],
   safety: [
-    'Un bélier ne coûte rien à faire tourner, mais ses coups atteignent plusieurs bars : conduite motrice rigide (acier, fonte), bélier ancré, manomètre côté refoulement, et jamais un doigt dans le clapet de choc quand il tourne.',
-    'A ram costs nothing to run, but its strokes reach several bar: a rigid drive pipe (steel, cast iron), an anchored ram, a pressure gauge on the delivery side, and never a finger in the waste valve while it runs.',
+    'Un bélier ne coûte rien à faire tourner, mais ses coups atteignent plusieurs bars. Prévoyez une conduite motrice rigide (acier, fonte), un bélier ancré et un manomètre côté refoulement, et ne mettez jamais un doigt dans le clapet de choc quand il tourne.',
+    'A ram costs nothing to run, but its strokes reach several bars. Use a rigid drive pipe (steel, cast iron), an anchored ram and a pressure gauge on the delivery side, and never put a finger in the waste valve while it runs.',
   ],
   genericRam: [
     'Le bélier montré est un bélier générique de 1″, pas le Walton n°3 de la vidéo : aucune fiche du constructeur n’a été trouvée, donc les dimensions du corps sont des estimations. Seul le clapet de choc suit la vidéo.',
-    'The ram shown is a generic 1″ ram, not the Walton n°3 of the video: no maker data sheet was found, so the body dimensions are estimates. Only the waste valve follows the video.',
+    'The ram shown is a generic 1″ ram, not the Walton No. 3 of the video: no maker data sheet was found, so the body dimensions are estimates. Only the waste valve follows the video.',
   ],
-  chapters: ['Chapitres de la vidéo', 'Video chapters'],
+  chapters: ['Sommaire de la vidéo', 'Video outline'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 registerStrings(LAB);

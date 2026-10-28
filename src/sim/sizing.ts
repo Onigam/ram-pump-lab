@@ -1,8 +1,10 @@
 // The sizing calculator: pure functions (no DOM, no simulation), from the fall, the delivery head, the spring flow and
 // the drive pipe size to the minimum drive pipe length, the spring flow the pipe needs, the expected delivery and the
-// warnings. Every rule comes from the sources of docs/research.md (§2, K17–K21) and is labelled below:
+// warnings. The rules come from the sources of docs/research.md (§2, K17–K21) and are labelled below, except one that is
+// the model's own:
 //   S4 = NC State Extension, Hydraulic Ram Pumps (the rules and table 2);  S6 = Wikipedia (3–7 × the fall, 60 % efficiency);
-//   research §5 = H/h above ≈ 12 is too much for a ram.
+//   H/h above ≈ 12 = the cutoff of the lab's model for the n°1 valve as calibrated, not a rule of the sources (which give
+//   performance for larger ratios): see HEAD_RATIO_MAX.
 // Nothing here is a design for building a ram: the numbers are the sources' orders of magnitude.
 
 /** US gallon, L (exact: 231 cubic inches). The sources give US units: conversions are explicit. */
@@ -76,7 +78,11 @@ export const TYPICAL_ETA = 0.6;
 export const LENGTH_RATIO_S4 = 5;
 /** Usual range of the drive pipe length as a multiple of the fall (S6, K20: 3 to 7). */
 export const LENGTH_RATIO_USUAL: readonly [number, number] = [3, 7];
-/** Above this H/h the ram is asked too much (research §5: H/h > ~12). */
+/**
+ * Above this H/h the model's ram is asked too much. The model's own cutoff, not a source's rule: the n°1 valve as
+ * calibrated delivers nothing above H/h ≈ 11.4, while NC State lists ratios up to 100 and Practical Action gives
+ * performance up to 20 for commercial rams. Rounded to 12 (docs/physics.md §7).
+ */
 export const HEAD_RATIO_MAX = 12;
 /** Below this H/h the recoil of the model is too weak to reopen the waste valve: the ram stays shut (physics.md §7). */
 export const HEAD_RATIO_MIN = 1.5;
@@ -95,7 +101,7 @@ export interface SizingInput {
 }
 
 export type SizingWarning =
-  /** H/h above 12. */
+  /** H/h above 12 (the model's cutoff, see HEAD_RATIO_MAX). */
   | 'headHigh'
   /** H/h below 1.5. */
   | 'headLow'

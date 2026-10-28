@@ -4,6 +4,7 @@ import {
   icon,
   ICONS,
   LineChart,
+  paragraphs,
   SERIES_COLORS,
   section as kitSection,
   select as kitSelect,
@@ -17,35 +18,41 @@ import type { RamSim } from '../sim/engine';
 import { WAVE_SPEED } from '../sim/physics';
 import { CYCLE_PHASES, PRESET_IDS, RANGES, SCENARIO_IDS, VALVE_SETTINGS } from '../sim/presets';
 import { nearestPipeSize, PIPE_SIZES, sizeRam, TYPICAL_ETA, type PipeSizeId, type SizingWarning } from '../sim/sizing';
-import type { CyclePhase, PipeMaterial, PresetId, RamParams, ScenarioId, StrokeTrace, ValveId } from '../sim/types';
+import type {
+  CyclePhase,
+  Means,
+  PipeMaterial,
+  PresetId,
+  RamParams,
+  RamState,
+  ScenarioId,
+  StrokeTrace,
+  ValveId,
+} from '../sim/types';
+import {
+  headPatches,
+  HEADS,
+  KEY_READOUTS,
+  MORE_READOUTS,
+  PHASE_HEADLINE_KEYS,
+  PHASE_KEYS,
+  PRESET_KEYS,
+  pumpQueues,
+  SCENARIO_CAPTION_KEYS,
+  SCENARIO_KEYS,
+  STROKES,
+  strokePatches,
+  SWEEP_BUDGET_MS,
+  WEIGHTS,
+  type CurveJob,
+  type ReadoutDef,
+} from './model';
 
-// Simulation mode: presets and scenarios, grouped controls, live readouts and charts. The stroke cycle itself is in
-// the 3D view; the panel shows its numbers (cycle averages), an oscilloscope of the last strokes, the cycle step by step
-// (freeze a phase, one whole stroke drawn with the frozen instant on it) and the sizing calculator.
-
-const PRESET_KEYS: Record<PresetId, UiKey> = {
-  'valve-3': 'presetValve3',
-  'valve-2': 'presetValve2',
-  'valve-1': 'presetValve1',
-};
-
-const SCENARIO_KEYS: Record<ScenarioId, UiKey> = {
-  'source-drop': 'scenarioSourceDrop',
-  'stroke-nut': 'scenarioStrokeNut',
-  'water-logged': 'scenarioWaterLogged',
-  'short-pipe': 'scenarioShortPipe',
-  'high-lift': 'scenarioHighLift',
-  'snifter-blocked': 'scenarioSnifterBlocked',
-  'plastic-pipe': 'scenarioPlasticPipe',
-  'heavy-weight': 'scenarioHeavyWeight',
-};
-
-const PHASE_KEYS: Record<CyclePhase, UiKey> = {
-  accel: 'phaseAccel',
-  close: 'phaseClose',
-  deliver: 'phaseDeliver',
-  recoil: 'phaseRecoil',
-};
+// Simulation mode, in the order a visitor needs it: what the panel is for, the story of the video (the three valves),
+// the status of the ram, the cycle step by step (freeze a phase, one whole stroke drawn with the frozen instant on it),
+// the scenarios with the line that says what to look at, the six main figures and the nine behind "More figures" (with a
+// "Reading the figures" help), the site and ram controls, the sizing calculator and the charts (oscilloscope, sweeps,
+// tank level). The stroke cycle itself is in the 3D view. What is shown is described in model.ts.
 
 const MATERIALS: [PipeMaterial, UiKey][] = [
   ['steel', 'matSteel'],
@@ -54,12 +61,6 @@ const MATERIALS: [PipeMaterial, UiKey][] = [
 ];
 
 const VALVE_COLORS: Record<ValveId, string> = { 1: SERIES_COLORS.hydro, 2: SERIES_COLORS.load, 3: SERIES_COLORS.dump };
-
-/** Delivery heads (m) and strokes (mm) of the two sweeps shown as charts. */
-const HEADS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130];
-const STROKES = Array.from({ length: 23 }, (_, i) => 0.5 + i * 0.25);
-/** Counterweights (g) of the second consumption sweep. */
-const WEIGHTS = Array.from({ length: 26 }, (_, i) => i * 40);
 
 type SweepVar = 'stroke' | 'weight';
 
@@ -85,6 +86,44 @@ function readoutCell(label: string, value: string, unit = ''): HTMLElement {
   );
 }
 
+/**
+ * Layout of the grids of figures: as many columns as fit, none narrower than 100 px. The kit's grid is three columns (two on
+ * a phone) whatever the width of the panel, which is only 270 px wide on a tablet: the labels, written in full, were then
+ * cut by an ellipsis. (A kit request, `.readouts` as auto-fit, would make this line unnecessary.)
+ */
+const GRID_STYLE = 'grid-template-columns: repeat(auto-fit, minmax(100px, 1fr))';
+
+/**
+ * A grid of live figures. The cells are built once (label, value, unit) and only their text is replaced when a value
+ * changes, five times a second: rebuilding the grid at that rate created about 300 elements a second.
+ */
+class ReadoutGrid {
+  readonly el = h('div', { class: 'readouts', style: GRID_STYLE });
+  private readonly values: Text[] = [];
+
+  constructor(private readonly defs: readonly ReadoutDef[]) {
+    for (const d of defs) {
+      const value = document.createTextNode('');
+      this.values.push(value);
+      this.el.append(
+        h(
+          'div',
+          { class: 'readout' },
+          h('span', {}, t(d.key)),
+          h('b', {}, value, d.unit ? h('small', {}, ` ${d.unit}`) : null),
+        ),
+      );
+    }
+  }
+
+  update(s: RamState): void {
+    this.defs.forEach((d, i) => {
+      const text = num(d.value(s), d.digits);
+      if (this.values[i].data !== text) this.values[i].data = text;
+    });
+  }
+}
+
 /** Nominal size of a drive pipe as written in the sources: ¾″, 1″, 1½″, 2″. */
 function sizeLabel(id: PipeSizeId): string {
   return { '3/4': '¾″', '1': '1″', '1-1/2': '1½″', '2': '2″' }[id];
@@ -104,16 +143,25 @@ interface StrokeSweep {
 interface Sweep<T> {
   key: string;
   wait: number;
-  queue: (() => void)[];
+  /** Slices of the cycle solve still to do (the first queue of `pumpQueues` goes first). */
+  queue: CurveJob[];
   data: T;
 }
 
 export class SimPanel implements PanelController {
   readonly el = h('div', { class: 'sim' });
-  private presetSelect: HTMLSelectElement | null = null;
+  /** The chips of the story (the three valves and "Custom"), refreshed from the parameters. */
+  private presetChips: [PresetId | 'custom', HTMLButtonElement][] = [];
   private restartButton: HTMLButtonElement | null = null;
   private status = h('div', {});
-  private readouts = h('div', { class: 'readouts' });
+  /** The six main figures, and the nine behind "More figures". */
+  private readouts = new ReadoutGrid(KEY_READOUTS);
+  private moreReadouts = new ReadoutGrid(MORE_READOUTS);
+  /** The last scenario played (null after a preset or at the start): its caption says what to look at. */
+  private scenario: ScenarioId | null = null;
+  private scenarioNote = h('p', { class: 'hint' });
+  private moreOpen = false;
+  private helpOpen = false;
   private scopeP: LineChart;
   private scopeV: LineChart;
   private headChart: LineChart;
@@ -236,19 +284,25 @@ export class SimPanel implements PanelController {
     const sim = this.ctx.sim;
     const p = sim.params;
 
-    const presetSelect = h(
-      'select',
-      {
-        'aria-label': t('preset'),
-        onchange: (ev: Event) => {
-          sim.applyPreset((ev.target as HTMLSelectElement).value as PresetId);
-          this.render();
-        },
-      },
-      ...PRESET_IDS.map((id) => h('option', { value: id, selected: p.preset === id }, t(PRESET_KEYS[id]))),
-      h('option', { value: 'custom', selected: p.preset === 'custom', disabled: true }, t('custom')),
-    );
-    this.presetSelect = presetSelect;
+    // the story of the video: valve No. 3 empties the tank, No. 2 is a trial, No. 1 saves it
+    this.presetChips = [
+      ...PRESET_IDS.map((id): [PresetId | 'custom', HTMLButtonElement] => [
+        id,
+        h(
+          'button',
+          {
+            class: 'part-chip',
+            onclick: () => {
+              this.scenario = null;
+              sim.applyPreset(id);
+              this.render();
+            },
+          },
+          t(PRESET_KEYS[id]),
+        ),
+      ]),
+      ['custom', h('button', { class: 'part-chip', disabled: true }, t('custom'))],
+    ];
 
     const restart = h(
       'button',
@@ -275,24 +329,23 @@ export class SimPanel implements PanelController {
         this.set({ [field]: v } as Partial<RamParams>, false),
       );
 
+    this.readouts = new ReadoutGrid(KEY_READOUTS);
+    this.moreReadouts = new ReadoutGrid(MORE_READOUTS);
     fill(
       this.el,
       h('div', { class: 'eyebrow eyebrow--accent' }, t('simTitle')),
+      h('p', { class: 'hint' }, t('simIntro')),
+      h('div', { class: 'eyebrow' }, t('story')),
+      h('div', { class: 'part-chips' }, ...this.presetChips.map(([, chip]) => chip)),
+      h('p', { class: 'hint' }, t('presetHint')),
       h(
         'div',
         { class: 'sim-top' },
-        presetSelect,
-        h(
-          'button',
-          {
-            class: 'btn',
-            'aria-label': t('reset'),
-            title: t('reset'),
-            onclick: () => (sim.reset(), this.render()),
-          },
-          icon(ICONS.reset, 16),
-        ),
+        h('button', { class: 'btn', onclick: () => (sim.reset(), this.render()) }, icon(ICONS.reset, 16), t('reset')),
+        restart,
       ),
+      this.status,
+      this.buildCycle(),
       h('div', { class: 'eyebrow' }, t('scenarios')),
       h(
         'div',
@@ -300,16 +353,30 @@ export class SimPanel implements PanelController {
         ...SCENARIO_IDS.map((id) =>
           h(
             'button',
-            { class: 'part-chip', onclick: () => (sim.applyScenario(id), this.render()) },
+            {
+              class: `part-chip${this.scenario === id ? ' is-on' : ''}`,
+              'aria-pressed': this.scenario === id ? 'true' : 'false',
+              onclick: () => {
+                this.scenario = id;
+                sim.applyScenario(id);
+                this.render();
+              },
+            },
             t(SCENARIO_KEYS[id]),
           ),
         ),
       ),
+      this.scenarioNote,
       h('p', { class: 'hint' }, t('scenarioHint')),
-      this.status,
-      h('div', { class: 'sim-top' }, restart),
-      this.readouts,
-      this.buildCycle(),
+      h('div', { class: 'eyebrow' }, t('readouts')),
+      this.readouts.el,
+      this.collapsible(t('moreFigures'), this.moreOpen, (open) => (this.moreOpen = open), this.moreReadouts.el),
+      this.collapsible(
+        t('readFigures'),
+        this.helpOpen,
+        (open) => (this.helpOpen = open),
+        ...paragraphs(t('readoutsHelp'), 'hint'),
+      ),
       kitSection(
         t('secSite'),
         slider('fall', 'fall', (v) => `${num(v, 1)} m`),
@@ -332,9 +399,9 @@ export class SimPanel implements PanelController {
           t('valve'),
           p.valve,
           [
-            [1, 'n°1 · DN15'],
-            [2, 'n°2 · DN20'],
-            [3, 'n°3 · DN25'],
+            [1, t('valveOption1')],
+            [2, t('valveOption2')],
+            [3, t('valveOption3')],
           ],
           (v) => this.set({ valve: v, ...VALVE_SETTINGS[v] }),
         ),
@@ -553,11 +620,15 @@ export class SimPanel implements PanelController {
       'div',
       {},
       h('div', { class: 'eyebrow eyebrow--accent' }, `${k + 1} · ${t(PHASE_KEYS[phase])}`),
-      h('div', { class: 'callout callout--tip' }, h('span', {}, text)),
+      h(
+        'div',
+        { class: 'callout callout--tip' },
+        h('span', {}, h('strong', {}, t(PHASE_HEADLINE_KEYS[phase])), ' ', text),
+      ),
       h('div', { class: 'eyebrow' }, t('cycleNow')),
       h(
         'div',
-        { class: 'readouts' },
+        { class: 'readouts', style: GRID_STYLE },
         readoutCell(t('cardValve'), num(s.wasteValve * 100), '%'),
         readoutCell(t('cardCheck'), num(s.deliveryValve * 100), '%'),
         readoutCell(t('cardSpeed'), num(s.driveVelocity, 2), 'm/s'),
@@ -790,7 +861,12 @@ export class SimPanel implements PanelController {
     const sim = this.ctx.sim;
     const s = sim.state;
     const p = sim.params;
-    if (this.presetSelect && this.presetSelect.value !== p.preset) this.presetSelect.value = p.preset;
+    for (const [id, chip] of this.presetChips) {
+      const on = p.preset === id;
+      chip.classList.toggle('is-on', on);
+      chip.setAttribute('aria-pressed', String(on));
+    }
+    fill(this.scenarioNote, this.scenario ? t(SCENARIO_CAPTION_KEYS[this.scenario]) : t('scenarioPrompt'));
     if (this.restartButton) this.restartButton.disabled = s.status !== 'stalled' || s.stallReason === 'gate';
 
     const warn = (text: string) =>
@@ -832,25 +908,8 @@ export class SimPanel implements PanelController {
 
   private renderReadouts(): void {
     const s = this.ctx.sim.state;
-    const cell = readoutCell;
-    fill(
-      this.readouts,
-      cell(t('liveStrokes'), num(s.strokesPerMin), ''),
-      cell(t('liveDrive'), num(s.driveFlow, 1), 'L/min'),
-      cell(t('liveWaste'), num(s.wasteFlow, 1), 'L/min'),
-      cell(t('liveDelivered'), num(s.deliveredFlow, 2), 'L/min'),
-      cell(t('liveDeliveredDay'), num(s.deliveredPerDay), 'L'),
-      cell(t('liveEtaD'), num(s.etaD * 100), '%'),
-      cell(t('liveEtaR'), num(s.etaR * 100), '%'),
-      cell(t('liveClosing'), num(s.closingVelocity, 2), 'm/s'),
-      cell(t('liveClosingMin'), num(s.minClosingVelocity, 2), 'm/s'),
-      cell(t('liveSurge'), num(s.surgeBar, 1), 'bar'),
-      cell(t('liveBody'), num(s.bodyPressure, 1), 'bar'),
-      cell(t('liveChamber'), num(s.chamberPressure, 1), 'bar'),
-      cell(t('liveTank'), num(s.tankLitres), 'L'),
-      cell(t('liveAir'), num(s.airFraction * 100), '%'),
-      cell(t('liveWave'), num(s.waveSpeed), 'm/s'),
-    );
+    this.readouts.update(s);
+    this.moreReadouts.update(s);
   }
 
   // ------------------------------------------------------------------ charts
@@ -897,39 +956,51 @@ export class SimPanel implements PanelController {
   }
 
   /**
-   * The sweeps solve the cycle model for many settings (about 12 ms each): they start once the sliders have been
-   * quiet for a moment and run one solve per frame.
+   * The sweeps solve the cycle model for many settings (about 6 ms each): they start once the sliders have been quiet for
+   * a moment (at once the first time, or after a change of variable), and advance a few milliseconds per frame, the head
+   * curves and the whole stroke first. The results are cached by `RamSim`, so a panel opened again finds them already.
    */
   private runSweeps(dt: number): void {
     const sim = this.ctx.sim;
     const p = sim.params;
     const air = Math.round(Math.log(Math.max(sim.state.airFraction, 0.004)) / 0.7);
     const site = [p.fall, p.driveLength, p.driveDiameter, p.pipeMaterial, p.deliveryLength, p.chamberVolume, air];
+    /** A point of a curve: solved a slice at a time, then handed to `store`. */
+    const point = (patch: Partial<RamParams>, store: (m: Means) => void): CurveJob => {
+      const task = sim.sweepTask(patch);
+      return (budgetMs) => {
+        if (!task.advance(budgetMs)) return false;
+        store(task.means as Means);
+        return true;
+      };
+    };
     this.refreshSweep(this.sweepHead, JSON.stringify(site), dt, () => {
       const data: Record<string, number[]> = { '1': [], '2': [], '3': [] };
-      for (const valve of [1, 2, 3] as ValveId[]) {
-        for (let i = 0; i < HEADS.length; i++) {
-          data[String(valve)].push(NaN);
-          this.sweepHead.queue.push(() => {
-            const m = sim.sweep({ valve, ...VALVE_SETTINGS[valve], deliveryHead: HEADS[i] });
-            data[String(valve)][i] = m.deliveredFlow * 1440;
-          });
-        }
-      }
+      for (const valve of [1, 2, 3] as ValveId[]) data[String(valve)] = HEADS.map(() => NaN);
+      headPatches().forEach((patch, i) => {
+        const valve = String(patch.valve);
+        const at = i % HEADS.length;
+        this.sweepHead.queue.push(
+          point(patch, (m) => {
+            data[valve][at] = m.deliveredFlow * 1440;
+          }),
+        );
+      });
       return data;
     });
-    // the consumption charts sweep the stroke (the other settings as they are) or the counterweight
+    // the consumption charts sweep the stroke (the other settings as they are) or the weight
     const byStroke = this.sweepVar === 'stroke';
     const xs = byStroke ? STROKES : WEIGHTS;
     const strokeKey = [...site, p.deliveryHead, p.valve, byStroke ? p.counterweight : p.stroke, this.sweepVar];
     this.refreshSweep(this.sweepStroke, JSON.stringify(strokeKey), dt, () => {
       const data: StrokeSweep = { xs, q: xs.map(() => NaN), d: xs.map(() => NaN) };
-      xs.forEach((x, i) => {
-        this.sweepStroke.queue.push(() => {
-          const m = sim.sweep(byStroke ? { stroke: x } : { counterweight: x });
-          data.q[i] = m.driveFlow;
-          data.d[i] = m.deliveredFlow * 1440;
-        });
+      strokePatches(this.sweepVar).forEach((patch, i) => {
+        this.sweepStroke.queue.push(
+          point(patch, (m) => {
+            data.q[i] = m.driveFlow;
+            data.d[i] = m.deliveredFlow * 1440;
+          }),
+        );
       });
       return data;
     });
@@ -938,19 +1009,23 @@ export class SimPanel implements PanelController {
     this.refreshSweep(this.sweepTrace, JSON.stringify(traceKey), dt, () => {
       this.sweepTrace.queue.push(() => {
         this.sweepTrace.data = sim.strokeTrace();
+        return true;
       });
       return this.sweepTrace.data;
     });
-    // one solve per frame, head curves first
-    const job = this.sweepHead.queue.shift() ?? this.sweepTrace.queue.shift() ?? this.sweepStroke.queue.shift();
-    job?.();
+    pumpQueues([this.sweepTrace.queue, this.sweepHead.queue, this.sweepStroke.queue], SWEEP_BUDGET_MS);
   }
 
+  /** Restart a sweep when its settings changed: after a quiet moment, or at once when it never ran or was emptied. */
   private refreshSweep<T>(sweep: Sweep<T>, key: string, dt: number, start: () => T): void {
     if (key !== sweep.key) {
+      const first = sweep.key === '';
       sweep.key = key;
-      sweep.wait = SWEEP_DELAY;
       sweep.queue.length = 0;
+      if (first) {
+        sweep.wait = 0;
+        sweep.data = start();
+      } else sweep.wait = SWEEP_DELAY;
       return;
     }
     if (sweep.wait > 0) {

@@ -157,7 +157,11 @@ export interface RamState {
   outletFlowNow: number;
   /** Instantaneous air drawn in by the snifter during the recoil, L/min at ambient pressure, ≥ 0. */
   snifterFlow: number;
-  /** Body pressure at the ram, bar gauge (sawtooth with the water hammer peak). */
+  /**
+   * Body pressure at the ram, bar gauge (sawtooth with the water hammer peak). An instantaneous value: sampled a few times
+   * a second it jumps between 0 and the peak, so a readout shows `peakPressure` instead (the card of a frozen phase, where
+   * it is steady, shows this one).
+   */
   bodyPressure: number;
   /** Highest body pressure of the last stroke, bar gauge. */
   peakPressure: number;

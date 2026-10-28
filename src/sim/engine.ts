@@ -1,5 +1,13 @@
 import type { LabSim } from '@onigam/lab-kit/ui';
-import { buildConfig, RamCycle, recordStroke, solveSteady, type CycleConfig, type CycleSnapshot } from './cycle';
+import {
+  buildConfig,
+  RamCycle,
+  recordStroke,
+  solveSteady,
+  SteadyRun,
+  type CycleConfig,
+  type CycleSnapshot,
+} from './cycle';
 import {
   AIR_FRACTION_LOGGED,
   AIR_FRACTION_NOMINAL,
@@ -16,6 +24,7 @@ import {
 } from './physics';
 import {
   CYCLE_PHASES,
+  PRESET_PACE,
   presetParams,
   RANGES,
   SCENARIO_PACE,
@@ -24,6 +33,7 @@ import {
   type RangedKey,
   type ScheduledEvent,
 } from './presets';
+import { idleQueue, SolveCache } from './sweep-cache';
 import type {
   AlarmKey,
   CyclePhase,
@@ -52,9 +62,17 @@ const SCOPE_LENGTH = 400;
 /** Spacing of the history samples, simulated seconds, and length kept (48 h). */
 const HISTORY_DT = 300;
 const HISTORY_LENGTH = 576;
-/** Above this H/h the ram is flagged as asked too much (research §5: H/h > ~12). */
+/**
+ * Above this H/h the ram is flagged as asked too much. It is the model's own cutoff, not a rule of the sources: the n°1
+ * valve as calibrated delivers nothing above H/h ≈ 11.4 (86 m at the video's 7.5 m of fall), and the sources give
+ * performance for larger ratios (NC State lists ratios up to 100, Practical Action up to 20). Rounded to 12.
+ */
 const HEAD_RATIO_ALARM = 12;
-/** Below this L/h the drive pipe is flagged as too short (K20: rules of thumb say 3-5; the video's own 2.7 is not flagged). */
+/**
+ * Below this L/h the drive pipe is flagged as too short. The 2.5 is a threshold of the lab, not of a source: the rules of
+ * thumb say 3 to 7 times the fall (the sizing calculator warns below 3), and the video's own 2.7 must not carry a
+ * permanent alarm (docs/physics.md §7).
+ */
 const LENGTH_RATIO_ALARM = 2.5;
 /** Below this air share the chamber counts as water-logged. */
 const WATERLOGGED_AIR = 0.05;
@@ -74,6 +92,60 @@ const HOLD_AT = { accel: 0.95, deliver: 0.5 } as const;
 const HOLD_RECOIL_VALVE = 0.5;
 
 const clamp = (x: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, x));
+
+/**
+ * Results of the cycle model for other settings (`RamSim.sweep`, `sweepTask`, `strokeTrace`), shared by every simulation
+ * and by the sheets of the drawings: the model is deterministic, so a set of settings is solved once (a solve is about
+ * 6 ms; the charts ask for hundreds). Bounded: the least recently used results go first.
+ */
+const MEANS_CACHE = new SolveCache<Means>(1000);
+const TRACE_CACHE = new SolveCache<StrokeTrace | null>(24);
+/** Solves started ahead of need (`RamSim.prefetch`), a few milliseconds per idle period of the browser. */
+const PREFETCH = idleQueue(4);
+/** Steps of the cycle model between two looks at the clock while a solve is spread over several frames (≈ 0.15 ms). */
+const TASK_SLICE_STEPS = 500;
+
+/** Size and hit counts of the shared result caches (for tests and measurements). */
+export function sweepCacheStats(): { means: number; traces: number; hits: number; misses: number } {
+  return {
+    means: MEANS_CACHE.size,
+    traces: TRACE_CACHE.size,
+    hits: MEANS_CACHE.hits + TRACE_CACHE.hits,
+    misses: MEANS_CACHE.misses + TRACE_CACHE.misses,
+  };
+}
+
+/** What decides the result of a solve: every setting the cycle model reads, and the air share of the chamber. */
+function settingsKey(p: RamParams, air: number): string {
+  return [
+    p.fall,
+    p.driveLength,
+    p.driveDiameter,
+    p.pipeMaterial,
+    p.deliveryHead,
+    p.deliveryLength,
+    p.valve,
+    p.stroke,
+    p.counterweight,
+    p.chamberVolume,
+    p.snifterBlocked ? 1 : 0,
+    air,
+  ].join('|');
+}
+
+/** Cycle averages shared by several readers are read-only. */
+function frozen(m: Means): Means {
+  Object.freeze(m.phaseShare);
+  return Object.freeze(m);
+}
+
+/** A solve of the cycle averages that can be done a few milliseconds at a time (`RamSim.sweepTask`). */
+export interface SweepTask {
+  /** The averages: set at once when the settings were solved before, otherwise once `advance` has returned true. */
+  readonly means: Means | null;
+  /** Work for about `budgetMs` milliseconds (at least one small slice); true when `means` is ready. */
+  advance(budgetMs: number): boolean;
+}
 
 /** A fixed-length record of the last strokes: what an oscilloscope on the ram would show. */
 export interface Scope {
@@ -257,7 +329,9 @@ export class RamSim implements LabSim {
   applyPreset(id: PresetId): void {
     Object.assign(this.params, presetParams(id), {
       slowMo: this.params.slowMo,
-      timeScale: this.params.timeScale,
+      // the story of the n°3 and n°2 valves unfolds over hours: it is played fast enough to be seen, never slower than the
+      // visitor chose
+      timeScale: Math.max(this.params.timeScale, PRESET_PACE[id] ?? 1),
       running: this.params.running,
     });
     this.events = [];
@@ -314,7 +388,7 @@ export class RamSim implements LabSim {
   }
 
   /**
-   * Manual restart of a stopped ram (the video: "il fallait venir le remettre en marche"). Returns false when there
+   * Manual restart of a stopped ram (in the video, the ram had to be restarted by hand). Returns false when there
    * is no water left in the buffer tank to prime it with.
    */
   restart(): boolean {
@@ -483,7 +557,12 @@ export class RamSim implements LabSim {
   strokeTrace(patch: Partial<RamParams> = {}): StrokeTrace | null {
     const p = { ...this.params, ...patch };
     const air = p.waterLogged ? AIR_FRACTION_LOGGED : this.airFraction;
-    return recordStroke(buildConfig(p), air);
+    const key = settingsKey(p, air);
+    const known = TRACE_CACHE.get(key); // shared, read-only (null: the valve does not cycle with these settings)
+    if (known !== undefined) return known;
+    const trace = recordStroke(buildConfig(p), air);
+    TRACE_CACHE.set(key, trace);
+    return trace;
   }
 
   // ------------------------------------------------------------------ cycle averages
@@ -504,11 +583,72 @@ export class RamSim implements LabSim {
     return this.means;
   }
 
-  /** Cycle averages for other parameters (sweeps for the charts); does not touch the live simulation. */
+  /**
+   * Cycle averages for other parameters (sweeps for the charts); does not touch the live simulation. Cached by the
+   * settings and the air share of the chamber (see `MEANS_CACHE`): the same question is answered once, for every
+   * simulation and every sheet. The result is shared and read-only.
+   */
   sweep(patch: Partial<RamParams>): Means {
     const p = { ...this.params, ...patch };
     const air = p.waterLogged ? AIR_FRACTION_LOGGED : this.airFraction;
-    return solveSteady(buildConfig(p), air, p.deliveryHead);
+    const key = settingsKey(p, air);
+    const known = MEANS_CACHE.get(key);
+    if (known) return known;
+    const means = frozen(solveSteady(buildConfig(p), air, p.deliveryHead));
+    MEANS_CACHE.set(key, means);
+    return means;
+  }
+
+  /** Has `sweep(patch)` been solved already (is the answer instant)? */
+  isSweepCached(patch: Partial<RamParams>): boolean {
+    const p = { ...this.params, ...patch };
+    return MEANS_CACHE.has(settingsKey(p, p.waterLogged ? AIR_FRACTION_LOGGED : this.airFraction));
+  }
+
+  /**
+   * `sweep(patch)` as a task that is advanced a few milliseconds at a time, for a page that must not hold up a frame:
+   * the figures are the same as `sweep`'s, to the last digit, and are cached the same way.
+   */
+  sweepTask(patch: Partial<RamParams>): SweepTask {
+    const p = { ...this.params, ...patch };
+    const air = p.waterLogged ? AIR_FRACTION_LOGGED : this.airFraction;
+    const key = settingsKey(p, air);
+    const known = MEANS_CACHE.get(key);
+    if (known) return { means: known, advance: () => true };
+    const run = new SteadyRun(buildConfig(p), air, p.deliveryHead);
+    const task = {
+      means: null as Means | null,
+      advance(budgetMs: number): boolean {
+        if (task.means) return true;
+        const start = performance.now();
+        do {
+          if (run.advance(TASK_SLICE_STEPS)) {
+            task.means = frozen(run.means as Means);
+            MEANS_CACHE.set(key, task.means);
+            return true;
+          }
+        } while (performance.now() - start < budgetMs);
+        return false;
+      },
+    };
+    return task;
+  }
+
+  /**
+   * Solve these sweeps ahead of need, a few milliseconds at a time while the browser is idle, so that a later
+   * `sweep(patch)` (the first visit of a sheet, the opening of the simulation panel) is answered from the cache. Patches
+   * already solved cost nothing. The settings are those of the simulation at the time of the call.
+   */
+  prefetch(patches: readonly Partial<RamParams>[]): void {
+    for (const patch of patches) {
+      const task = this.sweepTask(patch);
+      if (!task.means) PREFETCH.push((budgetMs) => task.advance(budgetMs));
+    }
+  }
+
+  /** Number of prefetched solves not finished yet. */
+  get prefetchPending(): number {
+    return PREFETCH.pending;
   }
 
   /** Configuration of the live cycle (read only). */

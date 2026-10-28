@@ -65,14 +65,15 @@ export const AIR_TAU_REFILL = 20 * 60;
 
 /**
  * Flow leaving the buffer tank by its open drain (the `tank-drain` part action), L/min. ASSUMPTION (nothing in the
- * sources): a DN40 drain valve under ≈ 1 m of water, Q = Cd·A·√(2·g·h) with Cd 0.6, A = 12.6 cm², h = 1 m, ≈ 200 L/min,
- * rounded down to 150 for the throttling of the pipe. The 5 700 L tank then empties in ≈ 40 min.
+ * sources): a drain valve of DN40 to DN50 (the drawn one is a DN50) under ≈ 1 m of water, Q = Cd·A·√(2·g·h) with Cd 0.6,
+ * h = 1 m, gives ≈ 200 L/min (DN40, A = 12.6 cm²) to ≈ 310 L/min (DN50, A = 19.6 cm²); 150 is taken, rounded well down
+ * for the throttling of the pipe. The 5 700 L tank then empties in ≈ 40 min.
  */
 export const TANK_DRAIN_FLOW = 150;
 
 /**
- * Inner diameter of the delivery pipe, m. S4: the delivery pipe is about half the drive pipe, so a ½" pipe (≈ 16 mm bore)
- * for the video's 1" ram: 0.6 × the drive bore. ASSUMPTION.
+ * Inner diameter of the delivery pipe, m. S4 says the delivery pipe is about half the drive pipe (13.5 mm for the 27 mm
+ * pipe); the model takes 0.6 × the drive bore (16.2 mm, a ½" pipe for the video's 1" ram). ASSUMPTION.
  */
 export function deliveryDiameter(driveDiameterMm: number): number {
   return Math.max(0.008, (driveDiameterMm / 1000) * 0.6);

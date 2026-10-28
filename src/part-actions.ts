@@ -1,6 +1,7 @@
 import type { PartInfo } from '@onigam/lab-kit/content';
 import { fill, h, icon, ICONS, type AppContext } from '@onigam/lab-kit/ui';
 import { t, type UiKey } from './i18n/ui';
+import { PART_HINT_KEYS } from './panels/model';
 import { runPartTest, testsForPart, turnNut, type PartTest, type PartTestId } from './sim/actions';
 import type { RamSim } from './sim/engine';
 
@@ -93,8 +94,22 @@ function nutButton(ctx: AppContext<RamSim>, info: PartInfo, direction: 'in' | 'o
   );
 }
 
-/** Extra buttons on a part sheet ("test" actions that put the simulation in the state the part is about). */
+/**
+ * The line under the buttons that says what to look at once one has acted. A tooltip is not enough: a touch screen has
+ * none, and the camera moves before anything happens, so the visitor must know where to look. The `actions` row of the
+ * sheet is a wrapping flex row; this item takes a whole row of its own.
+ */
+function lookHint(id: string): HTMLElement | null {
+  const key = PART_HINT_KEYS[id];
+  return key ? h('p', { class: 'hint', style: 'flex: 1 1 100%; margin: 0' }, t(key)) : null;
+}
+
+/** Extra buttons on a part sheet ("test" actions that put the simulation in the state the part is about), and a line saying what to look at. */
 export function partActions(ctx: AppContext<RamSim>, info: PartInfo): HTMLElement[] {
-  if (info.id === 'stroke-nut') return [nutButton(ctx, info, 'in'), nutButton(ctx, info, 'out')];
-  return testsForPart(info.id).map((test) => testButton(ctx, info, test));
+  const buttons =
+    info.id === 'stroke-nut'
+      ? [nutButton(ctx, info, 'in'), nutButton(ctx, info, 'out')]
+      : testsForPart(info.id).map((test) => testButton(ctx, info, test));
+  const hint = buttons.length > 0 ? lookHint(info.id) : null;
+  return hint ? [...buttons, hint] : buttons;
 }
