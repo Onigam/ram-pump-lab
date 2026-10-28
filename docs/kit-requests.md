@@ -175,6 +175,8 @@ and `CurveChart` for the live canvas panels, but nothing for an SVG drawing. Wri
 
 ## 14. Narration: the cues placed at the very end of a segment are never applied (found with the French audio, 2026-10-28)
 
+**Done in lab-kit v0.3.1 (2026-10-29):** `CueClock.finish()`, run by the engine when the audio ends. Checked in Chrome on this lab (section, X-ray and explode are off when a part ends) and on Pelton Lab (flows).
+
 A part or world segment that switches something on at the start and off "at the end" (`[[cutaway:on]] … [[cutaway:off]]`, `[[flows:on]] … [[flows:off]]`,
 `[[xray:on]] … [[xray:off]]`, `[[explode:0.6]] … [[explode:0]]`) leaves the effect on when the audio ends. The generator puts a trailing marker
 at the end of the aligned text (air-chamber: `cutaway: false` at 22.8 s), but the decoded audio is a hair shorter (22.7 s), so `onEnded` →

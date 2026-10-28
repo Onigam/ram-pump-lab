@@ -55,7 +55,7 @@ gauge under pressure. Water rights are not in the lab data, so none are mentione
   without the inventor's name, then 8 347 to redo 20 segments after the disclaimers were cut. About 26 600 in all.
 - Played in Chrome (dev server, headless): the intro's world hops, mode hops and closing state follow the voice; `cutaway` (air-chamber), `xray`
   (valve-seat), `explode` (valve-stem, scene valve) switch on at the start. **Known kit defect**: a cue placed at the very end of a segment is not
-  applied when the audio ends, so the effect stays on (see `docs/kit-requests.md` 14); it needs a kit fix, not a new audio.
+  applied when the audio ends, so the effect stayed on (see `docs/kit-requests.md` 14); fixed in lab-kit v0.3.1, no new audio.
 - Dry run: 49 segments, 17 097 characters, no segment rejected. `npx vitest run src/narration.test.ts`: 12 tests pass (ids, cues, camera spacing, disclaimers once, budget, no copy of the private transcript, manifest and audio files).
 - Not checked in the browser: the visual result of `xray` on valve-seat, `explode` on valve-stem and `cutaway` on tank-shell, ram, air-chamber
   (they depend on the scene modules; no audio exists yet).
