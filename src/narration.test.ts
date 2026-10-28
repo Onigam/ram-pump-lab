@@ -106,6 +106,18 @@ describe.each(Object.keys(scripts))('narration script %s', (lang) => {
     }
   });
 
+  it('says its disclaimers once: the reconstruction notice in the intro, the drinkability warning once', () => {
+    const words = {
+      fr: { notice: /reconstitution pédagogique|plan officiel/i, drink: /potable/i, hedge: /dans le modèle/i },
+      en: { notice: /educational reconstruction|official plan/i, drink: /drinkable|potable/i, hedge: /in the model/i },
+    }[lang as 'fr' | 'en'];
+    if (!words) return;
+    const where = (re: RegExp) => script.segments.filter((s) => re.test(s.text)).map((s) => s.id);
+    expect(where(words.notice)).toEqual(['intro']);
+    expect(where(words.drink).length).toBeLessThanOrEqual(1);
+    expect(where(words.hedge).length).toBeLessThanOrEqual(2);
+  });
+
   it('stays within the budget and has no symbol or digit in the spoken text', () => {
     let total = 0;
     for (const s of script.segments) {

@@ -16,14 +16,14 @@
       "scope": "intro",
       "title": "Présentation du site",
       "scene": "site",
-      "text": "[[home]] Imaginez une source au flanc d’une colline : un filet d’eau, rien de plus. Bien plus haut que la source, une ferme voudrait cette eau au robinet. Sans moteur, sans électricité, sans carburant. Impossible ? [[frame:spring]] Suivons la goutte. Elle sort de terre, sans bruit, [[scene:catchment]] se glisse dans un regard de pierre, puis tombe dans une grande cuve : la réserve. [[scene:site]] De là, la voici dans la conduite motrice, un tuyau rigide [[frame:drive-pipe]] qui la laisse dévaler sept virgule cinq mètres. Elle prend de la vitesse, beaucoup de vitesse. [[scene:ram]] Au bout, le bélier : une machine sans moteur. [[frame:waste-valve]] Son clapet de choc se referme d’un coup sec, et l’eau lancée s’arrête net. [[frame:delivery-valve]] Sans autre issue, elle force un petit clapet, [[frame:air-chamber]] gonfle une cloche d’air, et un peu d’eau s’élance vers le haut. Puis le clapet se rouvre, tout seul, et tout recommence : une centaine de fois par minute. [[scene:valve]] Ce clapet, vous le verrez de près : une tige, un poids, deux écrous. [[scene:site]] Revenons sur le site. Chaque coup pousse un peu d’eau [[frame:delivery-pipe]] dans trois cents mètres de tuyau. L’eau monte de soixante-cinq mètres, [[frame:water-tower]] jusqu’au château d’eau, un réservoir en hauteur. [[frame:house]] La maison a son eau : environ cinq cents litres par jour, dans la vidéo dont ce labo s’inspire. Seule une petite part monte : le reste ressort au pied de la machine. [[home]] Il y a quatre vues : le site, le captage, le bélier et le clapet. Cliquez sur une pièce : sa fiche s’ouvre, et vous pouvez écouter son histoire. [[mode:sim]] La simulation fait battre le bélier au ralenti. [[mode:lessons]] Six leçons, avec des quiz, expliquent le principe. [[mode:assembly]] Le guide de montage fabrique le clapet pièce par pièce, puis le pose sur le bélier. [[mode:install]] Le guide d’installation va du relevé du terrain à la première mise en route. [[mode:plans]] Les plans réunissent les dessins techniques. [[mode:explore]] Ce laboratoire est une reconstitution pédagogique, inspirée d’une vidéo. [[scene:site]] Le bélier montré est un modèle générique d’un pouce, pas la machine de la vidéo. Ce n’est ni un plan officiel, ni un produit de fabricant. [[select:none]] À vous de jouer !"
+      "text": "[[home]] Imaginez une source au flanc d’une colline : un filet d’eau, rien de plus. Bien plus haut que la source, une ferme voudrait cette eau au robinet. Sans moteur, sans électricité, sans carburant. Impossible ? [[frame:spring]] Suivons la goutte. Elle sort de terre, sans bruit, [[scene:catchment]] se glisse dans un regard de pierre, puis tombe dans une grande cuve : la réserve. [[scene:site]] De là, la voici dans la conduite motrice, un tuyau rigide [[frame:drive-pipe]] qui la laisse dévaler sept virgule cinq mètres. Elle prend de la vitesse, beaucoup de vitesse. [[scene:ram]] Au bout, le bélier : une machine sans moteur. [[frame:waste-valve]] Son clapet de choc se referme d’un coup sec, et l’eau lancée s’arrête net. [[frame:delivery-valve]] Sans autre issue, elle force un petit clapet, [[frame:air-chamber]] gonfle une cloche d’air, et un peu d’eau s’élance vers le haut. Puis le clapet se rouvre, tout seul, et tout recommence : une centaine de fois par minute. [[scene:valve]] Ce clapet, vous le verrez de près : une tige, un poids, deux écrous. [[scene:site]] Revenons sur le site. Chaque coup pousse un peu d’eau [[frame:delivery-pipe]] dans trois cents mètres de tuyau. L’eau monte de soixante-cinq mètres, [[frame:water-tower]] jusqu’au château d’eau, un réservoir en hauteur. [[frame:house]] La maison a son eau : environ cinq cents litres par jour, dans la vidéo dont ce labo s’inspire. Seule une petite part monte : le reste ressort au pied de la machine. [[home]] Il y a quatre vues : le site, le captage, le bélier et le clapet. Cliquez sur une pièce : sa fiche s’ouvre, et vous pouvez écouter son histoire. [[mode:sim]] La simulation fait battre le bélier au ralenti. [[mode:lessons]] Six leçons, avec des quiz, expliquent le principe. [[mode:assembly]] Le guide de montage fabrique le clapet pièce par pièce, puis le pose sur le bélier. [[mode:install]] Le guide d’installation va du relevé du terrain à la première mise en route. [[mode:plans]] Les plans réunissent les dessins techniques. [[mode:explore]] Ce laboratoire est une reconstitution pédagogique : ni plan officiel, ni produit de fabricant. [[scene:site]] Le bélier montré est un modèle générique d’un pouce, et, sauf quand je cite la vidéo, les chiffres viennent de la simulation. [[select:none]] À vous de jouer !"
     },
     {
       "id": "scene-site",
       "scope": "scene:site",
       "title": "Le site : de la source à la maison",
       "scene": "site",
-      "text": "[[home]] Voici toute la ferme, de la source à la maison. [[flows:on]] [[frame:spring]] Tout commence à la source, tout en haut. [[frame:buffer-tank]] Une réserve la recueille et la met de côté, [[frame:drive-pipe]] puis une conduite rigide la laisse tomber de sept virgule cinq mètres. [[frame:ram-pit]] Au pied de la pente, dans sa fosse, le bélier travaille. [[frame:waste-drain]] Presque toute l’eau ressort ici, par l’évacuation. [[frame:delivery-pipe]] Le reste, un mince filet, gravit la conduite de refoulement : soixante-cinq mètres de montée. [[frame:water-tower]] Il arrive au château d’eau, qui l’emmagasine en hauteur, [[frame:house]] et la maison en profite, par gravité. [[flows:off]] [[home]] Une chute, un clapet qui claque, et pas de moteur : l’eau monte toute seule ! Une précaution : l’eau d’une source n’est pas garantie potable. Faites-la analyser."
+      "text": "[[home]] Voici toute la ferme, de la source à la maison. [[flows:on]] [[frame:spring]] Tout commence à la source, tout en haut. [[frame:buffer-tank]] Une réserve la recueille et la met de côté, [[frame:drive-pipe]] puis une conduite rigide la laisse tomber de sept virgule cinq mètres. [[frame:ram-pit]] Au pied de la pente, dans sa fosse, le bélier travaille. [[frame:waste-drain]] Presque toute l’eau ressort ici, par l’évacuation. [[frame:delivery-pipe]] Le reste, un mince filet, gravit la conduite de refoulement : soixante-cinq mètres de montée. [[frame:water-tower]] Il arrive au château d’eau, qui l’emmagasine en hauteur, [[frame:house]] et la maison en profite, par gravité. [[flows:off]] [[home]] Une chute, un clapet qui claque, et pas de moteur : l’eau monte toute seule !"
     },
     {
       "id": "scene-catchment",
@@ -37,35 +37,35 @@
       "scope": "scene:ram",
       "title": "Le bélier hydraulique",
       "scene": "ram",
-      "text": "[[home]] Voici le bélier, une machine sans moteur. [[frame:inlet-valve,strainer]] L’eau motrice entre par un filtre et une vanne. [[frame:waste-valve]] Elle s’échappe d’abord par le clapet de choc, jusqu’à ce qu’il claque. [[frame:delivery-valve]] Chaque coup force alors un petit clapet à sens unique, [[frame:air-chamber]] et la cloche d’air change ces poussées en un débit continu. [[frame:snifter]] Le reniflard la recharge en air, pincée par pincée, [[frame:gauge]] et le manomètre dit la hauteur déjà gagnée. [[home]] [[flows:on]] Regardez l’eau : presque toute ressort par le clapet. [[flows:off]] Attention : ce bélier est un modèle générique d’un pouce, pas la machine de la vidéo : seul le clapet de choc la suit. Reconstitution pédagogique, ni plan officiel, ni produit de fabricant."
+      "text": "[[home]] Voici le bélier, une machine sans moteur. [[frame:inlet-valve,strainer]] L’eau motrice entre par un filtre et une vanne. [[frame:waste-valve]] Elle s’échappe d’abord par le clapet de choc, jusqu’à ce qu’il claque. [[frame:delivery-valve]] Chaque coup force alors un petit clapet à sens unique, [[frame:air-chamber]] et la cloche d’air change ces poussées en un débit continu. [[frame:snifter]] Le reniflard la recharge en air, pincée par pincée, [[frame:gauge]] et le manomètre dit la hauteur déjà gagnée. [[home]] [[flows:on]] Regardez l’eau : presque toute ressort par le clapet. [[flows:off]]"
     },
     {
       "id": "scene-valve",
       "scope": "scene:valve",
       "title": "Le clapet de choc",
       "scene": "valve",
-      "text": "[[home]] Le clapet de choc, d’après celui de la vidéo, mais simplifié. [[frame:base-plate,valve-socket]] Une platine et un manchon soudé en font la base. [[frame:valve-reducer,valve-nipple]] Des raccords de plomberie forment le corps, percé de fentes où l’eau s’échappe. [[frame:valve-seat,valve-head]] Au cœur du corps, la portée et la tête : c’est ici que ça ferme. [[frame:valve-guide,valve-stem]] Un doigt de gant guide une tige filetée, [[frame:counterweight,stroke-nut,lock-nut]] que surmontent un poids et deux écrous. [[home]] [[explode:0.6]] Écartons les pièces, pour voir comment tout s’empile… [[explode:0]] Tout le réglage du bélier se joue ici : la course et le poids décident du rythme et de la consommation. Reconstitution pédagogique, ni plan officiel, ni produit de fabricant : les cotes sont estimées."
+      "text": "[[home]] Le clapet de choc, d’après celui de la vidéo, mais simplifié. [[frame:base-plate,valve-socket]] Une platine et un manchon soudé en font la base. [[frame:valve-reducer,valve-nipple]] Des raccords de plomberie forment le corps, percé de fentes où l’eau s’échappe. [[frame:valve-seat,valve-head]] Au cœur du corps, la portée et la tête : c’est ici que ça ferme. [[frame:valve-guide,valve-stem]] Un doigt de gant guide une tige filetée, [[frame:counterweight,stroke-nut,lock-nut]] que surmontent un poids et deux écrous. [[home]] [[explode:0.6]] Écartons les pièces, pour voir comment tout s’empile… [[explode:0]] Tout le réglage du bélier se joue ici : la course et le poids décident du rythme et de la consommation."
     },
     {
       "id": "part-spring",
       "scope": "part:spring",
       "title": "Captage de la source",
       "scene": "site",
-      "text": "Tout part d’un filet d’eau qui sort de terre. Dans la vidéo, il donnait dix litres par minute il y a deux ans, sept et demi aujourd’hui. Mesurez son débit en fin de saison sèche, pas au printemps ! Et ne la goûtez pas : une source n’est pas garantie potable, faites-la analyser."
+      "text": "Tout part d’un filet d’eau qui sort de terre. Dans la vidéo, il donnait dix litres par minute il y a deux ans, sept et demi aujourd’hui. Mesurez son débit en fin de saison sèche, pas au printemps !"
     },
     {
       "id": "part-buffer-tank",
       "scope": "part:buffer-tank",
       "title": "Réserve tampon",
       "scene": "site",
-      "text": "Une grande cuve entre la source et le bélier : c’est elle qui raconte l’histoire de la vidéo. Avec le gros clapet d’origine, le bélier buvait plus que la source ne donnait. La réserve se vidait en dix heures environ. Avec le petit clapet, dans le modèle, elle reste pleine. Une cuve plus grande ne ferait que retarder l’arrêt."
+      "text": "Une grande cuve entre la source et le bélier : c’est elle qui raconte l’histoire de la vidéo. Avec le gros clapet d’origine, le bélier buvait plus que la source ne donnait. La réserve se vidait en dix heures environ. Avec le petit clapet, elle reste pleine. Une cuve plus grande ne ferait que retarder l’arrêt."
     },
     {
       "id": "part-drive-pipe",
       "scope": "part:drive-pipe",
       "title": "Conduite motrice",
       "scene": "site",
-      "text": "Un tuyau rigide d’environ vingt mètres, qui descend de sept virgule cinq mètres. L’eau y prend de la vitesse, jusqu’au claquement du clapet de choc. C’est le coup de bélier : six virgule cinq bars de pointe, dans le modèle. Posez la main sur le tuyau, bélier en marche : on sent chaque coup !"
+      "text": "Un tuyau rigide d’environ vingt mètres, qui descend de sept virgule cinq mètres. L’eau y prend de la vitesse, jusqu’au claquement du clapet de choc. C’est le coup de bélier : six virgule cinq bars de pointe. Posez la main sur le tuyau, bélier en marche : on sent chaque coup !"
     },
     {
       "id": "part-ram-pit",
@@ -79,14 +79,14 @@
       "scope": "part:waste-drain",
       "title": "Évacuation des eaux de rejet",
       "scene": "site",
-      "text": "Où passe la plus grande part de l’eau ? Ici : presque toute ressort par l’évacuation. Dans le modèle, environ six litres sur six virgule sept par minute. Ce n’est pas un défaut, c’est le principe. Si elle se bouche, l’eau monte et, sur certains béliers, noie le clapet de choc. Dans le modèle, un seau de dix litres s’y remplit en moins de deux minutes."
+      "text": "Où passe la plus grande part de l’eau ? Ici : presque toute ressort par l’évacuation. Environ six litres sur six virgule sept par minute. Ce n’est pas un défaut, c’est le principe. Si elle se bouche, l’eau monte et, sur certains béliers, noie le clapet de choc. Un seau de dix litres doit s’y remplir en moins de deux minutes."
     },
     {
       "id": "part-delivery-pipe",
       "scope": "part:delivery-pipe",
       "title": "Conduite de refoulement",
       "scene": "site",
-      "text": "Voici le chemin des rares gouttes qui montent. Trois cents mètres de tuyau environ, jusqu’à soixante-cinq mètres au-dessus du bélier. La vidéo le rappelle : un mètre de chute remonte l’eau d’environ dix mètres, quelle que soit la longueur. Dans le modèle, il faut environ trois heures pour remplir ce tuyau."
+      "text": "Voici le chemin des rares gouttes qui montent. Trois cents mètres de tuyau environ, jusqu’à soixante-cinq mètres au-dessus du bélier. La vidéo le rappelle : un mètre de chute remonte l’eau d’environ dix mètres, quelle que soit la longueur. Il faut environ trois heures pour remplir ce tuyau."
     },
     {
       "id": "part-water-tower",
@@ -107,7 +107,7 @@
       "scope": "part:spring-box",
       "title": "Regard de captage",
       "scene": "catchment",
-      "text": "Une petite chambre fermée, posée là où l’eau sort de terre. Ne gênez jamais la source : la sortie reste plus basse que l’émergence. Une source gênée suit le chemin le plus facile, et peut ressortir ailleurs. Le regard la protège, il ne la rend pas potable."
+      "text": "Une petite chambre fermée, posée là où l’eau sort de terre. Ne gênez jamais la source : la sortie reste plus basse que l’émergence. Une source gênée suit le chemin le plus facile, et peut ressortir ailleurs."
     },
     {
       "id": "part-gravel-filter",
@@ -128,7 +128,7 @@
       "scope": "part:tank-shell",
       "title": "Cuve de la réserve tampon",
       "scene": "catchment",
-      "text": "[[cutaway:on]] La cuve est la clé de l’histoire. Son volume, environ cinq mille sept cents litres, n’est pas dans la vidéo. On l’a déduit des dix heures qu’elle mettait à se vider. Pleine, elle contient plus de cinq tonnes d’eau. Dans le modèle, une cuve vide arrête le bélier, qui ne repart pas seul. [[cutaway:off]]"
+      "text": "[[cutaway:on]] La cuve est la clé de l’histoire. Son volume, environ cinq mille sept cents litres, n’est pas dans la vidéo. On l’a déduit des dix heures qu’elle mettait à se vider. Pleine, elle contient plus de cinq tonnes d’eau. Une cuve vide arrête le bélier, qui ne repart pas seul. [[cutaway:off]]"
     },
     {
       "id": "part-tank-lid",
@@ -170,7 +170,7 @@
       "scope": "part:ram",
       "title": "Corps du bélier",
       "scene": "ram",
-      "text": "[[cutaway:on]] Le corps du bélier : la chambre où débouche la conduite motrice. Trois ouvertures : l’arrivée, la sortie du clapet de choc, et la sortie utile vers la cloche. C’est un bélier générique d’un pouce, pas celui de la vidéo. Son principe date de la fin du dix-huitième siècle. Un bélier d’un pouce attend plus d’eau que cette source n’en donne : la vidéo réduit donc la consommation du clapet. [[cutaway:off]]"
+      "text": "[[cutaway:on]] Le corps du bélier : la chambre où débouche la conduite motrice. Trois ouvertures : l’arrivée, la sortie du clapet de choc, et la sortie utile vers la cloche. Son principe date de la fin du dix-huitième siècle. Un bélier d’un pouce attend plus d’eau que cette source n’en donne : la vidéo réduit donc la consommation du clapet. [[cutaway:off]]"
     },
     {
       "id": "part-inlet-flange",
@@ -198,35 +198,35 @@
       "scope": "part:waste-valve",
       "title": "Clapet de choc (ensemble)",
       "scene": "ram",
-      "text": "[[flows:on]] Clac, clac, clac : voilà le cœur du bélier, et la seule pièce que la vidéo détaille. Au repos, il est ouvert : l’eau de la conduite s’échappe en accélérant. Dans le modèle, près d’un mètre par seconde suffit : l’eau le plaque sur sa portée, et le coup de bélier est parti ! Puis le recul le rouvre, et ça recommence, de cent à cent dix fois par minute. Dans la vidéo, un clapet en raccords de plomberie met fin aux arrêts. Gardez vos doigts loin du clapet en marche. [[flows:off]]"
+      "text": "[[flows:on]] Clac, clac, clac : voilà le cœur du bélier, et la seule pièce que la vidéo détaille. Au repos, il est ouvert : l’eau de la conduite s’échappe en accélérant. Près d’un mètre par seconde suffit : l’eau le plaque sur sa portée, et le coup de bélier est parti ! Puis le recul le rouvre, et ça recommence, de cent à cent dix fois par minute. Dans la vidéo, un clapet en raccords de plomberie met fin aux arrêts. Gardez vos doigts loin du clapet en marche. [[flows:off]]"
     },
     {
       "id": "part-delivery-valve",
       "scope": "part:delivery-valve",
       "title": "Clapet anti-retour de refoulement",
       "scene": "ram",
-      "text": "[[flows:on]] Quand le clapet de choc claque, l’eau arrêtée n’a plus qu’une issue : forcer ce petit clapet à sens unique. Il ne s’ouvre qu’un instant, et laisse passer moins d’une cuillère à café, dans le modèle. Et pourtant, coup après coup, l’eau monte ! Puis il se referme : la colonne de soixante-cinq mètres ne redescend pas. Bélier arrêté, vannes d’arrivée et de vidange fermées, le manomètre doit tenir de longues minutes. S’il s’effondre, ce clapet fuit. [[flows:off]]"
+      "text": "[[flows:on]] Quand le clapet de choc claque, l’eau arrêtée n’a plus qu’une issue : forcer ce petit clapet à sens unique. Il ne s’ouvre qu’un instant, et laisse passer moins d’une cuillère à café. Et pourtant, coup après coup, l’eau monte ! Puis il se referme : la colonne de soixante-cinq mètres ne redescend pas. Bélier arrêté, vannes d’arrivée et de vidange fermées, le manomètre doit tenir de longues minutes. S’il s’effondre, ce clapet fuit. [[flows:off]]"
     },
     {
       "id": "part-air-chamber",
       "scope": "part:air-chamber",
       "title": "Cloche à air",
       "scene": "ram",
-      "text": "[[cutaway:on]] L’air se comprime, l’eau non : voilà tout le secret de la cloche ! Chaque coup y fait entrer un peu d’eau, qui comprime l’air. L’air se détend, et pousse l’eau vers le haut sans pause. Des poussées brèves deviennent un débit presque continu. Noyée, sans air, elle ferait baisser le refoulement de quarante pour cent dans le modèle. Refoulement en chute ? Regardez d’abord la cloche et le reniflard. [[cutaway:off]]"
+      "text": "[[cutaway:on]] L’air se comprime, l’eau non : voilà tout le secret de la cloche ! Chaque coup y fait entrer un peu d’eau, qui comprime l’air. L’air se détend, et pousse l’eau vers le haut sans pause. Des poussées brèves deviennent un débit presque continu. Noyée, sans air, elle ferait baisser le refoulement de quarante pour cent. Refoulement en chute ? Regardez d’abord la cloche et le reniflard. [[cutaway:off]]"
     },
     {
       "id": "part-snifter",
       "scope": "part:snifter",
       "title": "Reniflard",
       "scene": "ram",
-      "text": "[[flows:on]] Une toute petite pièce du bélier, et peut-être la plus maligne ! L’air de la cloche se dissout peu à peu dans l’eau. Mais à chaque recul, la pression du corps tombe sous celle de l’air libre. La soupape s’ouvre, et une pincée d’air entre. Le coup suivant la pousse dans la cloche. Bouché, il ne se plaint pas : dans le modèle, la cloche est noyée en une quinzaine d’heures. Nettoyez son orifice à chaque visite. [[flows:off]]"
+      "text": "[[flows:on]] Une toute petite pièce du bélier, et peut-être la plus maligne ! L’air de la cloche se dissout peu à peu dans l’eau. Mais à chaque recul, la pression du corps tombe sous celle de l’air libre. La soupape s’ouvre, et une pincée d’air entre. Le coup suivant la pousse dans la cloche. Bouché, il ne se plaint pas : la cloche est noyée en une quinzaine d’heures. Nettoyez son orifice à chaque visite. [[flows:off]]"
     },
     {
       "id": "part-gauge",
       "scope": "part:gauge",
       "title": "Manomètre",
       "scene": "ram",
-      "text": "Un seul cadran, et il raconte tout. Le manomètre lit la hauteur déjà gagnée : un bar pour dix mètres. Soit six virgule quatre bars pour soixante-cinq mètres. Dans le modèle, l’aiguille bouge à peine quand la cloche est garnie d’air, et tremble quand elle est noyée. Ne le démontez jamais sous pression."
+      "text": "Un seul cadran, et il raconte tout. Le manomètre lit la hauteur déjà gagnée : un bar pour dix mètres. Soit six virgule quatre bars pour soixante-cinq mètres. L’aiguille bouge à peine quand la cloche est garnie d’air, et tremble quand elle est noyée. Ne le démontez jamais sous pression."
     },
     {
       "id": "part-delivery-union",
@@ -254,7 +254,7 @@
       "scope": "part:foundation",
       "title": "Massif d’ancrage",
       "scene": "ram",
-      "text": "Un bloc de béton, sous les pieds du bélier : il l’empêche de marcher sous les coups. Dans le modèle, cent neuf coups par minute, plus de cent cinquante mille par jour ! Mal fixé, le bélier desserre ses raccords et finit par rompre un joint. Ce massif n’est qu’une illustration."
+      "text": "Un bloc de béton, sous les pieds du bélier : il l’empêche de marcher sous les coups. Cent neuf coups par minute, plus de cent cinquante mille par jour ! Mal fixé, le bélier desserre ses raccords et finit par rompre un joint. Ce massif n’est qu’une illustration."
     },
     {
       "id": "part-base-plate",
@@ -282,7 +282,7 @@
       "scope": "part:valve-nipple",
       "title": "Mamelon fileté à lumières",
       "scene": "valve",
-      "text": "Un raccord fileté percé de fentes, les lumières. L’eau passe par la portée, monte dans le mamelon, puis sort par les côtés. Dans le modèle, elles sont trois fois plus larges que la portée : c’est le jeu sous la tête qui règle le débit. Gardez vos doigts loin des lumières en marche."
+      "text": "Un raccord fileté percé de fentes, les lumières. L’eau passe par la portée, monte dans le mamelon, puis sort par les côtés. Elles sont trois fois plus larges que la portée : c’est le jeu sous la tête qui règle le débit. Gardez vos doigts loin des lumières en marche."
     },
     {
       "id": "part-valve-sleeve",
@@ -345,7 +345,7 @@
       "scope": "part:stroke-nut",
       "title": "Écrou de réglage de course",
       "scene": "valve",
-      "text": "Le clapet ne bouge que de deux millimètres environ, dans le modèle. Cet écrou fixe cette course, donc la consommation : c’est le réglage le plus important. Trop court, le coup ne refoule plus. Trop long, le bélier boit plus que la source ne donne. Tournez par fractions de tour."
+      "text": "Le clapet ne bouge que de deux millimètres environ. Cet écrou fixe cette course, donc la consommation : c’est le réglage le plus important. Trop court, le coup ne refoule plus. Trop long, le bélier boit plus que la source ne donne. Tournez par fractions de tour."
     },
     {
       "id": "part-lock-nut",

@@ -5,11 +5,11 @@ Check cost without spending anything: `node <lab-kit>/tools/narration/generate.m
 
 ## Budget
 
-- **17 868 spoken characters** in total (cap 18 000; 30 000 is the owner's ceiling in `src/narration.test.ts`, so about 12 100 remain for retakes).
-- intro 1 902, worlds 2 459 (site 662, catchment 591, ram 615, valve 591), parts 13 507 (site 2 311, catchment 2 376, ram 4 413, valve 4 407).
-- Biggest parts (the nine "heroes", 357 to 466): waste-valve 466, delivery-valve 448, counterweight 425, snifter 411, air-chamber 398,
-  ram 388, valve-head 389, valve-stem 379, valve-seat 357.
-- Smallest: drive-gate-valve 231, overflow-pipe 237, house 249, ram-pit 250, spring-box 256. Ordinary parts average 279.
+- **17 097 spoken characters** in total (cap 18 000; 30 000 is the owner's ceiling in `src/narration.test.ts`, so about 12 100 remain for retakes).
+- intro 1 911, worlds 2 088 (site 578, catchment 591, ram 425, valve 494), parts 13 098 (site 2 155, catchment 2 311, ram 4 257, valve 4 375).
+- Biggest parts (the nine "heroes", 327 to 450): waste-valve 450, delivery-valve 432, counterweight 425, snifter 395, valve-head 389,
+  air-chamber 383, valve-stem 379, valve-seat 357, ram 327.
+- Smallest: spring 197, spring-box 207, drive-gate-valve 231, overflow-pipe 237, house 249. Ordinary parts average 275.
 - The suggested 230 to 300 per ordinary part held; the first draft (22 000) was cut by dropping repeated facts, not safety lines.
 
 ## Register
@@ -24,9 +24,10 @@ Most parts close on one concrete detail from the lab's own fields (`tip`, `maint
 Spoken text only: numbers and units in words (the repo test refuses digits and symbols), no codes (V1/V2/V3 are "la vanne d'arrivée / de vidange /
 de sortie", sizes are "un pouce", "un demi-pouce"), no markdown.
 Honesty:
-- the intro and the ram and valve worlds say it is an educational reconstruction, not an official plan, not a maker's product; the ram is a
-  generic one-inch ram, only the waste valve follows the video;
-- figures flagged "estimation", "hypothèse", "résultat du modèle", "calibré" are left out or said "environ" / "dans le modèle";
+- disclaimers are said ONCE (owner: "y'en a trop"): only the intro says it is an educational reconstruction, not an official plan, not a maker's
+  product, that the ram is a generic one-inch ram, and that the figures come from the simulation except when the video is quoted; the drinkability
+  warning is only in `part-house`; "dans le modèle" is kept once (`part-counterweight`, video against model). `src/narration.test.ts` enforces it;
+- figures flagged "estimation", "hypothèse", "résultat du modèle", "calibré" are left out or said "environ" (the intro's sentence covers the rest);
 - "la vidéo" is used only where the sheet says so (spring flow, tank emptying in ten hours, 500 litres a day, waste valve story, the head, stem, seat,
   guide and fins stories, "a metre of fall lifts water about ten metres");
 - pieces the sheets say are not in the video (flanges, inlet valve, strainer, snifter, gauge, union, V2, V3, anchor block, catchment parts) are never
@@ -50,12 +51,12 @@ gauge under pressure. Water rights are not in the lab data, so none are mentione
 
 ## Checked
 
-- Audio generated 2026-10-28 (`public/audio/fr`, 8 MB): 49 segments, 1 022.9 s (17 min 3 s), 83 cues. Credits spent: 17 899, then 388 to redo `part-ram`
-  once the inventor's name was removed. About 18 300 in all.
+- Audio generated 2026-10-28 (`public/audio/fr`, 7.6 MB): 49 segments, 978.4 s (16 min 18 s), 83 cues. Credits spent: 17 899, 388 to redo `part-ram`
+  without the inventor's name, then 8 347 to redo 20 segments after the disclaimers were cut. About 26 600 in all.
 - Played in Chrome (dev server, headless): the intro's world hops, mode hops and closing state follow the voice; `cutaway` (air-chamber), `xray`
   (valve-seat), `explode` (valve-stem, scene valve) switch on at the start. **Known kit defect**: a cue placed at the very end of a segment is not
   applied when the audio ends, so the effect stays on (see `docs/kit-requests.md` 14); it needs a kit fix, not a new audio.
-- Dry run: 49 segments, 17 868 characters, no segment rejected. `npx vitest run src/narration.test.ts`: 8 tests pass (ids, cues, camera spacing, budget, no copy of the private transcript).
+- Dry run: 49 segments, 17 097 characters, no segment rejected. `npx vitest run src/narration.test.ts`: 12 tests pass (ids, cues, camera spacing, disclaimers once, budget, no copy of the private transcript, manifest and audio files).
 - Not checked in the browser: the visual result of `xray` on valve-seat, `explode` on valve-stem and `cutaway` on tank-shell, ram, air-chamber
   (they depend on the scene modules; no audio exists yet).
 

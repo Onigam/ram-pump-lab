@@ -1,12 +1,12 @@
 {
   "lang": "fr",
   "model": "eleven_v4",
-  "generatedAt": "2026-10-28T21:39:00.353Z",
+  "generatedAt": "2026-10-28T22:03:00.364Z",
   "voiceLabel": {
     "fr": "Voix de synthèse",
     "en": "Synthetic voice"
   },
-  "totalSeconds": 1022.88,
+  "totalSeconds": 978.4,
   "segments": [
     {
       "id": "intro",
@@ -14,158 +14,158 @@
       "title": "Présentation du site",
       "scene": "site",
       "file": "intro.mp3",
-      "duration": 114.72,
-      "chars": 1902,
-      "hash": "c326f8d264ecc7c7",
+      "duration": 113.76,
+      "chars": 1911,
+      "hash": "a0b5336421b3da95",
       "captions": [
         {
           "t0": 0,
-          "t1": 4.64,
+          "t1": 4.72,
           "text": "Imaginez une source au flanc d’une colline : un filet d’eau, rien de plus."
         },
         {
-          "t0": 4.64,
-          "t1": 8.48,
+          "t0": 4.72,
+          "t1": 8.64,
           "text": "Bien plus haut que la source, une ferme voudrait cette eau au robinet."
         },
         {
-          "t0": 8.48,
-          "t1": 11.6,
+          "t0": 8.64,
+          "t1": 11.88,
           "text": "Sans moteur, sans électricité, sans carburant."
         },
         {
-          "t0": 11.6,
+          "t0": 11.88,
           "t1": 12.8,
           "text": "Impossible ?"
         },
         {
           "t0": 12.8,
-          "t1": 14.16,
+          "t1": 14.13,
           "text": "Suivons la goutte."
         },
         {
-          "t0": 14.16,
-          "t1": 18.08,
+          "t0": 14.13,
+          "t1": 17.76,
           "text": "Elle sort de terre, sans bruit, se glisse dans un regard de pierre,"
         },
         {
-          "t0": 18.12,
-          "t1": 21.52,
+          "t0": 17.8,
+          "t1": 21.08,
           "text": "puis tombe dans une grande cuve : la réserve."
         },
         {
-          "t0": 21.52,
-          "t1": 27.72,
+          "t0": 21.08,
+          "t1": 27,
           "text": "De là, la voici dans la conduite motrice, un tuyau rigide qui la laisse dévaler sept virgule cinq mètres."
         },
         {
-          "t0": 27.72,
-          "t1": 30.4,
+          "t0": 27,
+          "t1": 29.52,
           "text": "Elle prend de la vitesse, beaucoup de vitesse."
         },
         {
-          "t0": 30.4,
-          "t1": 33.92,
+          "t0": 29.52,
+          "t1": 33.04,
           "text": "Au bout, le bélier : une machine sans moteur."
         },
         {
-          "t0": 33.92,
-          "t1": 38.2,
+          "t0": 33.04,
+          "t1": 37.48,
           "text": "Son clapet de choc se referme d’un coup sec, et l’eau lancée s’arrête net."
         },
         {
-          "t0": 38.2,
-          "t1": 44.2,
+          "t0": 37.48,
+          "t1": 43.56,
           "text": "Sans autre issue, elle force un petit clapet, gonfle une cloche d’air, et un peu d’eau s’élance vers le haut."
         },
         {
-          "t0": 44.2,
-          "t1": 49.68,
+          "t0": 43.56,
+          "t1": 48.72,
           "text": "Puis le clapet se rouvre, tout seul, et tout recommence : une centaine de fois par minute."
         },
         {
-          "t0": 49.68,
-          "t1": 54.72,
+          "t0": 48.72,
+          "t1": 53.52,
           "text": "Ce clapet, vous le verrez de près : une tige, un poids, deux écrous."
         },
         {
-          "t0": 54.72,
-          "t1": 56.24,
+          "t0": 53.52,
+          "t1": 54.88,
           "text": "Revenons sur le site."
         },
         {
-          "t0": 56.24,
-          "t1": 59.56,
+          "t0": 54.88,
+          "t1": 58.16,
           "text": "Chaque coup pousse un peu d’eau dans trois cents mètres de tuyau."
         },
         {
-          "t0": 59.56,
-          "t1": 64.56,
+          "t0": 58.16,
+          "t1": 63.2,
           "text": "L’eau monte de soixante-cinq mètres, jusqu’au château d’eau, un réservoir en hauteur."
         },
         {
-          "t0": 64.56,
-          "t1": 70.32,
+          "t0": 63.2,
+          "t1": 68.8,
           "text": "La maison a son eau : environ cinq cents litres par jour, dans la vidéo dont ce labo s’inspire."
         },
         {
-          "t0": 70.32,
-          "t1": 74.48,
+          "t0": 68.8,
+          "t1": 73.04,
           "text": "Seule une petite part monte : le reste ressort au pied de la machine."
         },
         {
-          "t0": 74.48,
-          "t1": 79.44,
+          "t0": 73.04,
+          "t1": 77.84,
           "text": "Il y a quatre vues : le site, le captage, le bélier et le clapet."
         },
         {
-          "t0": 79.44,
-          "t1": 83.92,
+          "t0": 77.84,
+          "t1": 82.24,
           "text": "Cliquez sur une pièce : sa fiche s’ouvre, et vous pouvez écouter son histoire."
         },
         {
-          "t0": 83.92,
-          "t1": 86.88,
+          "t0": 82.24,
+          "t1": 85.32,
           "text": "La simulation fait battre le bélier au ralenti."
         },
         {
-          "t0": 86.88,
-          "t1": 90.4,
+          "t0": 85.32,
+          "t1": 88.6,
           "text": "Six leçons, avec des quiz, expliquent le principe."
         },
         {
-          "t0": 90.4,
-          "t1": 95.16,
+          "t0": 88.6,
+          "t1": 93.4,
           "text": "Le guide de montage fabrique le clapet pièce par pièce, puis le pose sur le bélier."
         },
         {
-          "t0": 95.16,
-          "t1": 99.36,
+          "t0": 93.4,
+          "t1": 97.64,
           "text": "Le guide d’installation va du relevé du terrain à la première mise en route."
         },
         {
-          "t0": 99.36,
-          "t1": 101.72,
+          "t0": 97.64,
+          "t1": 100.12,
           "text": "Les plans réunissent les dessins techniques."
         },
         {
-          "t0": 101.72,
-          "t1": 106,
-          "text": "Ce laboratoire est une reconstitution pédagogique, inspirée d’une vidéo."
+          "t0": 100.12,
+          "t1": 105.96,
+          "text": "Ce laboratoire est une reconstitution pédagogique : ni plan officiel, ni produit de fabricant."
         },
         {
-          "t0": 106,
-          "t1": 110.52,
-          "text": "Le bélier montré est un modèle générique d’un pouce, pas la machine de la vidéo."
+          "t0": 105.96,
+          "t1": 110.8,
+          "text": "Le bélier montré est un modèle générique d’un pouce, et, sauf quand je cite la vidéo,"
         },
         {
-          "t0": 110.52,
-          "t1": 113.84,
-          "text": "Ce n’est ni un plan officiel, ni un produit de fabricant."
+          "t0": 110.88,
+          "t1": 113,
+          "text": "les chiffres viennent de la simulation."
         },
         {
-          "t0": 113.84,
-          "t1": 114.72,
+          "t0": 113,
+          "t1": 113.76,
           "text": "À vous de jouer !"
         }
       ],
@@ -185,19 +185,19 @@
           }
         },
         {
-          "t": 16.24,
+          "t": 16.08,
           "do": {
             "scene": "catchment"
           }
         },
         {
-          "t": 21.52,
+          "t": 21.08,
           "do": {
             "scene": "site"
           }
         },
         {
-          "t": 25.12,
+          "t": 24.4,
           "do": {
             "frame": [
               "drive-pipe"
@@ -205,13 +205,13 @@
           }
         },
         {
-          "t": 30.4,
+          "t": 29.52,
           "do": {
             "scene": "ram"
           }
         },
         {
-          "t": 33.92,
+          "t": 33.04,
           "do": {
             "frame": [
               "waste-valve"
@@ -219,7 +219,7 @@
           }
         },
         {
-          "t": 38.2,
+          "t": 37.48,
           "do": {
             "frame": [
               "delivery-valve"
@@ -227,7 +227,7 @@
           }
         },
         {
-          "t": 40.8,
+          "t": 40.08,
           "do": {
             "frame": [
               "air-chamber"
@@ -235,19 +235,19 @@
           }
         },
         {
-          "t": 49.68,
+          "t": 48.72,
           "do": {
             "scene": "valve"
           }
         },
         {
-          "t": 54.72,
+          "t": 53.52,
           "do": {
             "scene": "site"
           }
         },
         {
-          "t": 57.56,
+          "t": 56.28,
           "do": {
             "frame": [
               "delivery-pipe"
@@ -255,7 +255,7 @@
           }
         },
         {
-          "t": 61.52,
+          "t": 60.24,
           "do": {
             "frame": [
               "water-tower"
@@ -263,7 +263,7 @@
           }
         },
         {
-          "t": 64.56,
+          "t": 63.2,
           "do": {
             "frame": [
               "house"
@@ -271,55 +271,55 @@
           }
         },
         {
-          "t": 74.48,
+          "t": 73.04,
           "do": {
             "home": true
           }
         },
         {
-          "t": 83.92,
+          "t": 82.24,
           "do": {
             "mode": "sim"
           }
         },
         {
-          "t": 86.88,
+          "t": 85.32,
           "do": {
             "mode": "lessons"
           }
         },
         {
-          "t": 90.4,
+          "t": 88.6,
           "do": {
             "mode": "assembly"
           }
         },
         {
-          "t": 95.16,
+          "t": 93.4,
           "do": {
             "mode": "install"
           }
         },
         {
-          "t": 99.36,
+          "t": 97.64,
           "do": {
             "mode": "plans"
           }
         },
         {
-          "t": 101.72,
+          "t": 100.12,
           "do": {
             "mode": "explore"
           }
         },
         {
-          "t": 106,
+          "t": 105.96,
           "do": {
             "scene": "site"
           }
         },
         {
-          "t": 113.84,
+          "t": 113,
           "do": {
             "select": null
           }
@@ -332,64 +332,54 @@
       "title": "Le site : de la source à la maison",
       "scene": "site",
       "file": "scene-site.mp3",
-      "duration": 38.08,
-      "chars": 662,
-      "hash": "aa0783f76aa8f782",
+      "duration": 33.84,
+      "chars": 578,
+      "hash": "3968e3b3e2d087a4",
       "captions": [
         {
           "t0": 0,
-          "t1": 3.12,
+          "t1": 3.2,
           "text": "Voici toute la ferme, de la source à la maison."
         },
         {
-          "t0": 3.12,
-          "t1": 5.36,
+          "t0": 3.2,
+          "t1": 5.52,
           "text": "Tout commence à la source, tout en haut."
         },
         {
-          "t0": 5.36,
-          "t1": 7.76,
+          "t0": 5.52,
+          "t1": 7.92,
           "text": "Une réserve la recueille et la met de côté,"
         },
         {
-          "t0": 7.84,
-          "t1": 11.64,
+          "t0": 8,
+          "t1": 12.12,
           "text": "puis une conduite rigide la laisse tomber de sept virgule cinq mètres."
         },
         {
-          "t0": 11.64,
-          "t1": 14.96,
+          "t0": 12.12,
+          "t1": 15.52,
           "text": "Au pied de la pente, dans sa fosse, le bélier travaille."
         },
         {
-          "t0": 14.96,
-          "t1": 17.84,
+          "t0": 15.52,
+          "t1": 18.32,
           "text": "Presque toute l’eau ressort ici, par l’évacuation."
         },
         {
-          "t0": 17.84,
-          "t1": 23.6,
+          "t0": 18.32,
+          "t1": 24.16,
           "text": "Le reste, un mince filet, gravit la conduite de refoulement : soixante-cinq mètres de montée."
         },
         {
-          "t0": 23.6,
-          "t1": 28.72,
+          "t0": 24.16,
+          "t1": 29.2,
           "text": "Il arrive au château d’eau, qui l’emmagasine en hauteur, et la maison en profite, par gravité."
         },
         {
-          "t0": 28.72,
-          "t1": 33.52,
+          "t0": 29.2,
+          "t1": 33.84,
           "text": "Une chute, un clapet qui claque, et pas de moteur : l’eau monte toute seule !"
-        },
-        {
-          "t0": 33.52,
-          "t1": 36.99,
-          "text": "Une précaution : l’eau d’une source n’est pas garantie potable."
-        },
-        {
-          "t0": 36.99,
-          "t1": 38.08,
-          "text": "Faites-la analyser."
         }
       ],
       "cues": [
@@ -400,13 +390,13 @@
           }
         },
         {
-          "t": 3.12,
+          "t": 3.2,
           "do": {
             "flows": true
           }
         },
         {
-          "t": 3.12,
+          "t": 3.2,
           "do": {
             "frame": [
               "spring"
@@ -414,7 +404,7 @@
           }
         },
         {
-          "t": 5.36,
+          "t": 5.52,
           "do": {
             "frame": [
               "buffer-tank"
@@ -422,7 +412,7 @@
           }
         },
         {
-          "t": 7.84,
+          "t": 8,
           "do": {
             "frame": [
               "drive-pipe"
@@ -430,7 +420,7 @@
           }
         },
         {
-          "t": 11.64,
+          "t": 12.12,
           "do": {
             "frame": [
               "ram-pit"
@@ -438,7 +428,7 @@
           }
         },
         {
-          "t": 14.96,
+          "t": 15.52,
           "do": {
             "frame": [
               "waste-drain"
@@ -446,7 +436,7 @@
           }
         },
         {
-          "t": 17.84,
+          "t": 18.32,
           "do": {
             "frame": [
               "delivery-pipe"
@@ -454,7 +444,7 @@
           }
         },
         {
-          "t": 23.6,
+          "t": 24.16,
           "do": {
             "frame": [
               "water-tower"
@@ -462,7 +452,7 @@
           }
         },
         {
-          "t": 26.44,
+          "t": 26.92,
           "do": {
             "frame": [
               "house"
@@ -470,13 +460,13 @@
           }
         },
         {
-          "t": 28.72,
+          "t": 29.2,
           "do": {
             "flows": false
           }
         },
         {
-          "t": 28.72,
+          "t": 29.2,
           "do": {
             "home": true
           }
@@ -635,59 +625,44 @@
       "title": "Le bélier hydraulique",
       "scene": "ram",
       "file": "scene-ram.mp3",
-      "duration": 35.92,
-      "chars": 615,
-      "hash": "301bb5c5f5f91fe0",
+      "duration": 24.72,
+      "chars": 425,
+      "hash": "f5bdd5d24382e77e",
       "captions": [
         {
           "t0": 0,
-          "t1": 3.44,
+          "t1": 3.16,
           "text": "Voici le bélier, une machine sans moteur."
         },
         {
-          "t0": 3.44,
-          "t1": 6.43,
+          "t0": 3.16,
+          "t1": 5.96,
           "text": "L’eau motrice entre par un filtre et une vanne."
         },
         {
-          "t0": 6.43,
-          "t1": 10.04,
+          "t0": 5.96,
+          "t1": 9.72,
           "text": "Elle s’échappe d’abord par le clapet de choc, jusqu’à ce qu’il claque."
         },
         {
-          "t0": 10.04,
-          "t1": 12.8,
+          "t0": 9.72,
+          "t1": 12.48,
           "text": "Chaque coup force alors un petit clapet à sens unique,"
         },
         {
-          "t0": 12.84,
-          "t1": 16.36,
+          "t0": 12.52,
+          "t1": 16.2,
           "text": "et la cloche d’air change ces poussées en un débit continu."
         },
         {
-          "t0": 16.36,
-          "t1": 22.24,
+          "t0": 16.2,
+          "t1": 21.92,
           "text": "Le reniflard la recharge en air, pincée par pincée, et le manomètre dit la hauteur déjà gagnée."
         },
         {
-          "t0": 22.24,
-          "t1": 25.44,
+          "t0": 21.92,
+          "t1": 24.72,
           "text": "Regardez l’eau : presque toute ressort par le clapet."
-        },
-        {
-          "t0": 25.44,
-          "t1": 28.4,
-          "text": "Attention : ce bélier est un modèle générique d’un pouce,"
-        },
-        {
-          "t0": 28.48,
-          "t1": 31.92,
-          "text": "pas la machine de la vidéo : seul le clapet de choc la suit."
-        },
-        {
-          "t0": 31.92,
-          "t1": 35.92,
-          "text": "Reconstitution pédagogique, ni plan officiel, ni produit de fabricant."
         }
       ],
       "cues": [
@@ -698,7 +673,7 @@
           }
         },
         {
-          "t": 3.44,
+          "t": 3.16,
           "do": {
             "frame": [
               "inlet-valve",
@@ -707,7 +682,7 @@
           }
         },
         {
-          "t": 6.43,
+          "t": 5.96,
           "do": {
             "frame": [
               "waste-valve"
@@ -715,7 +690,7 @@
           }
         },
         {
-          "t": 10.04,
+          "t": 9.72,
           "do": {
             "frame": [
               "delivery-valve"
@@ -723,7 +698,7 @@
           }
         },
         {
-          "t": 12.84,
+          "t": 12.52,
           "do": {
             "frame": [
               "air-chamber"
@@ -731,7 +706,7 @@
           }
         },
         {
-          "t": 16.36,
+          "t": 16.2,
           "do": {
             "frame": [
               "snifter"
@@ -739,7 +714,7 @@
           }
         },
         {
-          "t": 19.72,
+          "t": 19.4,
           "do": {
             "frame": [
               "gauge"
@@ -747,19 +722,19 @@
           }
         },
         {
-          "t": 22.24,
+          "t": 21.92,
           "do": {
             "home": true
           }
         },
         {
-          "t": 22.24,
+          "t": 21.92,
           "do": {
             "flows": true
           }
         },
         {
-          "t": 25.44,
+          "t": 24.72,
           "do": {
             "flows": false
           }
@@ -772,49 +747,44 @@
       "title": "Le clapet de choc",
       "scene": "valve",
       "file": "scene-valve.mp3",
-      "duration": 34.4,
-      "chars": 591,
-      "hash": "c504477203b9c265",
+      "duration": 29.52,
+      "chars": 494,
+      "hash": "1bc17a0528e56a7b",
       "captions": [
         {
           "t0": 0,
-          "t1": 3.76,
+          "t1": 4,
           "text": "Le clapet de choc, d’après celui de la vidéo, mais simplifié."
         },
         {
-          "t0": 3.76,
-          "t1": 6.88,
+          "t0": 4,
+          "t1": 7.2,
           "text": "Une platine et un manchon soudé en font la base."
         },
         {
-          "t0": 6.88,
-          "t1": 11.2,
+          "t0": 7.2,
+          "t1": 11.76,
           "text": "Des raccords de plomberie forment le corps, percé de fentes où l’eau s’échappe."
         },
         {
-          "t0": 11.2,
-          "t1": 15.28,
+          "t0": 11.76,
+          "t1": 15.92,
           "text": "Au cœur du corps, la portée et la tête : c’est ici que ça ferme."
         },
         {
-          "t0": 15.28,
-          "t1": 20.04,
+          "t0": 15.92,
+          "t1": 20.76,
           "text": "Un doigt de gant guide une tige filetée, que surmontent un poids et deux écrous."
         },
         {
-          "t0": 20.04,
-          "t1": 22.88,
+          "t0": 20.76,
+          "t1": 23.71,
           "text": "Écartons les pièces, pour voir comment tout s’empile…"
         },
         {
-          "t0": 22.88,
-          "t1": 28.96,
+          "t0": 23.71,
+          "t1": 29.52,
           "text": "Tout le réglage du bélier se joue ici : la course et le poids décident du rythme et de la consommation."
-        },
-        {
-          "t0": 28.96,
-          "t1": 34.4,
-          "text": "Reconstitution pédagogique, ni plan officiel, ni produit de fabricant : les cotes sont estimées."
         }
       ],
       "cues": [
@@ -825,7 +795,7 @@
           }
         },
         {
-          "t": 3.76,
+          "t": 4,
           "do": {
             "frame": [
               "base-plate",
@@ -834,7 +804,7 @@
           }
         },
         {
-          "t": 6.88,
+          "t": 7.2,
           "do": {
             "frame": [
               "valve-reducer",
@@ -843,7 +813,7 @@
           }
         },
         {
-          "t": 11.2,
+          "t": 11.76,
           "do": {
             "frame": [
               "valve-seat",
@@ -852,7 +822,7 @@
           }
         },
         {
-          "t": 15.28,
+          "t": 15.92,
           "do": {
             "frame": [
               "valve-guide",
@@ -861,7 +831,7 @@
           }
         },
         {
-          "t": 17.52,
+          "t": 18.24,
           "do": {
             "frame": [
               "counterweight",
@@ -871,19 +841,19 @@
           }
         },
         {
-          "t": 20.04,
+          "t": 20.76,
           "do": {
             "home": true
           }
         },
         {
-          "t": 20.04,
+          "t": 20.76,
           "do": {
             "explode": 0.6
           }
         },
         {
-          "t": 22.88,
+          "t": 23.71,
           "do": {
             "explode": 0
           }
@@ -896,29 +866,24 @@
       "title": "Captage de la source",
       "scene": "site",
       "file": "part-spring.mp3",
-      "duration": 14.96,
-      "chars": 278,
-      "hash": "71eb32ee61ab8393",
+      "duration": 10.4,
+      "chars": 197,
+      "hash": "0146a82dfe1ec5b0",
       "captions": [
         {
           "t0": 0,
-          "t1": 2.56,
+          "t1": 2.48,
           "text": "Tout part d’un filet d’eau qui sort de terre."
         },
         {
-          "t0": 2.56,
+          "t0": 2.48,
           "t1": 7.28,
           "text": "Dans la vidéo, il donnait dix litres par minute il y a deux ans, sept et demi aujourd’hui."
         },
         {
           "t0": 7.28,
-          "t1": 10.61,
+          "t1": 10.4,
           "text": "Mesurez son débit en fin de saison sèche, pas au printemps !"
-        },
-        {
-          "t0": 10.61,
-          "t1": 14.96,
-          "text": "Et ne la goûtez pas : une source n’est pas garantie potable, faites-la analyser."
         }
       ],
       "cues": []
@@ -929,33 +894,33 @@
       "title": "Réserve tampon",
       "scene": "site",
       "file": "part-buffer-tank.mp3",
-      "duration": 18.48,
-      "chars": 326,
-      "hash": "d019e67fc3d56a77",
+      "duration": 17.28,
+      "chars": 310,
+      "hash": "16ef1c274c5d3218",
       "captions": [
         {
           "t0": 0,
-          "t1": 5.52,
+          "t1": 5.12,
           "text": "Une grande cuve entre la source et le bélier : c’est elle qui raconte l’histoire de la vidéo."
         },
         {
-          "t0": 5.52,
-          "t1": 9.88,
+          "t0": 5.12,
+          "t1": 9.48,
           "text": "Avec le gros clapet d’origine, le bélier buvait plus que la source ne donnait."
         },
         {
-          "t0": 9.88,
-          "t1": 12.36,
+          "t0": 9.48,
+          "t1": 11.96,
           "text": "La réserve se vidait en dix heures environ."
         },
         {
-          "t0": 12.36,
-          "t1": 15.84,
-          "text": "Avec le petit clapet, dans le modèle, elle reste pleine."
+          "t0": 11.96,
+          "t1": 14.48,
+          "text": "Avec le petit clapet, elle reste pleine."
         },
         {
-          "t0": 15.84,
-          "t1": 18.48,
+          "t0": 14.48,
+          "t1": 17.28,
           "text": "Une cuve plus grande ne ferait que retarder l’arrêt."
         }
       ],
@@ -967,28 +932,28 @@
       "title": "Conduite motrice",
       "scene": "site",
       "file": "part-drive-pipe.mp3",
-      "duration": 16,
-      "chars": 292,
-      "hash": "dfc5019ed01d0c94",
+      "duration": 15.36,
+      "chars": 276,
+      "hash": "65dd50db4183e2ff",
       "captions": [
         {
           "t0": 0,
-          "t1": 4.68,
+          "t1": 4.72,
           "text": "Un tuyau rigide d’environ vingt mètres, qui descend de sept virgule cinq mètres."
         },
         {
-          "t0": 4.68,
+          "t0": 4.72,
           "t1": 8.19,
           "text": "L’eau y prend de la vitesse, jusqu’au claquement du clapet de choc."
         },
         {
           "t0": 8.19,
-          "t1": 12.04,
-          "text": "C’est le coup de bélier : six virgule cinq bars de pointe, dans le modèle."
+          "t1": 11.44,
+          "text": "C’est le coup de bélier : six virgule cinq bars de pointe."
         },
         {
-          "t0": 12.04,
-          "t1": 16,
+          "t0": 11.44,
+          "t1": 15.36,
           "text": "Posez la main sur le tuyau, bélier en marche : on sent chaque coup !"
         }
       ],
@@ -1028,39 +993,39 @@
       "title": "Évacuation des eaux de rejet",
       "scene": "site",
       "file": "part-waste-drain.mp3",
-      "duration": 19.92,
-      "chars": 353,
-      "hash": "03f73afbe3bdaf9e",
+      "duration": 17.92,
+      "chars": 326,
+      "hash": "a71e9fb75274aa18",
       "captions": [
         {
           "t0": 0,
-          "t1": 1.95,
+          "t1": 2.03,
           "text": "Où passe la plus grande part de l’eau ?"
         },
         {
-          "t0": 1.95,
-          "t1": 5.04,
+          "t0": 2.03,
+          "t1": 5.12,
           "text": "Ici : presque toute ressort par l’évacuation."
         },
         {
-          "t0": 5.04,
-          "t1": 8.92,
-          "text": "Dans le modèle, environ six litres sur six virgule sept par minute."
+          "t0": 5.12,
+          "t1": 8.04,
+          "text": "Environ six litres sur six virgule sept par minute."
         },
         {
-          "t0": 8.92,
-          "t1": 11.16,
+          "t0": 8.04,
+          "t1": 10.2,
           "text": "Ce n’est pas un défaut, c’est le principe."
         },
         {
-          "t0": 11.16,
-          "t1": 16.04,
+          "t0": 10.2,
+          "t1": 14.96,
           "text": "Si elle se bouche, l’eau monte et, sur certains béliers, noie le clapet de choc."
         },
         {
-          "t0": 16.04,
-          "t1": 19.92,
-          "text": "Dans le modèle, un seau de dix litres s’y remplit en moins de deux minutes."
+          "t0": 14.96,
+          "t1": 17.92,
+          "text": "Un seau de dix litres doit s’y remplir en moins de deux minutes."
         }
       ],
       "cues": []
@@ -1071,29 +1036,29 @@
       "title": "Conduite de refoulement",
       "scene": "site",
       "file": "part-delivery-pipe.mp3",
-      "duration": 16.32,
-      "chars": 307,
-      "hash": "3f5e4c62cb506a35",
+      "duration": 15.28,
+      "chars": 291,
+      "hash": "957bc9f65c482723",
       "captions": [
         {
           "t0": 0,
-          "t1": 2.56,
+          "t1": 2.52,
           "text": "Voici le chemin des rares gouttes qui montent."
         },
         {
-          "t0": 2.56,
-          "t1": 6.96,
+          "t0": 2.52,
+          "t1": 6.92,
           "text": "Trois cents mètres de tuyau environ, jusqu’à soixante-cinq mètres au-dessus du bélier."
         },
         {
-          "t0": 6.96,
-          "t1": 12.8,
+          "t0": 6.92,
+          "t1": 12.64,
           "text": "La vidéo le rappelle : un mètre de chute remonte l’eau d’environ dix mètres, quelle que soit la longueur."
         },
         {
-          "t0": 12.8,
-          "t1": 16.32,
-          "text": "Dans le modèle, il faut environ trois heures pour remplir ce tuyau."
+          "t0": 12.64,
+          "t1": 15.28,
+          "text": "Il faut environ trois heures pour remplir ce tuyau."
         }
       ],
       "cues": []
@@ -1165,29 +1130,24 @@
       "title": "Regard de captage",
       "scene": "catchment",
       "file": "part-spring-box.mp3",
-      "duration": 15.44,
-      "chars": 256,
-      "hash": "10f89fc84e32a044",
+      "duration": 12.24,
+      "chars": 207,
+      "hash": "18fc7e7e58c175c8",
       "captions": [
         {
           "t0": 0,
-          "t1": 3.84,
+          "t1": 4,
           "text": "Une petite chambre fermée, posée là où l’eau sort de terre."
         },
         {
-          "t0": 3.84,
-          "t1": 8.24,
+          "t0": 4,
+          "t1": 8.16,
           "text": "Ne gênez jamais la source : la sortie reste plus basse que l’émergence."
         },
         {
-          "t0": 8.24,
-          "t1": 12.56,
+          "t0": 8.16,
+          "t1": 12.24,
           "text": "Une source gênée suit le chemin le plus facile, et peut ressortir ailleurs."
-        },
-        {
-          "t0": 12.56,
-          "t1": 15.44,
-          "text": "Le regard la protège, il ne la rend pas potable."
         }
       ],
       "cues": []
@@ -1269,34 +1229,34 @@
       "title": "Cuve de la réserve tampon",
       "scene": "catchment",
       "file": "part-tank-shell.mp3",
-      "duration": 15.84,
-      "chars": 286,
-      "hash": "1e9397b745edf6aa",
+      "duration": 15.2,
+      "chars": 270,
+      "hash": "9252ad32b8ee996f",
       "captions": [
         {
           "t0": 0,
-          "t1": 2.24,
+          "t1": 2.4,
           "text": "La cuve est la clé de l’histoire."
         },
         {
-          "t0": 2.24,
-          "t1": 6.08,
+          "t0": 2.4,
+          "t1": 6.32,
           "text": "Son volume, environ cinq mille sept cents litres, n’est pas dans la vidéo."
         },
         {
-          "t0": 6.08,
-          "t1": 8.88,
+          "t0": 6.32,
+          "t1": 9.12,
           "text": "On l’a déduit des dix heures qu’elle mettait à se vider."
         },
         {
-          "t0": 8.88,
-          "t1": 11.76,
+          "t0": 9.12,
+          "t1": 12,
           "text": "Pleine, elle contient plus de cinq tonnes d’eau."
         },
         {
-          "t0": 11.76,
-          "t1": 15.84,
-          "text": "Dans le modèle, une cuve vide arrête le bélier, qui ne repart pas seul."
+          "t0": 12,
+          "t1": 15.2,
+          "text": "Une cuve vide arrête le bélier, qui ne repart pas seul."
         }
       ],
       "cues": [
@@ -1307,7 +1267,7 @@
           }
         },
         {
-          "t": 15.84,
+          "t": 15.2,
           "do": {
             "cutaway": false
           }
@@ -1475,33 +1435,28 @@
       "title": "Corps du bélier",
       "scene": "ram",
       "file": "part-ram.mp3",
-      "duration": 22.4,
-      "chars": 388,
-      "hash": "a1aba0a23ff61f15",
+      "duration": 18.32,
+      "chars": 327,
+      "hash": "e3f844dcb56b3128",
       "captions": [
         {
           "t0": 0,
-          "t1": 4.24,
+          "t1": 3.92,
           "text": "Le corps du bélier : la chambre où débouche la conduite motrice."
         },
         {
-          "t0": 4.24,
-          "t1": 10.08,
+          "t0": 3.92,
+          "t1": 9.52,
           "text": "Trois ouvertures : l’arrivée, la sortie du clapet de choc, et la sortie utile vers la cloche."
         },
         {
-          "t0": 10.08,
-          "t1": 13.36,
-          "text": "C’est un bélier générique d’un pouce, pas celui de la vidéo."
-        },
-        {
-          "t0": 13.36,
-          "t1": 16.16,
+          "t0": 9.52,
+          "t1": 12.32,
           "text": "Son principe date de la fin du dix-huitième siècle."
         },
         {
-          "t0": 16.16,
-          "t1": 22.4,
+          "t0": 12.32,
+          "t1": 18.32,
           "text": "Un bélier d’un pouce attend plus d’eau que cette source n’en donne : la vidéo réduit donc la consommation du clapet."
         }
       ],
@@ -1513,7 +1468,7 @@
           }
         },
         {
-          "t": 22.4,
+          "t": 18.32,
           "do": {
             "cutaway": false
           }
@@ -1625,9 +1580,9 @@
       "title": "Clapet de choc (ensemble)",
       "scene": "ram",
       "file": "part-waste-valve.mp3",
-      "duration": 26.24,
-      "chars": 466,
-      "hash": "cfd20945649e4909",
+      "duration": 24.8,
+      "chars": 450,
+      "hash": "df150e257e173168",
       "captions": [
         {
           "t0": 0,
@@ -1636,32 +1591,27 @@
         },
         {
           "t0": 4.7,
-          "t1": 9.36,
+          "t1": 9.16,
           "text": "Au repos, il est ouvert : l’eau de la conduite s’échappe en accélérant."
         },
         {
-          "t0": 9.36,
-          "t1": 13.76,
-          "text": "Dans le modèle, près d’un mètre par seconde suffit : l’eau le plaque sur sa portée,"
+          "t0": 9.16,
+          "t1": 14.37,
+          "text": "Près d’un mètre par seconde suffit : l’eau le plaque sur sa portée, et le coup de bélier est parti !"
         },
         {
-          "t0": 13.8,
-          "t1": 15.65,
-          "text": "et le coup de bélier est parti !"
-        },
-        {
-          "t0": 15.65,
-          "t1": 20.36,
+          "t0": 14.37,
+          "t1": 19,
           "text": "Puis le recul le rouvre, et ça recommence, de cent à cent dix fois par minute."
         },
         {
-          "t0": 20.36,
-          "t1": 24,
+          "t0": 19,
+          "t1": 22.52,
           "text": "Dans la vidéo, un clapet en raccords de plomberie met fin aux arrêts."
         },
         {
-          "t0": 24,
-          "t1": 26.24,
+          "t0": 22.52,
+          "t1": 24.8,
           "text": "Gardez vos doigts loin du clapet en marche."
         }
       ],
@@ -1673,7 +1623,7 @@
           }
         },
         {
-          "t": 26.24,
+          "t": 24.8,
           "do": {
             "flows": false
           }
@@ -1686,38 +1636,38 @@
       "title": "Clapet anti-retour de refoulement",
       "scene": "ram",
       "file": "part-delivery-valve.mp3",
-      "duration": 25.6,
-      "chars": 448,
-      "hash": "e9d659a1250d8c34",
+      "duration": 24.8,
+      "chars": 432,
+      "hash": "8e0012ae67cec13c",
       "captions": [
         {
           "t0": 0,
-          "t1": 6.48,
+          "t1": 6.4,
           "text": "Quand le clapet de choc claque, l’eau arrêtée n’a plus qu’une issue : forcer ce petit clapet à sens unique."
         },
         {
-          "t0": 6.48,
-          "t1": 10.96,
-          "text": "Il ne s’ouvre qu’un instant, et laisse passer moins d’une cuillère à café, dans le modèle."
+          "t0": 6.4,
+          "t1": 10.16,
+          "text": "Il ne s’ouvre qu’un instant, et laisse passer moins d’une cuillère à café."
         },
         {
-          "t0": 10.96,
-          "t1": 13.76,
+          "t0": 10.16,
+          "t1": 13.04,
           "text": "Et pourtant, coup après coup, l’eau monte !"
         },
         {
-          "t0": 13.76,
-          "t1": 17.92,
+          "t0": 13.04,
+          "t1": 17.2,
           "text": "Puis il se referme : la colonne de soixante-cinq mètres ne redescend pas."
         },
         {
-          "t0": 17.92,
-          "t1": 23.52,
+          "t0": 17.2,
+          "t1": 22.77,
           "text": "Bélier arrêté, vannes d’arrivée et de vidange fermées, le manomètre doit tenir de longues minutes."
         },
         {
-          "t0": 23.52,
-          "t1": 25.6,
+          "t0": 22.77,
+          "t1": 24.8,
           "text": "S’il s’effondre, ce clapet fuit."
         }
       ],
@@ -1729,7 +1679,7 @@
           }
         },
         {
-          "t": 25.6,
+          "t": 24.8,
           "do": {
             "flows": false
           }
@@ -1742,43 +1692,43 @@
       "title": "Cloche à air",
       "scene": "ram",
       "file": "part-air-chamber.mp3",
-      "duration": 22.8,
-      "chars": 398,
-      "hash": "00af957f9e4fd3a1",
+      "duration": 22.08,
+      "chars": 383,
+      "hash": "faa8d485973cf8d3",
       "captions": [
         {
           "t0": 0,
-          "t1": 4.64,
+          "t1": 4.69,
           "text": "L’air se comprime, l’eau non : voilà tout le secret de la cloche !"
         },
         {
-          "t0": 4.64,
-          "t1": 8.08,
+          "t0": 4.69,
+          "t1": 8.04,
           "text": "Chaque coup y fait entrer un peu d’eau, qui comprime l’air."
         },
         {
-          "t0": 8.08,
-          "t1": 11.36,
+          "t0": 8.04,
+          "t1": 11.32,
           "text": "L’air se détend, et pousse l’eau vers le haut sans pause."
         },
         {
-          "t0": 11.36,
-          "t1": 14.4,
+          "t0": 11.32,
+          "t1": 14.28,
           "text": "Des poussées brèves deviennent un débit presque continu."
         },
         {
-          "t0": 14.4,
-          "t1": 19.04,
-          "text": "Noyée, sans air, elle ferait baisser le refoulement de quarante pour cent dans le modèle."
+          "t0": 14.28,
+          "t1": 18.52,
+          "text": "Noyée, sans air, elle ferait baisser le refoulement de quarante pour cent."
         },
         {
-          "t0": 19.04,
-          "t1": 20.48,
+          "t0": 18.52,
+          "t1": 19.95,
           "text": "Refoulement en chute ?"
         },
         {
-          "t0": 20.48,
-          "t1": 22.8,
+          "t0": 19.95,
+          "t1": 22.08,
           "text": "Regardez d’abord la cloche et le reniflard."
         }
       ],
@@ -1790,7 +1740,7 @@
           }
         },
         {
-          "t": 22.8,
+          "t": 22.08,
           "do": {
             "cutaway": false
           }
@@ -1803,43 +1753,43 @@
       "title": "Reniflard",
       "scene": "ram",
       "file": "part-snifter.mp3",
-      "duration": 23.68,
-      "chars": 411,
-      "hash": "1857009dff4954f1",
+      "duration": 22.64,
+      "chars": 395,
+      "hash": "182f489835da5d1b",
       "captions": [
         {
           "t0": 0,
-          "t1": 4.24,
+          "t1": 4.16,
           "text": "Une toute petite pièce du bélier, et peut-être la plus maligne !"
         },
         {
-          "t0": 4.24,
-          "t1": 7.2,
+          "t0": 4.16,
+          "t1": 7,
           "text": "L’air de la cloche se dissout peu à peu dans l’eau."
         },
         {
-          "t0": 7.2,
-          "t1": 11.28,
+          "t0": 7,
+          "t1": 11.08,
           "text": "Mais à chaque recul, la pression du corps tombe sous celle de l’air libre."
         },
         {
-          "t0": 11.28,
-          "t1": 14.4,
+          "t0": 11.08,
+          "t1": 14.04,
           "text": "La soupape s’ouvre, et une pincée d’air entre."
         },
         {
-          "t0": 14.4,
-          "t1": 16.56,
+          "t0": 14.04,
+          "t1": 16.32,
           "text": "Le coup suivant la pousse dans la cloche."
         },
         {
-          "t0": 16.56,
-          "t1": 21.52,
-          "text": "Bouché, il ne se plaint pas : dans le modèle, la cloche est noyée en une quinzaine d’heures."
+          "t0": 16.32,
+          "t1": 20.56,
+          "text": "Bouché, il ne se plaint pas : la cloche est noyée en une quinzaine d’heures."
         },
         {
-          "t0": 21.52,
-          "t1": 23.68,
+          "t0": 20.56,
+          "t1": 22.64,
           "text": "Nettoyez son orifice à chaque visite."
         }
       ],
@@ -1851,7 +1801,7 @@
           }
         },
         {
-          "t": 23.68,
+          "t": 22.64,
           "do": {
             "flows": false
           }
@@ -1864,33 +1814,33 @@
       "title": "Manomètre",
       "scene": "ram",
       "file": "part-gauge.mp3",
-      "duration": 17.76,
-      "chars": 302,
-      "hash": "97e693c08bfc8d0b",
+      "duration": 17.28,
+      "chars": 286,
+      "hash": "6835d0c806a84d55",
       "captions": [
         {
           "t0": 0,
-          "t1": 2.64,
+          "t1": 2.72,
           "text": "Un seul cadran, et il raconte tout."
         },
         {
-          "t0": 2.64,
-          "t1": 6.84,
+          "t0": 2.72,
+          "t1": 7.04,
           "text": "Le manomètre lit la hauteur déjà gagnée : un bar pour dix mètres."
         },
         {
-          "t0": 6.84,
-          "t1": 10.16,
+          "t0": 7.04,
+          "t1": 10.51,
           "text": "Soit six virgule quatre bars pour soixante-cinq mètres."
         },
         {
-          "t0": 10.16,
-          "t1": 15.72,
-          "text": "Dans le modèle, l’aiguille bouge à peine quand la cloche est garnie d’air, et tremble quand elle est noyée."
+          "t0": 10.51,
+          "t1": 15.2,
+          "text": "L’aiguille bouge à peine quand la cloche est garnie d’air, et tremble quand elle est noyée."
         },
         {
-          "t0": 15.72,
-          "t1": 17.76,
+          "t0": 15.2,
+          "t1": 17.28,
           "text": "Ne le démontez jamais sous pression."
         }
       ],
@@ -2006,28 +1956,28 @@
       "title": "Massif d’ancrage",
       "scene": "ram",
       "file": "part-foundation.mp3",
-      "duration": 15.28,
-      "chars": 277,
-      "hash": "6cc3494b395a252c",
+      "duration": 14.96,
+      "chars": 261,
+      "hash": "c92359ef0fda9cb8",
       "captions": [
         {
           "t0": 0,
-          "t1": 4.64,
+          "t1": 4.88,
           "text": "Un bloc de béton, sous les pieds du bélier : il l’empêche de marcher sous les coups."
         },
         {
-          "t0": 4.64,
-          "t1": 9.2,
-          "text": "Dans le modèle, cent neuf coups par minute, plus de cent cinquante mille par jour !"
+          "t0": 4.88,
+          "t1": 8.8,
+          "text": "Cent neuf coups par minute, plus de cent cinquante mille par jour !"
         },
         {
-          "t0": 9.2,
-          "t1": 13.4,
+          "t0": 8.8,
+          "t1": 13.16,
           "text": "Mal fixé, le bélier desserre ses raccords et finit par rompre un joint."
         },
         {
-          "t0": 13.4,
-          "t1": 15.28,
+          "t0": 13.16,
+          "t1": 14.96,
           "text": "Ce massif n’est qu’une illustration."
         }
       ],
@@ -2143,9 +2093,9 @@
       "title": "Mamelon fileté à lumières",
       "scene": "valve",
       "file": "part-valve-nipple.mp3",
-      "duration": 15.44,
-      "chars": 282,
-      "hash": "91d3fb8257917304",
+      "duration": 14.88,
+      "chars": 266,
+      "hash": "8651db3776e4622e",
       "captions": [
         {
           "t0": 0,
@@ -2154,17 +2104,17 @@
         },
         {
           "t0": 3.28,
-          "t1": 7.64,
+          "t1": 7.76,
           "text": "L’eau passe par la portée, monte dans le mamelon, puis sort par les côtés."
         },
         {
-          "t0": 7.64,
-          "t1": 13.12,
-          "text": "Dans le modèle, elles sont trois fois plus larges que la portée : c’est le jeu sous la tête qui règle le débit."
+          "t0": 7.76,
+          "t1": 12.64,
+          "text": "Elles sont trois fois plus larges que la portée : c’est le jeu sous la tête qui règle le débit."
         },
         {
-          "t0": 13.12,
-          "t1": 15.44,
+          "t0": 12.64,
+          "t1": 14.88,
           "text": "Gardez vos doigts loin des lumières en marche."
         }
       ],
@@ -2496,33 +2446,33 @@
       "title": "Écrou de réglage de course",
       "scene": "valve",
       "file": "part-stroke-nut.mp3",
-      "duration": 16.16,
-      "chars": 278,
-      "hash": "39ea4921991422e2",
+      "duration": 15.68,
+      "chars": 262,
+      "hash": "0f360fb8109f1577",
       "captions": [
         {
           "t0": 0,
-          "t1": 3.68,
-          "text": "Le clapet ne bouge que de deux millimètres environ, dans le modèle."
+          "t1": 2.88,
+          "text": "Le clapet ne bouge que de deux millimètres environ."
         },
         {
-          "t0": 3.68,
-          "t1": 8.96,
+          "t0": 2.88,
+          "t1": 8.32,
           "text": "Cet écrou fixe cette course, donc la consommation : c’est le réglage le plus important."
         },
         {
-          "t0": 8.96,
-          "t1": 11.2,
+          "t0": 8.32,
+          "t1": 10.6,
           "text": "Trop court, le coup ne refoule plus."
         },
         {
-          "t0": 11.2,
-          "t1": 14.4,
+          "t0": 10.6,
+          "t1": 13.88,
           "text": "Trop long, le bélier boit plus que la source ne donne."
         },
         {
-          "t0": 14.4,
-          "t1": 16.16,
+          "t0": 13.88,
+          "t1": 15.68,
           "text": "Tournez par fractions de tour."
         }
       ],
