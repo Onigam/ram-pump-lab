@@ -1,0 +1,358 @@
+{
+  "lang": "en",
+  "voiceLabel": {
+    "fr": "Voix de synthèse",
+    "en": "Synthetic voice"
+  },
+  "settings": {
+    "stability": 0.5,
+    "similarity_boost": 0.8,
+    "style": 0.35,
+    "speed": 0.95
+  },
+  "segments": [
+    {
+      "id": "intro",
+      "scope": "intro",
+      "title": "About the site",
+      "scene": "site",
+      "text": "[[home]] Picture a spring on a hillside: a trickle of water, nothing more. Far above it, a farm would love that water at the tap. With no motor, no electricity, no fuel. Impossible? [[frame:spring]] Let’s follow one drop. It leaves the ground without a sound, [[scene:catchment]] slips into a little stone chamber, then falls into a big tank: the buffer tank. [[scene:site]] From there it enters the drive pipe, a rigid pipe [[frame:drive-pipe]] that lets it race down seven point five metres. It picks up speed, lots of speed. [[scene:ram]] At the end, the ram: a machine with no motor. [[frame:waste-valve]] Its waste valve snaps shut, and the rushing water stops dead. [[frame:delivery-valve]] With nowhere else to go, it forces a small valve open, [[frame:air-chamber]] squeezes an air chamber, and a little water is thrown upwards. Then the valve opens again, all by itself, and everything starts over: about a hundred times a minute. [[scene:valve]] You will see that valve up close: a stem, a weight, two nuts. [[scene:site]] Back on the site. Each stroke pushes a little water [[frame:delivery-pipe]] into three hundred metres of pipe. The water climbs sixty-five metres [[frame:water-tower]] to the water tower, a tank up high. [[frame:house]] The house gets its water: about five hundred litres a day, in the video this lab draws on. Only a small share rises: the rest leaves at the foot of the machine. [[home]] There are four views: the site, the catchment, the ram and the valve. Click a part: its sheet opens, and you can listen to its story. [[mode:sim]] The simulation makes the ram beat in slow motion. [[mode:lessons]] Six lessons, with quizzes, explain the principle. [[mode:assembly]] The assembly guide builds the valve part by part, then fits it on the ram. [[mode:install]] The installation guide goes from surveying the land to the first start-up. [[mode:plans]] The drawings gather the technical sheets. [[mode:explore]] This lab is an educational reconstruction: neither an official plan nor a maker’s product. [[scene:site]] The ram shown is a generic one-inch ram and, unless I quote the video, the figures come from the simulation. [[select:none]] Over to you!"
+    },
+    {
+      "id": "scene-site",
+      "scope": "scene:site",
+      "title": "The site: from the spring to the house",
+      "scene": "site",
+      "text": "[[home]] Here is the whole farm, from the spring to the house. [[flows:on]] [[frame:spring]] It all starts at the spring, right at the top. [[frame:buffer-tank]] A tank collects the water and keeps it in store, [[frame:drive-pipe]] then a rigid pipe lets it fall seven point five metres. [[frame:ram-pit]] At the foot of the slope, in its pit, the ram goes to work. [[frame:waste-drain]] Almost all the water leaves here, through the drain. [[frame:delivery-pipe]] The rest, a thin trickle, climbs the delivery pipe: sixty-five metres of climb. [[frame:water-tower]] It reaches the water tower, which stores it up high, [[frame:house]] and the house enjoys it, by gravity, all day long. [[flows:off]] [[home]] A fall, a valve that slams, and no motor: the water climbs all by itself!"
+    },
+    {
+      "id": "scene-catchment",
+      "scope": "scene:catchment",
+      "title": "The spring box and the buffer tank",
+      "scene": "catchment",
+      "text": "[[home]] This is where the water’s whole journey begins. [[frame:spring-box]] The spring comes out of the ground into a stone box, [[frame:gravel-filter]] after crossing a bed of gravel that holds back the soil. [[frame:feed-pipe]] A sloping pipe carries it along, with no pressure, [[frame:tank-shell]] to the buffer tank, a big covered tank. [[frame:overflow-pipe]] Its overflow sends the surplus downstream. [[frame:intake-screen]] A strainer keeps out leaves and gravel, [[frame:drive-gate-valve]] and a valve opens or closes the drive pipe. [[home]] [[flows:on]] [[cutaway:on]] Watch the water follow its path, and the section show the level in the tank. [[cutaway:off]] [[flows:off]] This is the heart of the video’s story. When the ram drank more than the spring gave, the tank emptied, and it stopped."
+    },
+    {
+      "id": "scene-ram",
+      "scope": "scene:ram",
+      "title": "The hydraulic ram",
+      "scene": "ram",
+      "text": "[[home]] Here is the ram, a machine with no motor. [[frame:inlet-valve,strainer]] The driving water enters through a strainer and a valve. [[frame:waste-valve]] It escapes first through the waste valve, until it slams shut. [[frame:delivery-valve]] Each stroke then forces open a small one-way valve, [[frame:air-chamber]] and the air chamber turns these pushes into a steady flow. [[frame:snifter]] The snifter recharges it with air, pinch by pinch, [[frame:gauge]] and the gauge shows the height already gained. [[home]] [[flows:on]] Watch the water: almost all of it leaves through the valve. [[flows:off]]"
+    },
+    {
+      "id": "scene-valve",
+      "scope": "scene:valve",
+      "title": "The waste valve",
+      "scene": "valve",
+      "text": "[[home]] The waste valve, after the one in the video, but simplified. [[frame:base-plate,valve-socket]] A base plate and a welded socket make the foundation. [[frame:valve-reducer,valve-nipple]] Plumbing fittings form the body, cut with slots where the water escapes. [[frame:valve-seat,valve-head]] At the heart of the body, the seat and the head: this is where it closes. [[frame:valve-guide,valve-stem]] A thermowell guides a threaded stem, [[frame:counterweight,stroke-nut,lock-nut]] which carries a heavy weight and two nuts. [[home]] [[explode:0.6]] Let’s pull the parts apart, to see how it all stacks up… [[explode:0]] The whole tuning of the ram happens here: the stroke and the weight set the rhythm and the consumption."
+    },
+    {
+      "id": "part-spring",
+      "scope": "part:spring",
+      "title": "Spring catchment",
+      "scene": "site",
+      "text": "It all starts with a trickle of water coming out of the ground. In the video, it gave ten litres a minute two years ago, seven and a half today. Measure its flow at the end of the dry season, not in spring!"
+    },
+    {
+      "id": "part-buffer-tank",
+      "scope": "part:buffer-tank",
+      "title": "Buffer tank",
+      "scene": "site",
+      "text": "A big tank between the spring and the ram: it is the one that tells the story of the video. With the big original valve, the ram drank more than the spring gave. The tank emptied in about ten hours. With the small valve, it stays full. A bigger tank would only delay the stop."
+    },
+    {
+      "id": "part-drive-pipe",
+      "scope": "part:drive-pipe",
+      "title": "Drive pipe",
+      "scene": "site",
+      "text": "A rigid pipe about twenty metres long, dropping seven point five metres. The water gathers speed in it, until the waste valve slams. That is the water hammer: six point five bar at its peak. Put your hand on the pipe, ram running: you can feel every stroke!"
+    },
+    {
+      "id": "part-ram-pit",
+      "scope": "part:ram-pit",
+      "title": "Ram pit",
+      "scene": "site",
+      "text": "The ram strikes about a hundred times a minute: it is bolted to a rigid block at the bottom of a pit. The pit keeps the waste valve and the other valves within reach, and lets the waste water drain away. Listen to your ram: a change of rhythm means trouble."
+    },
+    {
+      "id": "part-waste-drain",
+      "scope": "part:waste-drain",
+      "title": "Waste-water drain",
+      "scene": "site",
+      "text": "Where does most of the water go? Here: almost all of it leaves through the drain. About six litres out of six point seven a minute. That is not a flaw, it is the principle. If it clogs, the water rises and, on some rams, drowns the waste valve. A ten-litre bucket should fill there in under two minutes."
+    },
+    {
+      "id": "part-delivery-pipe",
+      "scope": "part:delivery-pipe",
+      "title": "Delivery pipe",
+      "scene": "site",
+      "text": "This is the path of the few drops that climb. About three hundred metres of pipe, up to sixty-five metres above the ram. The video points it out: one metre of fall lifts water about ten metres, however long the pipe. It takes about three hours to fill this pipe."
+    },
+    {
+      "id": "part-water-tower",
+      "scope": "part:water-tower",
+      "title": "Water tower",
+      "scene": "site",
+      "text": "The house uses water in bursts, the ram never stops: the water tower bridges the gap. In the video, it receives about five hundred litres a day, two buckets an hour. Give it an overflow that sends the surplus somewhere safe."
+    },
+    {
+      "id": "part-house",
+      "scope": "part:house",
+      "title": "House",
+      "scene": "site",
+      "text": "So that is why all this way! The water runs down from the tower to the tap, by gravity, on demand. The video finds five hundred litres a day enough. But spring water is not guaranteed drinkable: have it tested before you drink it."
+    },
+    {
+      "id": "part-spring-box",
+      "scope": "part:spring-box",
+      "title": "Spring box",
+      "scene": "catchment",
+      "text": "A small closed chamber, set where the water comes out of the ground. Never obstruct the spring: the outlet stays lower than where the water emerges. An obstructed spring takes the easiest path, and may come out somewhere else."
+    },
+    {
+      "id": "part-gravel-filter",
+      "scope": "part:gravel-filter",
+      "title": "Gravel filter",
+      "scene": "catchment",
+      "text": "A bed of stones between the rock and the spring box. The smallest are near the spring, the biggest against the wall. Why? Very fine gravel clogs quickly, very coarse gravel holds back nothing. And it is not a treatment: it stops grains, not germs."
+    },
+    {
+      "id": "part-feed-pipe",
+      "scope": "part:feed-pipe",
+      "title": "Feed pipe",
+      "scene": "catchment",
+      "text": "A few metres of sloping pipe, from the spring box to the tank. No shock, no pressure: the water flows by itself, plastic will do. It ends in open air, above the overflow, so that a full tank can never push water back. No high point: it would trap air."
+    },
+    {
+      "id": "part-tank-shell",
+      "scope": "part:tank-shell",
+      "title": "Buffer tank shell",
+      "scene": "catchment",
+      "text": "[[cutaway:on]] The tank is the key to the story. Its volume, about five thousand seven hundred litres, is not in the video. It was worked out from the ten hours it took to empty. Full, it holds more than five tonnes of water. An empty tank stops the ram, which does not restart by itself. [[cutaway:off]]"
+    },
+    {
+      "id": "part-tank-lid",
+      "scope": "part:tank-lid",
+      "title": "Lid and vent",
+      "scene": "catchment",
+      "text": "A lid keeps out light, leaves, insects and animals. The light, because it feeds algae. It also carries a screened vent: for the water to leave, air has to come in. Never block it to keep the water clean."
+    },
+    {
+      "id": "part-overflow-pipe",
+      "scope": "part:overflow-pipe",
+      "title": "Overflow",
+      "scene": "catchment",
+      "text": "The overflow sets the tank’s maximum level and sends the surplus downstream. With the ram stopped, the whole spring flows through it. Never put a valve on it: the day someone closes it, the tank overflows through the lid."
+    },
+    {
+      "id": "part-intake-screen",
+      "scope": "part:intake-screen",
+      "title": "Intake screen",
+      "scene": "catchment",
+      "text": "First part of the drive pipe. Its basket holds back leaves and gravel that would jam under the waste valve. But it is its submerged position, not its mesh, that keeps air out. Sitting on the bottom, it sucks up mud; at the surface, it lets air in."
+    },
+    {
+      "id": "part-drive-gate-valve",
+      "scope": "part:drive-gate-valve",
+      "title": "Drive-pipe gate valve",
+      "scene": "catchment",
+      "text": "It guards the outlet of the tank, this full-bore valve. Closed, it stops the ram and lets you work without emptying the tank. Running, it stays fully open: half closed, it vibrates, wears and slows the water."
+    },
+    {
+      "id": "part-tank-drain",
+      "scope": "part:tank-drain",
+      "title": "Tank drain",
+      "scene": "catchment",
+      "text": "At the very bottom of the tank, a ball valve: the drain. Open, it flushes out water, mud and leaves. After draining, the spring takes about thirteen hours to refill the tank. Keep the drive-pipe valve closed in the meantime, or the ram restarts on an almost empty tank."
+    },
+    {
+      "id": "part-ram",
+      "scope": "part:ram",
+      "title": "Ram body",
+      "scene": "ram",
+      "text": "[[cutaway:on]] The ram body: the chamber where the drive pipe ends. Three openings: the inlet, the outlet of the waste valve, and the useful outlet towards the air chamber. Its principle dates from the late eighteenth century. A one-inch ram wants more water than this spring gives: so the video reduces what the waste valve consumes. [[cutaway:off]]"
+    },
+    {
+      "id": "part-inlet-flange",
+      "scope": "part:inlet-flange",
+      "title": "Inlet flange",
+      "scene": "ram",
+      "text": "This is the ram’s first doorway, on the tank side. A steel flange welded to the end of the pipe, a flat gasket, four bolts. It is the one you undo to separate the ram from its twenty metres of pipe. Tighten in a cross pattern, a fraction of a turn at a time: a flange tightened on one side only leaks."
+    },
+    {
+      "id": "part-inlet-valve",
+      "scope": "part:inlet-valve",
+      "title": "Inlet valve (V1)",
+      "scene": "ram",
+      "text": "It starts the ram, and stops it: the inlet valve. Fully open, it should go unnoticed: everything it holds back is momentum lost for the stroke. Half closed, it chokes the driving water: never set the flow with it. Set it with the stroke of the waste valve."
+    },
+    {
+      "id": "part-strainer",
+      "scope": "part:strainer",
+      "title": "Y-strainer",
+      "scene": "ram",
+      "text": "The Y-strainer stops what the spring carries: leaves, sand, grit. A single pebble wedged under the head of the waste valve is enough to make it leak! Its mesh should offer a surface much larger than the pipe’s section, so it takes a long time to clog."
+    },
+    {
+      "id": "part-waste-valve",
+      "scope": "part:waste-valve",
+      "title": "Waste valve (assembly)",
+      "scene": "ram",
+      "text": "[[flows:on]] Clack, clack, clack: the heart of the ram, and the only part the video shows in detail. At rest, it is open: the water in the pipe escapes, speeding up. Close to one metre per second is enough: the water presses it onto its seat, and the water hammer is off! Then the recoil opens it again, and it starts over, a hundred to a hundred and ten times a minute. In the video, a valve made of plumbing fittings ends the stoppages. Keep your fingers away from the valve while it runs. [[flows:off]]"
+    },
+    {
+      "id": "part-delivery-valve",
+      "scope": "part:delivery-valve",
+      "title": "Delivery check valve",
+      "scene": "ram",
+      "text": "[[flows:on]] When the waste valve slams, the stopped water has only one way out: forcing this small one-way valve. It opens for an instant, and lets through less than a teaspoon. And yet, stroke after stroke, the water climbs! Then it closes again: the sixty-five-metre column does not fall back. With the ram stopped and the inlet and drain valves closed, the gauge should hold for long minutes. If it collapses, this valve leaks. [[flows:off]]"
+    },
+    {
+      "id": "part-air-chamber",
+      "scope": "part:air-chamber",
+      "title": "Air chamber",
+      "scene": "ram",
+      "text": "[[cutaway:on]] Air compresses, water does not: that is the whole secret of the air chamber! Each stroke pushes a little water in, which compresses the air. The air expands, and pushes the water upwards without a pause. Short pushes become an almost continuous flow. Waterlogged, with no air, it would cut the delivery by forty per cent. Delivery dropping? Look first at the air chamber and the snifter. [[cutaway:off]]"
+    },
+    {
+      "id": "part-snifter",
+      "scope": "part:snifter",
+      "title": "Snifter valve",
+      "scene": "ram",
+      "text": "[[flows:on]] A very small part of the ram, and perhaps the cleverest! The air in the chamber slowly dissolves in the water. But at each recoil, the pressure in the body falls below that of the open air. The valve opens, and a pinch of air comes in. The next stroke pushes it into the chamber. Blocked, it does not complain: the chamber is waterlogged in about fifteen hours. Clean its hole at every visit. [[flows:off]]"
+    },
+    {
+      "id": "part-gauge",
+      "scope": "part:gauge",
+      "title": "Pressure gauge",
+      "scene": "ram",
+      "text": "A single dial, and it tells everything. The gauge reads the height already gained: one bar for ten metres. That is six point four bar for sixty-five metres. The needle barely moves when the chamber holds air, and shakes when it is waterlogged. Never take it off under pressure."
+    },
+    {
+      "id": "part-delivery-union",
+      "scope": "part:delivery-union",
+      "title": "Delivery union",
+      "scene": "ram",
+      "text": "A three-piece fitting, to disconnect the ram without cutting the pipe. Careful: behind it, three hundred metres of pipe, about sixty litres, at over six bar. Loosened all at once, it lets out a violent jet. Stop the ram, then loosen very slowly, a cloth around it: the pipe empties through there."
+    },
+    {
+      "id": "part-outlet-valve",
+      "scope": "part:outlet-valve",
+      "title": "Outlet valve (V3)",
+      "scene": "ram",
+      "text": "About sixty litres, three hours of the ram’s work: that is what the outlet valve keeps in the delivery pipe. It holds it while you work on the machine. Reopen it once the job is done… and don’t forget! Left closed by mistake, it makes the ram strike for nothing."
+    },
+    {
+      "id": "part-drain-valve",
+      "scope": "part:drain-valve",
+      "title": "Drain valve (V2)",
+      "scene": "ram",
+      "text": "How do you empty the ram before a frosty night? Through its lowest point: the drain valve, with the inlet valve closed. But not the air chamber: it keeps its six point four bar. Open slowly, jet towards the pit’s drain: the body may still be under pressure."
+    },
+    {
+      "id": "part-foundation",
+      "scope": "part:foundation",
+      "title": "Anchor block",
+      "scene": "ram",
+      "text": "A block of concrete under the ram’s feet: it stops it from walking under the blows. A hundred and nine strokes a minute, more than a hundred and fifty thousand a day! Badly fixed, the ram loosens its fittings and ends up breaking a joint. This block is only an illustration."
+    },
+    {
+      "id": "part-base-plate",
+      "scope": "part:base-plate",
+      "title": "Base plate",
+      "scene": "valve",
+      "text": "Here, we build without touching the ram. The base plate takes the place of the original valve’s: same size, same holes, and the ram body stays intact. A steel fitting is welded in its central hole. Keep the original plate as a template: trace the outline and the holes through it."
+    },
+    {
+      "id": "part-valve-socket",
+      "scope": "part:valve-socket",
+      "title": "Welded 26×34 socket",
+      "scene": "valve",
+      "text": "A steel socket welded to the centre of the plate: the base of the stack. Its volume holds the water, which pushes on the head. In the video, the builder welds a smaller fitting, and regrets not taking this one. Weld it square: seat, guide and stem must share a single axis."
+    },
+    {
+      "id": "part-valve-reducer",
+      "scope": "part:valve-reducer",
+      "title": "Reducer 26×34 → 15×21",
+      "scene": "valve",
+      "text": "The reducer steps down from the big socket to the body of the valve. Its inner cone is a funnel that guides the water to the seat. In the video, the original one-inch and the three-quarter-inch trial both used too much water. Tighten all the fittings fully before moving on to the seat."
+    },
+    {
+      "id": "part-valve-nipple",
+      "scope": "part:valve-nipple",
+      "title": "Ported nipple",
+      "scene": "valve",
+      "text": "A threaded fitting cut with slots, the ports. The water passes through the seat, rises in the nipple, then leaves through the sides. The ports are three times wider than the seat: it is the gap under the head that sets the flow. Keep your fingers away from the ports while it runs."
+    },
+    {
+      "id": "part-valve-sleeve",
+      "scope": "part:valve-sleeve",
+      "title": "15×21 female-female sleeve",
+      "scene": "valve",
+      "text": "An ordinary plumbing part, but one that keeps everything straight. This sleeve with two female threads joins the nipple to the guide, and lines them up on one axis. If its threads engage the guide crooked, the stem rubs. Screw the guide in by hand for several turns before tightening with a spanner."
+    },
+    {
+      "id": "part-valve-seat",
+      "scope": "part:valve-seat",
+      "title": "Conical seat",
+      "scene": "valve",
+      "text": "[[xray:on]] The seat: it is what makes the seal. A cone machined to the same angle as the head: at each stroke, the head comes to sit in it. Why a cone? The contact is wider, and the head re-centres itself. In the video, a flat valve with a gasket did not hold: the gasket was dead within twenty-four hours. Machine it once the whole stack is tightened, never before. [[xray:off]]"
+    },
+    {
+      "id": "part-valve-head",
+      "scope": "part:valve-head",
+      "title": "Valve head",
+      "scene": "valve",
+      "text": "It is what closes: a stainless countersunk screw, shortened, and drilled along its axis to let the stem through. The hard part is making it straight. The threaded part of a screw is almost never in line with its head. The first heads, cut crooked, leaked even when tightened. Grip the screw in the chuck, and feed it down onto a drill bit held in a vice: it centres itself."
+    },
+    {
+      "id": "part-valve-stem",
+      "scope": "part:valve-stem",
+      "title": "Valve stem",
+      "scene": "valve",
+      "text": "[[explode:0.6]] The backbone of the valve: a plain threaded rod of six millimetres, found anywhere. From bottom to top, it carries the head, two sleeves, the stroke nut, the weight and the lock nut. With a pitch of one millimetre per turn, a tenth of a turn sets a tenth of a millimetre of stroke. Don’t weld the head to the stem: in the video, the welded trial did not close. [[explode:0]]"
+    },
+    {
+      "id": "part-stem-sleeves",
+      "scope": "part:stem-sleeves",
+      "title": "Stem sleeves",
+      "scene": "valve",
+      "text": "A threaded rod makes a poor axle: its threads would wear against the guide. The builder slips two small machined sleeves over it, fitted to a tenth of a millimetre: you wear a sleeve, not the rod! Measure the bore of the guide in several places before machining: it is not perfectly round."
+    },
+    {
+      "id": "part-valve-guide",
+      "scope": "part:valve-guide",
+      "title": "Thermowell guide",
+      "scene": "valve",
+      "text": "A stainless thermowell, made to house solar water heater probes: the builder had some to hand. It guides the stem, and its end face stops the stroke nut and the weight at each stroke. One part guides the stem and sets the stroke. Its face must be flat and square."
+    },
+    {
+      "id": "part-valve-fins",
+      "scope": "part:valve-fins",
+      "title": "Fins",
+      "scene": "valve",
+      "text": "On the original valve, small fins make it turn a little at each lift: the wear is spread all round. In the video, the builder plans to file some under this one, without knowing whether it will make it turn: the effect is not proven. Give all the fins the same slope."
+    },
+    {
+      "id": "part-counterweight",
+      "scope": "part:counterweight",
+      "title": "Weight (rebar)",
+      "scene": "valve",
+      "text": "A length of rebar thirty millimetres across, drilled and tapped along its axis. It drops the valve back down after each stroke. According to the video, it matters a little for consumption; in the model, it is a major lever. Double its mass: the rhythm falls to seventy-five strokes a minute, and consumption goes over fifteen litres a minute. The first weight, made of stacked nuts, went crooked and stopped the ram."
+    },
+    {
+      "id": "part-stroke-nut",
+      "scope": "part:stroke-nut",
+      "title": "Stroke nut",
+      "scene": "valve",
+      "text": "The valve moves only about two millimetres. This nut sets that stroke, and so the consumption: it is the most important adjustment. Too short, and the stroke no longer delivers. Too long, and the ram drinks more than the spring gives. Turn by fractions of a turn."
+    },
+    {
+      "id": "part-lock-nut",
+      "scope": "part:lock-nut",
+      "title": "Lock nut",
+      "scene": "valve",
+      "text": "A hundred strokes a minute: every vibration can loosen the stroke nut. The ram drifts out of adjustment with nothing to show it. The lock nut holds it, tightened against the weight. Tighten it after every adjustment, with two spanners: hand-tight, it works loose within hours."
+    }
+  ]
+}

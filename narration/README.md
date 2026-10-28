@@ -82,3 +82,19 @@ gauge under pressure. Water rights are not in the lab data, so none are mentione
 
 bélier (as in "coup de bélier"), reniflard, doigt de gant, taraudé, fraisé, mamelon, lumières (the slots), portée (the seat), inox,
 filtre en Y, mandrin, foret, étau, d'équerre, colmate, quiz, "dix-huitième".
+
+# English script
+
+`en.json` has the same 49 segments as `fr.json` (identical `id`, `scope`, `scene`, order; the same cues with the same arguments at the matching point of
+the sentence); `src/narration.test.ts` checks it. Titles are the lab's English names. Dry run:
+`node <lab-kit>/tools/narration/generate.mjs --src narration/en.json --out /tmp/ram-audio-en --dry-run`.
+
+- **16 482 spoken characters** (French 17 097): intro 1 794, worlds 2 080 (site 576, catchment 572, ram 430, valve 502), parts 12 608 (biggest waste-valve 478, delivery-valve 418, counterweight 416;
+  smallest tank-lid 203, spring 206, drive-gate-valve 208). Measured with `tone-stats.mjs` against Pelton's English script:
+  average sentence 67 characters (Pelton 69), one sentence above 120 (2), exclamations 0.79 per 1 000 characters (0.83), questions 0.36 (0.35).
+- Register: an adaptation, not a translation. Same warm storyteller ("you", "let's"), short sentences, one image per part. British spelling and units
+  (metres, litres, tonnes, spanner, "per cent"). Numbers in words, no symbol.
+- Disclaimers are said once, as in French: the reconstruction notice, the generic one-inch ram and "unless I quote the video, the figures come from the
+  simulation" only in the intro; the drinkability warning only in `part-house`; "in the model" only in `part-counterweight`. The test enforces it for both.
+- The builder of the valve is "the builder" (French "l'auteur"); no name, no brand. The principle's history is "the late eighteenth century".
+- Words the voice may stumble on: thermowell, snifter, rebar, spanner, tonnes, countersunk, "re-centres", "water hammer".

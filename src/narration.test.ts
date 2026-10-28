@@ -185,3 +185,13 @@ describe('the private transcript', () => {
     expect(copied).toEqual([]);
   });
 });
+
+describe('narration scripts agree between languages', () => {
+  const cues = (text: string) => [...text.matchAll(CUE)].map((m) => m[0]);
+
+  it.skipIf(!scripts.fr || !scripts.en)('have the same segments and the same cues in the same order', () => {
+    const [fr, en] = [scripts.fr!, scripts.en!];
+    expect(en.segments.map((s) => [s.id, s.scope, s.scene])).toEqual(fr.segments.map((s) => [s.id, s.scope, s.scene]));
+    for (const s of fr.segments) expect(cues(en.segments.find((x) => x.id === s.id)!.text), s.id).toEqual(cues(s.text));
+  });
+});
