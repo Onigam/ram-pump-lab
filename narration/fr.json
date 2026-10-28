@@ -170,7 +170,7 @@
       "scope": "part:ram",
       "title": "Corps du bélier",
       "scene": "ram",
-      "text": "[[cutaway:on]] Le corps du bélier : la chambre où débouche la conduite motrice. Trois ouvertures : l’arrivée, la sortie du clapet de choc, et la sortie utile vers la cloche. C’est un bélier générique d’un pouce, pas celui de la vidéo. Le principe est attribué à Joseph de Montgolfier, à la fin du dix-huitième siècle. Un bélier d’un pouce attend plus d’eau que cette source n’en donne : la vidéo réduit donc la consommation du clapet. [[cutaway:off]]"
+      "text": "[[cutaway:on]] Le corps du bélier : la chambre où débouche la conduite motrice. Trois ouvertures : l’arrivée, la sortie du clapet de choc, et la sortie utile vers la cloche. C’est un bélier générique d’un pouce, pas celui de la vidéo. Son principe date de la fin du dix-huitième siècle. Un bélier d’un pouce attend plus d’eau que cette source n’en donne : la vidéo réduit donc la consommation du clapet. [[cutaway:off]]"
     },
     {
       "id": "part-inlet-flange",

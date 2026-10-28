@@ -172,3 +172,16 @@ and `CurveChart` for the live canvas panels, but nothing for an SVG drawing. Wri
 - **Hatches**: there is no concrete or rock hatch (`steel` and `alu` stand for them on RP-D13; `earth` is soil only).
 
 - **Needed by**: every lab with charts on its sheets (Pelton Lab draws efficiency and power curves); the ram lab (RP-D08 to RP-D10).
+
+## 14. Narration: the cues placed at the very end of a segment are never applied (found with the French audio, 2026-10-28)
+
+A part or world segment that switches something on at the start and off "at the end" (`[[cutaway:on]] … [[cutaway:off]]`, `[[flows:on]] … [[flows:off]]`,
+`[[xray:on]] … [[xray:off]]`, `[[explode:0.6]] … [[explode:0]]`) leaves the effect on when the audio ends. The generator puts a trailing marker
+at the end of the aligned text (air-chamber: `cutaway: false` at 22.8 s), but the decoded audio is a hair shorter (22.7 s), so `onEnded` →
+`tick()` reads `currentTime` below the cue time and never runs it. Measured in Chrome on `part-air-chamber` (section stays on), `part-valve-seat`
+(X-ray stays on) and `part-valve-stem` (explode stays at 0.6); a cue in the middle of the text (`scene-valve`: `explode:0` at 24.7 s) works.
+Pelton Lab has the same pattern (`part-in-screen`: `flows:false` at 20.96 s, `part-buckets`: `flows:false` at 24.72 s) and the same symptom.
+
+- **Fix in the kit**: when the audio ends, apply the state at the end of the segment (the last cue of each kind, as `replayCues` does for a seek to
+  the end) instead of only the cues up to `currentTime`; or clamp every cue time to the audio duration. No lab or script change, no new audio.
+- **Needed by**: every lab with a spoken guide (Pelton Lab in production, this lab).

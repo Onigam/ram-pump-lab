@@ -15,9 +15,9 @@ Check cost without spending anything: `node <lab-kit>/tools/narration/generate.m
 ## Register
 
 No person, channel, company, brand or institution is named in the script or its titles (credits live in the Sources panel): "la vidéo" for the
-source video, "l'auteur" for who builds the valve, "le modèle" for the simulation. The only name is the historical inventor of the principle,
-once, in `part-ram`, with "à la fin du dix-huitième siècle" and no year (the sources disagree).
-A warm storyteller who addresses the listener ("vous", "on", "nous"; never "tu"): short sentences (only two above 120 characters, none above 123, so subtitles cut
+source video, "l'auteur" for who builds the valve, "le modèle" for the simulation. No name at all, not even the historical inventor of the
+principle (the owner had him removed): `part-ram` says "Son principe date de la fin du dix-huitième siècle" and gives no year (the sources disagree).
+A warm storyteller who addresses the listener ("vous", "on", "nous"; never "tu"): short sentences (one above 120 characters, so subtitles cut
 cleanly), one image or one wonder per part, a question now and then, rare exclamations. The wonder is water that lifts water with no motor,
 no electricity, no fuel, by stopping itself a hundred times a minute.
 Most parts close on one concrete detail from the lab's own fields (`tip`, `maintenance`, `design`, specs).
@@ -74,5 +74,5 @@ gauge under pressure. Water rights are not in the lab data, so none are mentione
 
 ## Words the voice may stumble on
 
-Montgolfier, bélier (as in "coup de bélier"), reniflard, doigt de gant, taraudé, fraisé, mamelon, lumières (the slots), portée (the seat), inox,
+bélier (as in "coup de bélier"), reniflard, doigt de gant, taraudé, fraisé, mamelon, lumières (the slots), portée (the seat), inox,
 filtre en Y, mandrin, foret, étau, d'équerre, colmate, quiz, "dix-huitième".
