@@ -134,6 +134,8 @@ export const lab: LabDefinition<RamSim> = {
   sim: new RamSim(),
   defaultScene: 'site',
   video: { id: 'mc0gq5rObcM' },
+  // spoken guide: audio and subtitles generated from narration/<lang>.json (see narration/README.md)
+  narration: { manifest: 'audio/{lang}/manifest.json' },
   parts: PARTS,
   scenes: [
     {
