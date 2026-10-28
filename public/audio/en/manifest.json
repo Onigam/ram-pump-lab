@@ -1,0 +1,2495 @@
+{
+  "lang": "en",
+  "model": "eleven_v4",
+  "generatedAt": "2026-10-28T23:06:07.777Z",
+  "voiceLabel": {
+    "fr": "Voix de synthèse",
+    "en": "Synthetic voice"
+  },
+  "totalSeconds": 1033.92,
+  "segments": [
+    {
+      "id": "intro",
+      "scope": "intro",
+      "title": "About the site",
+      "scene": "site",
+      "file": "intro.mp3",
+      "duration": 116.24,
+      "chars": 1794,
+      "hash": "c8a8c77216f7c8c2",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 4.72,
+          "text": "Picture a spring on a hillside: a trickle of water, nothing more."
+        },
+        {
+          "t0": 4.72,
+          "t1": 8.16,
+          "text": "Far above it, a farm would love that water at the tap."
+        },
+        {
+          "t0": 8.16,
+          "t1": 11.28,
+          "text": "With no motor, no electricity, no fuel."
+        },
+        {
+          "t0": 11.28,
+          "t1": 12.4,
+          "text": "Impossible?"
+        },
+        {
+          "t0": 12.4,
+          "t1": 14.24,
+          "text": "Let’s follow one drop."
+        },
+        {
+          "t0": 14.24,
+          "t1": 18.4,
+          "text": "It leaves the ground without a sound, slips into a little stone chamber,"
+        },
+        {
+          "t0": 18.52,
+          "t1": 21.84,
+          "text": "then falls into a big tank: the buffer tank."
+        },
+        {
+          "t0": 21.84,
+          "t1": 27.6,
+          "text": "From there it enters the drive pipe, a rigid pipe that lets it race down seven point five metres."
+        },
+        {
+          "t0": 27.6,
+          "t1": 30.08,
+          "text": "It picks up speed, lots of speed."
+        },
+        {
+          "t0": 30.08,
+          "t1": 33.6,
+          "text": "At the end, the ram: a machine with no motor."
+        },
+        {
+          "t0": 33.6,
+          "t1": 37.84,
+          "text": "Its waste valve snaps shut, and the rushing water stops dead."
+        },
+        {
+          "t0": 37.84,
+          "t1": 42.72,
+          "text": "With nowhere else to go, it forces a small valve open, squeezes an air chamber,"
+        },
+        {
+          "t0": 42.76,
+          "t1": 45.04,
+          "text": "and a little water is thrown upwards."
+        },
+        {
+          "t0": 45.04,
+          "t1": 51.44,
+          "text": "Then the valve opens again, all by itself, and everything starts over: about a hundred times a minute."
+        },
+        {
+          "t0": 51.44,
+          "t1": 56.24,
+          "text": "You will see that valve up close: a stem, a weight, two nuts."
+        },
+        {
+          "t0": 56.24,
+          "t1": 57.52,
+          "text": "Back on the site."
+        },
+        {
+          "t0": 57.52,
+          "t1": 61.52,
+          "text": "Each stroke pushes a little water into three hundred metres of pipe."
+        },
+        {
+          "t0": 61.52,
+          "t1": 66,
+          "text": "The water climbs sixty-five metres to the water tower, a tank up high."
+        },
+        {
+          "t0": 66,
+          "t1": 71.6,
+          "text": "The house gets its water: about five hundred litres a day, in the video this lab draws on."
+        },
+        {
+          "t0": 71.6,
+          "t1": 76.16,
+          "text": "Only a small share rises: the rest leaves at the foot of the machine."
+        },
+        {
+          "t0": 76.16,
+          "t1": 80.88,
+          "text": "There are four views: the site, the catchment, the ram and the valve."
+        },
+        {
+          "t0": 80.88,
+          "t1": 84.96,
+          "text": "Click a part: its sheet opens, and you can listen to its story."
+        },
+        {
+          "t0": 84.96,
+          "t1": 88.4,
+          "text": "The simulation makes the ram beat in slow motion."
+        },
+        {
+          "t0": 88.4,
+          "t1": 91.68,
+          "text": "Six lessons, with quizzes, explain the principle."
+        },
+        {
+          "t0": 91.68,
+          "t1": 96.32,
+          "text": "The assembly guide builds the valve part by part, then fits it on the ram."
+        },
+        {
+          "t0": 96.32,
+          "t1": 100.6,
+          "text": "The installation guide goes from surveying the land to the first start-up."
+        },
+        {
+          "t0": 100.6,
+          "t1": 103.2,
+          "text": "The drawings gather the technical sheets."
+        },
+        {
+          "t0": 103.2,
+          "t1": 108.88,
+          "text": "This lab is an educational reconstruction: neither an official plan nor a maker’s product."
+        },
+        {
+          "t0": 108.88,
+          "t1": 115.48,
+          "text": "The ram shown is a generic one-inch ram and, unless I quote the video, the figures come from the simulation."
+        },
+        {
+          "t0": 115.48,
+          "t1": 116.24,
+          "text": "Over to you!"
+        }
+      ],
+      "cues": [
+        {
+          "t": 0,
+          "do": {
+            "home": true
+          }
+        },
+        {
+          "t": 12.4,
+          "do": {
+            "frame": [
+              "spring"
+            ]
+          }
+        },
+        {
+          "t": 16.4,
+          "do": {
+            "scene": "catchment"
+          }
+        },
+        {
+          "t": 21.84,
+          "do": {
+            "scene": "site"
+          }
+        },
+        {
+          "t": 24.64,
+          "do": {
+            "frame": [
+              "drive-pipe"
+            ]
+          }
+        },
+        {
+          "t": 30.08,
+          "do": {
+            "scene": "ram"
+          }
+        },
+        {
+          "t": 33.6,
+          "do": {
+            "frame": [
+              "waste-valve"
+            ]
+          }
+        },
+        {
+          "t": 37.84,
+          "do": {
+            "frame": [
+              "delivery-valve"
+            ]
+          }
+        },
+        {
+          "t": 41.28,
+          "do": {
+            "frame": [
+              "air-chamber"
+            ]
+          }
+        },
+        {
+          "t": 51.44,
+          "do": {
+            "scene": "valve"
+          }
+        },
+        {
+          "t": 56.24,
+          "do": {
+            "scene": "site"
+          }
+        },
+        {
+          "t": 59.36,
+          "do": {
+            "frame": [
+              "delivery-pipe"
+            ]
+          }
+        },
+        {
+          "t": 63.44,
+          "do": {
+            "frame": [
+              "water-tower"
+            ]
+          }
+        },
+        {
+          "t": 66,
+          "do": {
+            "frame": [
+              "house"
+            ]
+          }
+        },
+        {
+          "t": 76.16,
+          "do": {
+            "home": true
+          }
+        },
+        {
+          "t": 84.96,
+          "do": {
+            "mode": "sim"
+          }
+        },
+        {
+          "t": 88.4,
+          "do": {
+            "mode": "lessons"
+          }
+        },
+        {
+          "t": 91.68,
+          "do": {
+            "mode": "assembly"
+          }
+        },
+        {
+          "t": 96.32,
+          "do": {
+            "mode": "install"
+          }
+        },
+        {
+          "t": 100.6,
+          "do": {
+            "mode": "plans"
+          }
+        },
+        {
+          "t": 103.2,
+          "do": {
+            "mode": "explore"
+          }
+        },
+        {
+          "t": 108.88,
+          "do": {
+            "scene": "site"
+          }
+        },
+        {
+          "t": 115.48,
+          "do": {
+            "select": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-site",
+      "scope": "scene:site",
+      "title": "The site: from the spring to the house",
+      "scene": "site",
+      "file": "scene-site.mp3",
+      "duration": 39.12,
+      "chars": 576,
+      "hash": "365e2a915ae49202",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 3.52,
+          "text": "Here is the whole farm, from the spring to the house."
+        },
+        {
+          "t0": 3.52,
+          "t1": 6.32,
+          "text": "It all starts at the spring, right at the top."
+        },
+        {
+          "t0": 6.32,
+          "t1": 13.92,
+          "text": "A tank collects the water and keeps it in store, then a rigid pipe lets it fall seven point five metres."
+        },
+        {
+          "t0": 13.92,
+          "t1": 17.76,
+          "text": "At the foot of the slope, in its pit, the ram goes to work."
+        },
+        {
+          "t0": 17.76,
+          "t1": 20.88,
+          "text": "Almost all the water leaves here, through the drain."
+        },
+        {
+          "t0": 20.88,
+          "t1": 26.72,
+          "text": "The rest, a thin trickle, climbs the delivery pipe: sixty-five metres of climb."
+        },
+        {
+          "t0": 26.72,
+          "t1": 33.36,
+          "text": "It reaches the water tower, which stores it up high, and the house enjoys it, by gravity, all day long."
+        },
+        {
+          "t0": 33.36,
+          "t1": 39.12,
+          "text": "A fall, a valve that slams, and no motor: the water climbs all by itself!"
+        }
+      ],
+      "cues": [
+        {
+          "t": 0,
+          "do": {
+            "home": true
+          }
+        },
+        {
+          "t": 3.52,
+          "do": {
+            "flows": true
+          }
+        },
+        {
+          "t": 3.52,
+          "do": {
+            "frame": [
+              "spring"
+            ]
+          }
+        },
+        {
+          "t": 6.32,
+          "do": {
+            "frame": [
+              "buffer-tank"
+            ]
+          }
+        },
+        {
+          "t": 9.52,
+          "do": {
+            "frame": [
+              "drive-pipe"
+            ]
+          }
+        },
+        {
+          "t": 13.92,
+          "do": {
+            "frame": [
+              "ram-pit"
+            ]
+          }
+        },
+        {
+          "t": 17.76,
+          "do": {
+            "frame": [
+              "waste-drain"
+            ]
+          }
+        },
+        {
+          "t": 20.88,
+          "do": {
+            "frame": [
+              "delivery-pipe"
+            ]
+          }
+        },
+        {
+          "t": 26.72,
+          "do": {
+            "frame": [
+              "water-tower"
+            ]
+          }
+        },
+        {
+          "t": 29.72,
+          "do": {
+            "frame": [
+              "house"
+            ]
+          }
+        },
+        {
+          "t": 33.36,
+          "do": {
+            "flows": false
+          }
+        },
+        {
+          "t": 33.36,
+          "do": {
+            "home": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-catchment",
+      "scope": "scene:catchment",
+      "title": "The spring box and the buffer tank",
+      "scene": "catchment",
+      "file": "scene-catchment.mp3",
+      "duration": 35.44,
+      "chars": 572,
+      "hash": "ba2723195ab43e2a",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 3.04,
+          "text": "This is where the water’s whole journey begins."
+        },
+        {
+          "t0": 3.04,
+          "t1": 9.44,
+          "text": "The spring comes out of the ground into a stone box, after crossing a bed of gravel that holds back the soil."
+        },
+        {
+          "t0": 9.44,
+          "t1": 15.36,
+          "text": "A sloping pipe carries it along, with no pressure, to the buffer tank, a big covered tank."
+        },
+        {
+          "t0": 15.36,
+          "t1": 18.4,
+          "text": "Its overflow sends the surplus downstream."
+        },
+        {
+          "t0": 18.4,
+          "t1": 23.92,
+          "text": "A strainer keeps out leaves and gravel, and a valve opens or closes the drive pipe."
+        },
+        {
+          "t0": 23.92,
+          "t1": 28.32,
+          "text": "Watch the water follow its path, and the section show the level in the tank."
+        },
+        {
+          "t0": 28.32,
+          "t1": 30.88,
+          "text": "This is the heart of the video’s story."
+        },
+        {
+          "t0": 30.88,
+          "t1": 35.44,
+          "text": "When the ram drank more than the spring gave, the tank emptied, and it stopped."
+        }
+      ],
+      "cues": [
+        {
+          "t": 0,
+          "do": {
+            "home": true
+          }
+        },
+        {
+          "t": 3.04,
+          "do": {
+            "frame": [
+              "spring-box"
+            ]
+          }
+        },
+        {
+          "t": 6.16,
+          "do": {
+            "frame": [
+              "gravel-filter"
+            ]
+          }
+        },
+        {
+          "t": 9.44,
+          "do": {
+            "frame": [
+              "feed-pipe"
+            ]
+          }
+        },
+        {
+          "t": 12.52,
+          "do": {
+            "frame": [
+              "tank-shell"
+            ]
+          }
+        },
+        {
+          "t": 15.36,
+          "do": {
+            "frame": [
+              "overflow-pipe"
+            ]
+          }
+        },
+        {
+          "t": 18.4,
+          "do": {
+            "frame": [
+              "intake-screen"
+            ]
+          }
+        },
+        {
+          "t": 20.76,
+          "do": {
+            "frame": [
+              "drive-gate-valve"
+            ]
+          }
+        },
+        {
+          "t": 23.92,
+          "do": {
+            "home": true
+          }
+        },
+        {
+          "t": 23.92,
+          "do": {
+            "flows": true
+          }
+        },
+        {
+          "t": 23.92,
+          "do": {
+            "cutaway": true
+          }
+        },
+        {
+          "t": 28.32,
+          "do": {
+            "cutaway": false
+          }
+        },
+        {
+          "t": 28.32,
+          "do": {
+            "flows": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-ram",
+      "scope": "scene:ram",
+      "title": "The hydraulic ram",
+      "scene": "ram",
+      "file": "scene-ram.mp3",
+      "duration": 28.08,
+      "chars": 430,
+      "hash": "a287ab02ae839242",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 3.28,
+          "text": "Here is the ram, a machine with no motor."
+        },
+        {
+          "t0": 3.28,
+          "t1": 6.72,
+          "text": "The driving water enters through a strainer and a valve."
+        },
+        {
+          "t0": 6.72,
+          "t1": 10.96,
+          "text": "It escapes first through the waste valve, until it slams shut."
+        },
+        {
+          "t0": 10.96,
+          "t1": 18.24,
+          "text": "Each stroke then forces open a small one-way valve, and the air chamber turns these pushes into a steady flow."
+        },
+        {
+          "t0": 18.24,
+          "t1": 24.48,
+          "text": "The snifter recharges it with air, pinch by pinch, and the gauge shows the height already gained."
+        },
+        {
+          "t0": 24.48,
+          "t1": 28.08,
+          "text": "Watch the water: almost all of it leaves through the valve."
+        }
+      ],
+      "cues": [
+        {
+          "t": 0,
+          "do": {
+            "home": true
+          }
+        },
+        {
+          "t": 3.28,
+          "do": {
+            "frame": [
+              "inlet-valve",
+              "strainer"
+            ]
+          }
+        },
+        {
+          "t": 6.72,
+          "do": {
+            "frame": [
+              "waste-valve"
+            ]
+          }
+        },
+        {
+          "t": 10.96,
+          "do": {
+            "frame": [
+              "delivery-valve"
+            ]
+          }
+        },
+        {
+          "t": 14.4,
+          "do": {
+            "frame": [
+              "air-chamber"
+            ]
+          }
+        },
+        {
+          "t": 18.24,
+          "do": {
+            "frame": [
+              "snifter"
+            ]
+          }
+        },
+        {
+          "t": 21.6,
+          "do": {
+            "frame": [
+              "gauge"
+            ]
+          }
+        },
+        {
+          "t": 24.48,
+          "do": {
+            "home": true
+          }
+        },
+        {
+          "t": 24.48,
+          "do": {
+            "flows": true
+          }
+        },
+        {
+          "t": 28.08,
+          "do": {
+            "flows": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene-valve",
+      "scope": "scene:valve",
+      "title": "The waste valve",
+      "scene": "valve",
+      "file": "scene-valve.mp3",
+      "duration": 29.12,
+      "chars": 502,
+      "hash": "673a9bd08f825afb",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 3.84,
+          "text": "The waste valve, after the one in the video, but simplified."
+        },
+        {
+          "t0": 3.84,
+          "t1": 7.04,
+          "text": "A base plate and a welded socket make the foundation."
+        },
+        {
+          "t0": 7.04,
+          "t1": 11.28,
+          "text": "Plumbing fittings form the body, cut with slots where the water escapes."
+        },
+        {
+          "t0": 11.28,
+          "t1": 15.36,
+          "text": "At the heart of the body, the seat and the head: this is where it closes."
+        },
+        {
+          "t0": 15.36,
+          "t1": 20.24,
+          "text": "A thermowell guides a threaded stem, which carries a heavy weight and two nuts."
+        },
+        {
+          "t0": 20.24,
+          "t1": 23.6,
+          "text": "Let’s pull the parts apart, to see how it all stacks up…"
+        },
+        {
+          "t0": 23.6,
+          "t1": 29.12,
+          "text": "The whole tuning of the ram happens here: the stroke and the weight set the rhythm and the consumption."
+        }
+      ],
+      "cues": [
+        {
+          "t": 0,
+          "do": {
+            "home": true
+          }
+        },
+        {
+          "t": 3.84,
+          "do": {
+            "frame": [
+              "base-plate",
+              "valve-socket"
+            ]
+          }
+        },
+        {
+          "t": 7.04,
+          "do": {
+            "frame": [
+              "valve-reducer",
+              "valve-nipple"
+            ]
+          }
+        },
+        {
+          "t": 11.28,
+          "do": {
+            "frame": [
+              "valve-seat",
+              "valve-head"
+            ]
+          }
+        },
+        {
+          "t": 15.36,
+          "do": {
+            "frame": [
+              "valve-guide",
+              "valve-stem"
+            ]
+          }
+        },
+        {
+          "t": 17.8,
+          "do": {
+            "frame": [
+              "counterweight",
+              "stroke-nut",
+              "lock-nut"
+            ]
+          }
+        },
+        {
+          "t": 20.24,
+          "do": {
+            "home": true
+          }
+        },
+        {
+          "t": 20.24,
+          "do": {
+            "explode": 0.6
+          }
+        },
+        {
+          "t": 23.6,
+          "do": {
+            "explode": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "part-spring",
+      "scope": "part:spring",
+      "title": "Spring catchment",
+      "scene": "site",
+      "file": "part-spring.mp3",
+      "duration": 12.24,
+      "chars": 206,
+      "hash": "c2c3f950897c2ed6",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 3.56,
+          "text": "It all starts with a trickle of water coming out of the ground."
+        },
+        {
+          "t0": 3.56,
+          "t1": 8.8,
+          "text": "In the video, it gave ten litres a minute two years ago, seven and a half today."
+        },
+        {
+          "t0": 8.8,
+          "t1": 12.24,
+          "text": "Measure its flow at the end of the dry season, not in spring!"
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-buffer-tank",
+      "scope": "part:buffer-tank",
+      "title": "Buffer tank",
+      "scene": "site",
+      "file": "part-buffer-tank.mp3",
+      "duration": 17.04,
+      "chars": 276,
+      "hash": "5737611c51b4c401",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 5.68,
+          "text": "A big tank between the spring and the ram: it is the one that tells the story of the video."
+        },
+        {
+          "t0": 5.68,
+          "t1": 9.92,
+          "text": "With the big original valve, the ram drank more than the spring gave."
+        },
+        {
+          "t0": 9.92,
+          "t1": 12.24,
+          "text": "The tank emptied in about ten hours."
+        },
+        {
+          "t0": 12.24,
+          "t1": 14.64,
+          "text": "With the small valve, it stays full."
+        },
+        {
+          "t0": 14.64,
+          "t1": 17.04,
+          "text": "A bigger tank would only delay the stop."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-drive-pipe",
+      "scope": "part:drive-pipe",
+      "title": "Drive pipe",
+      "scene": "site",
+      "file": "part-drive-pipe.mp3",
+      "duration": 16.56,
+      "chars": 257,
+      "hash": "f673eb6dc50ab47a",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 4.84,
+          "text": "A rigid pipe about twenty metres long, dropping seven point five metres."
+        },
+        {
+          "t0": 4.84,
+          "t1": 8.8,
+          "text": "The water gathers speed in it, until the waste valve slams."
+        },
+        {
+          "t0": 8.8,
+          "t1": 12.64,
+          "text": "That is the water hammer: six point five bar at its peak."
+        },
+        {
+          "t0": 12.64,
+          "t1": 16.56,
+          "text": "Put your hand on the pipe, ram running: you can feel every stroke!"
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-ram-pit",
+      "scope": "part:ram-pit",
+      "title": "Ram pit",
+      "scene": "site",
+      "file": "part-ram-pit.mp3",
+      "duration": 15.04,
+      "chars": 257,
+      "hash": "19ac000ee6240ae8",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 6.08,
+          "text": "The ram strikes about a hundred times a minute: it is bolted to a rigid block at the bottom of a pit."
+        },
+        {
+          "t0": 6.08,
+          "t1": 11.6,
+          "text": "The pit keeps the waste valve and the other valves within reach, and lets the waste water drain away."
+        },
+        {
+          "t0": 11.6,
+          "t1": 15.04,
+          "text": "Listen to your ram: a change of rhythm means trouble."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-waste-drain",
+      "scope": "part:waste-drain",
+      "title": "Waste-water drain",
+      "scene": "site",
+      "file": "part-waste-drain.mp3",
+      "duration": 19.44,
+      "chars": 303,
+      "hash": "46ef1a895625025e",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 2.16,
+          "text": "Where does most of the water go?"
+        },
+        {
+          "t0": 2.16,
+          "t1": 5.36,
+          "text": "Here: almost all of it leaves through the drain."
+        },
+        {
+          "t0": 5.36,
+          "t1": 8.56,
+          "text": "About six litres out of six point seven a minute."
+        },
+        {
+          "t0": 8.56,
+          "t1": 11.12,
+          "text": "That is not a flaw, it is the principle."
+        },
+        {
+          "t0": 11.12,
+          "t1": 16.32,
+          "text": "If it clogs, the water rises and, on some rams, drowns the waste valve."
+        },
+        {
+          "t0": 16.32,
+          "t1": 19.44,
+          "text": "A ten-litre bucket should fill there in under two minutes."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-delivery-pipe",
+      "scope": "part:delivery-pipe",
+      "title": "Delivery pipe",
+      "scene": "site",
+      "file": "part-delivery-pipe.mp3",
+      "duration": 15.68,
+      "chars": 262,
+      "hash": "fbac81e2da25d081",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 2.96,
+          "text": "This is the path of the few drops that climb."
+        },
+        {
+          "t0": 2.96,
+          "t1": 7.56,
+          "text": "About three hundred metres of pipe, up to sixty-five metres above the ram."
+        },
+        {
+          "t0": 7.56,
+          "t1": 13.28,
+          "text": "The video points it out: one metre of fall lifts water about ten metres, however long the pipe."
+        },
+        {
+          "t0": 13.28,
+          "t1": 15.68,
+          "text": "It takes about three hours to fill this pipe."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-water-tower",
+      "scope": "part:water-tower",
+      "title": "Water tower",
+      "scene": "site",
+      "file": "part-water-tower.mp3",
+      "duration": 14,
+      "chars": 224,
+      "hash": "a74a7d9a079a093c",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 6,
+          "text": "The house uses water in bursts, the ram never stops: the water tower bridges the gap."
+        },
+        {
+          "t0": 6,
+          "t1": 10.72,
+          "text": "In the video, it receives about five hundred litres a day, two buckets an hour."
+        },
+        {
+          "t0": 10.72,
+          "t1": 14,
+          "text": "Give it an overflow that sends the surplus somewhere safe."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-house",
+      "scope": "part:house",
+      "title": "House",
+      "scene": "site",
+      "file": "part-house.mp3",
+      "duration": 14.96,
+      "chars": 230,
+      "hash": "0b735730ca5b3fd6",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 2.56,
+          "text": "So that is why all this way!"
+        },
+        {
+          "t0": 2.56,
+          "t1": 7.2,
+          "text": "The water runs down from the tower to the tap, by gravity, on demand."
+        },
+        {
+          "t0": 7.2,
+          "t1": 10.4,
+          "text": "The video finds five hundred litres a day enough."
+        },
+        {
+          "t0": 10.4,
+          "t1": 14.96,
+          "text": "But spring water is not guaranteed drinkable: have it tested before you drink it."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-spring-box",
+      "scope": "part:spring-box",
+      "title": "Spring box",
+      "scene": "catchment",
+      "file": "part-spring-box.mp3",
+      "duration": 13.6,
+      "chars": 226,
+      "hash": "699781a3b984d74b",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 4.48,
+          "text": "A small closed chamber, set where the water comes out of the ground."
+        },
+        {
+          "t0": 4.48,
+          "t1": 9.36,
+          "text": "Never obstruct the spring: the outlet stays lower than where the water emerges."
+        },
+        {
+          "t0": 9.36,
+          "t1": 13.6,
+          "text": "An obstructed spring takes the easiest path, and may come out somewhere else."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-gravel-filter",
+      "scope": "part:gravel-filter",
+      "title": "Gravel filter",
+      "scene": "catchment",
+      "file": "part-gravel-filter.mp3",
+      "duration": 16.4,
+      "chars": 247,
+      "hash": "39d1c05eea969b08",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 3.28,
+          "text": "A bed of stones between the rock and the spring box."
+        },
+        {
+          "t0": 3.28,
+          "t1": 6.88,
+          "text": "The smallest are near the spring, the biggest against the wall."
+        },
+        {
+          "t0": 6.88,
+          "t1": 7.76,
+          "text": "Why?"
+        },
+        {
+          "t0": 7.76,
+          "t1": 12.56,
+          "text": "Very fine gravel clogs quickly, very coarse gravel holds back nothing."
+        },
+        {
+          "t0": 12.56,
+          "t1": 16.4,
+          "text": "And it is not a treatment: it stops grains, not germs."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-feed-pipe",
+      "scope": "part:feed-pipe",
+      "title": "Feed pipe",
+      "scene": "catchment",
+      "file": "part-feed-pipe.mp3",
+      "duration": 16.56,
+      "chars": 251,
+      "hash": "f8fbf978ed9f8730",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 4,
+          "text": "A few metres of sloping pipe, from the spring box to the tank."
+        },
+        {
+          "t0": 4,
+          "t1": 8.72,
+          "text": "No shock, no pressure: the water flows by itself, plastic will do."
+        },
+        {
+          "t0": 8.72,
+          "t1": 14.4,
+          "text": "It ends in open air, above the overflow, so that a full tank can never push water back."
+        },
+        {
+          "t0": 14.4,
+          "t1": 16.56,
+          "text": "No high point: it would trap air."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-tank-shell",
+      "scope": "part:tank-shell",
+      "title": "Buffer tank shell",
+      "scene": "catchment",
+      "file": "part-tank-shell.mp3",
+      "duration": 16.8,
+      "chars": 273,
+      "hash": "eaba8f0fc77eab4e",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 2.48,
+          "text": "The tank is the key to the story."
+        },
+        {
+          "t0": 2.48,
+          "t1": 6.96,
+          "text": "Its volume, about five thousand seven hundred litres, is not in the video."
+        },
+        {
+          "t0": 6.96,
+          "t1": 10,
+          "text": "It was worked out from the ten hours it took to empty."
+        },
+        {
+          "t0": 10,
+          "t1": 13.04,
+          "text": "Full, it holds more than five tonnes of water."
+        },
+        {
+          "t0": 13.04,
+          "t1": 16.8,
+          "text": "An empty tank stops the ram, which does not restart by itself."
+        }
+      ],
+      "cues": [
+        {
+          "t": 0,
+          "do": {
+            "cutaway": true
+          }
+        },
+        {
+          "t": 16.8,
+          "do": {
+            "cutaway": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "part-tank-lid",
+      "scope": "part:tank-lid",
+      "title": "Lid and vent",
+      "scene": "catchment",
+      "file": "part-tank-lid.mp3",
+      "duration": 14.08,
+      "chars": 203,
+      "hash": "f9c7498a5308ce4e",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 4.08,
+          "text": "A lid keeps out light, leaves, insects and animals."
+        },
+        {
+          "t0": 4.08,
+          "t1": 6.48,
+          "text": "The light, because it feeds algae."
+        },
+        {
+          "t0": 6.48,
+          "t1": 11.6,
+          "text": "It also carries a screened vent: for the water to leave, air has to come in."
+        },
+        {
+          "t0": 11.6,
+          "t1": 14.08,
+          "text": "Never block it to keep the water clean."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-overflow-pipe",
+      "scope": "part:overflow-pipe",
+      "title": "Overflow",
+      "scene": "catchment",
+      "file": "part-overflow-pipe.mp3",
+      "duration": 13.76,
+      "chars": 221,
+      "hash": "9f44be915ba4be6d",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 5.2,
+          "text": "The overflow sets the tank’s maximum level and sends the surplus downstream."
+        },
+        {
+          "t0": 5.2,
+          "t1": 8.64,
+          "text": "With the ram stopped, the whole spring flows through it."
+        },
+        {
+          "t0": 8.64,
+          "t1": 13.76,
+          "text": "Never put a valve on it: the day someone closes it, the tank overflows through the lid."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-intake-screen",
+      "scope": "part:intake-screen",
+      "title": "Intake screen",
+      "scene": "catchment",
+      "file": "part-intake-screen.mp3",
+      "duration": 15.92,
+      "chars": 247,
+      "hash": "0826d49a7109ffbb",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 2.08,
+          "text": "First part of the drive pipe."
+        },
+        {
+          "t0": 2.08,
+          "t1": 6.64,
+          "text": "Its basket holds back leaves and gravel that would jam under the waste valve."
+        },
+        {
+          "t0": 6.64,
+          "t1": 11.2,
+          "text": "But it is its submerged position, not its mesh, that keeps air out."
+        },
+        {
+          "t0": 11.2,
+          "t1": 15.92,
+          "text": "Sitting on the bottom, it sucks up mud; at the surface, it lets air in."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-drive-gate-valve",
+      "scope": "part:drive-gate-valve",
+      "title": "Drive-pipe gate valve",
+      "scene": "catchment",
+      "file": "part-drive-gate-valve.mp3",
+      "duration": 13.76,
+      "chars": 208,
+      "hash": "3a7ecd0033f8d7e7",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 3.6,
+          "text": "It guards the outlet of the tank, this full-bore valve."
+        },
+        {
+          "t0": 3.6,
+          "t1": 7.84,
+          "text": "Closed, it stops the ram and lets you work without emptying the tank."
+        },
+        {
+          "t0": 7.84,
+          "t1": 13.76,
+          "text": "Running, it stays fully open: half closed, it vibrates, wears and slows the water."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-tank-drain",
+      "scope": "part:tank-drain",
+      "title": "Tank drain",
+      "scene": "catchment",
+      "file": "part-tank-drain.mp3",
+      "duration": 17.6,
+      "chars": 269,
+      "hash": "9f507ca5b5c49c94",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 3.92,
+          "text": "At the very bottom of the tank, a ball valve: the drain."
+        },
+        {
+          "t0": 3.92,
+          "t1": 7.44,
+          "text": "Open, it flushes out water, mud and leaves."
+        },
+        {
+          "t0": 7.44,
+          "t1": 12,
+          "text": "After draining, the spring takes about thirteen hours to refill the tank."
+        },
+        {
+          "t0": 12,
+          "t1": 17.6,
+          "text": "Keep the drive-pipe valve closed in the meantime, or the ram restarts on an almost empty tank."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-ram",
+      "scope": "part:ram",
+      "title": "Ram body",
+      "scene": "ram",
+      "file": "part-ram.mp3",
+      "duration": 20.24,
+      "chars": 319,
+      "hash": "10fe3881eead7c2f",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 4,
+          "text": "The ram body: the chamber where the drive pipe ends."
+        },
+        {
+          "t0": 4,
+          "t1": 10.64,
+          "text": "Three openings: the inlet, the outlet of the waste valve, and the useful outlet towards the air chamber."
+        },
+        {
+          "t0": 10.64,
+          "t1": 13.68,
+          "text": "Its principle dates from the late eighteenth century."
+        },
+        {
+          "t0": 13.68,
+          "t1": 20.24,
+          "text": "A one-inch ram wants more water than this spring gives: so the video reduces what the waste valve consumes."
+        }
+      ],
+      "cues": [
+        {
+          "t": 0,
+          "do": {
+            "cutaway": true
+          }
+        },
+        {
+          "t": 20.24,
+          "do": {
+            "cutaway": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "part-inlet-flange",
+      "scope": "part:inlet-flange",
+      "title": "Inlet flange",
+      "scene": "ram",
+      "file": "part-inlet-flange.mp3",
+      "duration": 19.04,
+      "chars": 301,
+      "hash": "3135548e9165923e",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 3.36,
+          "text": "This is the ram’s first doorway, on the tank side."
+        },
+        {
+          "t0": 3.36,
+          "t1": 8.24,
+          "text": "A steel flange welded to the end of the pipe, a flat gasket, four bolts."
+        },
+        {
+          "t0": 8.24,
+          "t1": 12.48,
+          "text": "It is the one you undo to separate the ram from its twenty metres of pipe."
+        },
+        {
+          "t0": 12.48,
+          "t1": 19.04,
+          "text": "Tighten in a cross pattern, a fraction of a turn at a time: a flange tightened on one side only leaks."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-inlet-valve",
+      "scope": "part:inlet-valve",
+      "title": "Inlet valve (V1)",
+      "scene": "ram",
+      "file": "part-inlet-valve.mp3",
+      "duration": 16.48,
+      "chars": 256,
+      "hash": "23f7a293d2b53b38",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 3.92,
+          "text": "It starts the ram, and stops it: the inlet valve."
+        },
+        {
+          "t0": 3.92,
+          "t1": 9.76,
+          "text": "Fully open, it should go unnoticed: everything it holds back is momentum lost for the stroke."
+        },
+        {
+          "t0": 9.76,
+          "t1": 14.24,
+          "text": "Half closed, it chokes the driving water: never set the flow with it."
+        },
+        {
+          "t0": 14.24,
+          "t1": 16.48,
+          "text": "Set it with the stroke of the waste valve."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-strainer",
+      "scope": "part:strainer",
+      "title": "Y-strainer",
+      "scene": "ram",
+      "file": "part-strainer.mp3",
+      "duration": 16,
+      "chars": 251,
+      "hash": "556a3c13d716e3ea",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 5.36,
+          "text": "The Y-strainer stops what the spring carries: leaves, sand, grit."
+        },
+        {
+          "t0": 5.36,
+          "t1": 10.24,
+          "text": "A single pebble wedged under the head of the waste valve is enough to make it leak!"
+        },
+        {
+          "t0": 10.24,
+          "t1": 16,
+          "text": "Its mesh should offer a surface much larger than the pipe’s section, so it takes a long time to clog."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-waste-valve",
+      "scope": "part:waste-valve",
+      "title": "Waste valve (assembly)",
+      "scene": "ram",
+      "file": "part-waste-valve.mp3",
+      "duration": 28,
+      "chars": 478,
+      "hash": "d02d33042f548b2f",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 5.44,
+          "text": "Clack, clack, clack: the heart of the ram, and the only part the video shows in detail."
+        },
+        {
+          "t0": 5.44,
+          "t1": 9.68,
+          "text": "At rest, it is open: the water in the pipe escapes, speeding up."
+        },
+        {
+          "t0": 9.68,
+          "t1": 15.72,
+          "text": "Close to one metre per second is enough: the water presses it onto its seat, and the water hammer is off!"
+        },
+        {
+          "t0": 15.72,
+          "t1": 21.52,
+          "text": "Then the recoil opens it again, and it starts over, a hundred to a hundred and ten times a minute."
+        },
+        {
+          "t0": 21.52,
+          "t1": 25.48,
+          "text": "In the video, a valve made of plumbing fittings ends the stoppages."
+        },
+        {
+          "t0": 25.48,
+          "t1": 28,
+          "text": "Keep your fingers away from the valve while it runs."
+        }
+      ],
+      "cues": [
+        {
+          "t": 0,
+          "do": {
+            "flows": true
+          }
+        },
+        {
+          "t": 28,
+          "do": {
+            "flows": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "part-delivery-valve",
+      "scope": "part:delivery-valve",
+      "title": "Delivery check valve",
+      "scene": "ram",
+      "file": "part-delivery-valve.mp3",
+      "duration": 26.56,
+      "chars": 418,
+      "hash": "5c3553260b21f9db",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 6.88,
+          "text": "When the waste valve slams, the stopped water has only one way out: forcing this small one-way valve."
+        },
+        {
+          "t0": 6.88,
+          "t1": 10.4,
+          "text": "It opens for an instant, and lets through less than a teaspoon."
+        },
+        {
+          "t0": 10.4,
+          "t1": 14.08,
+          "text": "And yet, stroke after stroke, the water climbs!"
+        },
+        {
+          "t0": 14.08,
+          "t1": 18.4,
+          "text": "Then it closes again: the sixty-five-metre column does not fall back."
+        },
+        {
+          "t0": 18.4,
+          "t1": 24.08,
+          "text": "With the ram stopped and the inlet and drain valves closed, the gauge should hold for long minutes."
+        },
+        {
+          "t0": 24.08,
+          "t1": 26.56,
+          "text": "If it collapses, this valve leaks."
+        }
+      ],
+      "cues": [
+        {
+          "t": 0,
+          "do": {
+            "flows": true
+          }
+        },
+        {
+          "t": 26.56,
+          "do": {
+            "flows": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "part-air-chamber",
+      "scope": "part:air-chamber",
+      "title": "Air chamber",
+      "scene": "ram",
+      "file": "part-air-chamber.mp3",
+      "duration": 24.88,
+      "chars": 387,
+      "hash": "e3baf54f126907db",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 5.52,
+          "text": "Air compresses, water does not: that is the whole secret of the air chamber!"
+        },
+        {
+          "t0": 5.52,
+          "t1": 9.52,
+          "text": "Each stroke pushes a little water in, which compresses the air."
+        },
+        {
+          "t0": 9.52,
+          "t1": 13.6,
+          "text": "The air expands, and pushes the water upwards without a pause."
+        },
+        {
+          "t0": 13.6,
+          "t1": 16.88,
+          "text": "Short pushes become an almost continuous flow."
+        },
+        {
+          "t0": 16.88,
+          "t1": 21.04,
+          "text": "Waterlogged, with no air, it would cut the delivery by forty per cent."
+        },
+        {
+          "t0": 21.04,
+          "t1": 22.4,
+          "text": "Delivery dropping?"
+        },
+        {
+          "t0": 22.4,
+          "t1": 24.88,
+          "text": "Look first at the air chamber and the snifter."
+        }
+      ],
+      "cues": [
+        {
+          "t": 0,
+          "do": {
+            "cutaway": true
+          }
+        },
+        {
+          "t": 24.88,
+          "do": {
+            "cutaway": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "part-snifter",
+      "scope": "part:snifter",
+      "title": "Snifter valve",
+      "scene": "ram",
+      "file": "part-snifter.mp3",
+      "duration": 24.32,
+      "chars": 392,
+      "hash": "643ee3545f39e204",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 4,
+          "text": "A very small part of the ram, and perhaps the cleverest!"
+        },
+        {
+          "t0": 4,
+          "t1": 7.28,
+          "text": "The air in the chamber slowly dissolves in the water."
+        },
+        {
+          "t0": 7.28,
+          "t1": 11.92,
+          "text": "But at each recoil, the pressure in the body falls below that of the open air."
+        },
+        {
+          "t0": 11.92,
+          "t1": 14.96,
+          "text": "The valve opens, and a pinch of air comes in."
+        },
+        {
+          "t0": 14.96,
+          "t1": 17.44,
+          "text": "The next stroke pushes it into the chamber."
+        },
+        {
+          "t0": 17.44,
+          "t1": 22.32,
+          "text": "Blocked, it does not complain: the chamber is waterlogged in about fifteen hours."
+        },
+        {
+          "t0": 22.32,
+          "t1": 24.32,
+          "text": "Clean its hole at every visit."
+        }
+      ],
+      "cues": [
+        {
+          "t": 0,
+          "do": {
+            "flows": true
+          }
+        },
+        {
+          "t": 24.32,
+          "do": {
+            "flows": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "part-gauge",
+      "scope": "part:gauge",
+      "title": "Pressure gauge",
+      "scene": "ram",
+      "file": "part-gauge.mp3",
+      "duration": 17.52,
+      "chars": 277,
+      "hash": "b18d9d73fa9cc33f",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 2.96,
+          "text": "A single dial, and it tells everything."
+        },
+        {
+          "t0": 2.96,
+          "t1": 7.28,
+          "text": "The gauge reads the height already gained: one bar for ten metres."
+        },
+        {
+          "t0": 7.28,
+          "t1": 10.64,
+          "text": "That is six point four bar for sixty-five metres."
+        },
+        {
+          "t0": 10.64,
+          "t1": 15.76,
+          "text": "The needle barely moves when the chamber holds air, and shakes when it is waterlogged."
+        },
+        {
+          "t0": 15.76,
+          "t1": 17.52,
+          "text": "Never take it off under pressure."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-delivery-union",
+      "scope": "part:delivery-union",
+      "title": "Delivery union",
+      "scene": "ram",
+      "file": "part-delivery-union.mp3",
+      "duration": 18.88,
+      "chars": 296,
+      "hash": "c6d3ed676508dad4",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 4.08,
+          "text": "A three-piece fitting, to disconnect the ram without cutting the pipe."
+        },
+        {
+          "t0": 4.08,
+          "t1": 10.16,
+          "text": "Careful: behind it, three hundred metres of pipe, about sixty litres, at over six bar."
+        },
+        {
+          "t0": 10.16,
+          "t1": 13.36,
+          "text": "Loosened all at once, it lets out a violent jet."
+        },
+        {
+          "t0": 13.36,
+          "t1": 18.88,
+          "text": "Stop the ram, then loosen very slowly, a cloth around it: the pipe empties through there."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-outlet-valve",
+      "scope": "part:outlet-valve",
+      "title": "Outlet valve (V3)",
+      "scene": "ram",
+      "file": "part-outlet-valve.mp3",
+      "duration": 15.68,
+      "chars": 262,
+      "hash": "414db6e6515cd3ed",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 6.72,
+          "text": "About sixty litres, three hours of the ram’s work: that is what the outlet valve keeps in the delivery pipe."
+        },
+        {
+          "t0": 6.72,
+          "t1": 9.12,
+          "text": "It holds it while you work on the machine."
+        },
+        {
+          "t0": 9.12,
+          "t1": 10.96,
+          "text": "Reopen it once the job is done…"
+        },
+        {
+          "t0": 10.96,
+          "t1": 12.08,
+          "text": "and don’t forget!"
+        },
+        {
+          "t0": 12.08,
+          "t1": 15.68,
+          "text": "Left closed by mistake, it makes the ram strike for nothing."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-drain-valve",
+      "scope": "part:drain-valve",
+      "title": "Drain valve (V2)",
+      "scene": "ram",
+      "file": "part-drain-valve.mp3",
+      "duration": 15.76,
+      "chars": 257,
+      "hash": "39ad680d3b03a146",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 3.04,
+          "text": "How do you empty the ram before a frosty night?"
+        },
+        {
+          "t0": 3.04,
+          "t1": 7.2,
+          "text": "Through its lowest point: the drain valve, with the inlet valve closed."
+        },
+        {
+          "t0": 7.2,
+          "t1": 10.8,
+          "text": "But not the air chamber: it keeps its six point four bar."
+        },
+        {
+          "t0": 10.8,
+          "t1": 15.76,
+          "text": "Open slowly, jet towards the pit’s drain: the body may still be under pressure."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-foundation",
+      "scope": "part:foundation",
+      "title": "Anchor block",
+      "scene": "ram",
+      "file": "part-foundation.mp3",
+      "duration": 16.32,
+      "chars": 274,
+      "hash": "194b353d55b2b5cc",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 5.04,
+          "text": "A block of concrete under the ram’s feet: it stops it from walking under the blows."
+        },
+        {
+          "t0": 5.04,
+          "t1": 10.08,
+          "text": "A hundred and nine strokes a minute, more than a hundred and fifty thousand a day!"
+        },
+        {
+          "t0": 10.08,
+          "t1": 14.48,
+          "text": "Badly fixed, the ram loosens its fittings and ends up breaking a joint."
+        },
+        {
+          "t0": 14.48,
+          "t1": 16.32,
+          "text": "This block is only an illustration."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-base-plate",
+      "scope": "part:base-plate",
+      "title": "Base plate",
+      "scene": "valve",
+      "file": "part-base-plate.mp3",
+      "duration": 17.2,
+      "chars": 280,
+      "hash": "341f1e1a94349765",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 2.92,
+          "text": "Here, we build without touching the ram."
+        },
+        {
+          "t0": 2.92,
+          "t1": 9.88,
+          "text": "The base plate takes the place of the original valve’s: same size, same holes, and the ram body stays intact."
+        },
+        {
+          "t0": 9.88,
+          "t1": 12.88,
+          "text": "A steel fitting is welded in its central hole."
+        },
+        {
+          "t0": 12.88,
+          "t1": 17.2,
+          "text": "Keep the original plate as a template: trace the outline and the holes through it."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-valve-socket",
+      "scope": "part:valve-socket",
+      "title": "Welded 26×34 socket",
+      "scene": "valve",
+      "file": "part-valve-socket.mp3",
+      "duration": 16.96,
+      "chars": 273,
+      "hash": "a1af82aba0311875",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 4.48,
+          "text": "A steel socket welded to the centre of the plate: the base of the stack."
+        },
+        {
+          "t0": 4.48,
+          "t1": 7.84,
+          "text": "Its volume holds the water, which pushes on the head."
+        },
+        {
+          "t0": 7.84,
+          "t1": 12.56,
+          "text": "In the video, the builder welds a smaller fitting, and regrets not taking this one."
+        },
+        {
+          "t0": 12.56,
+          "t1": 16.96,
+          "text": "Weld it square: seat, guide and stem must share a single axis."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-valve-reducer",
+      "scope": "part:valve-reducer",
+      "title": "Reducer 26×34 → 15×21",
+      "scene": "valve",
+      "file": "part-valve-reducer.mp3",
+      "duration": 16.72,
+      "chars": 286,
+      "hash": "e55b679c903e3e7f",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 4.08,
+          "text": "The reducer steps down from the big socket to the body of the valve."
+        },
+        {
+          "t0": 4.08,
+          "t1": 7.76,
+          "text": "Its inner cone is a funnel that guides the water to the seat."
+        },
+        {
+          "t0": 7.76,
+          "t1": 13.36,
+          "text": "In the video, the original one-inch and the three-quarter-inch trial both used too much water."
+        },
+        {
+          "t0": 13.36,
+          "t1": 16.72,
+          "text": "Tighten all the fittings fully before moving on to the seat."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-valve-nipple",
+      "scope": "part:valve-nipple",
+      "title": "Ported nipple",
+      "scene": "valve",
+      "file": "part-valve-nipple.mp3",
+      "duration": 16.72,
+      "chars": 281,
+      "hash": "29ae0c0229002ece",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 3.28,
+          "text": "A threaded fitting cut with slots, the ports."
+        },
+        {
+          "t0": 3.28,
+          "t1": 8.48,
+          "text": "The water passes through the seat, rises in the nipple, then leaves through the sides."
+        },
+        {
+          "t0": 8.48,
+          "t1": 14,
+          "text": "The ports are three times wider than the seat: it is the gap under the head that sets the flow."
+        },
+        {
+          "t0": 14,
+          "t1": 16.72,
+          "text": "Keep your fingers away from the ports while it runs."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-valve-sleeve",
+      "scope": "part:valve-sleeve",
+      "title": "15×21 female-female sleeve",
+      "scene": "valve",
+      "file": "part-valve-sleeve.mp3",
+      "duration": 17.76,
+      "chars": 299,
+      "hash": "fc7ec1096f27e464",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 4.16,
+          "text": "An ordinary plumbing part, but one that keeps everything straight."
+        },
+        {
+          "t0": 4.16,
+          "t1": 10.04,
+          "text": "This sleeve with two female threads joins the nipple to the guide, and lines them up on one axis."
+        },
+        {
+          "t0": 10.04,
+          "t1": 13.64,
+          "text": "If its threads engage the guide crooked, the stem rubs."
+        },
+        {
+          "t0": 13.64,
+          "t1": 17.76,
+          "text": "Screw the guide in by hand for several turns before tightening with a spanner."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-valve-seat",
+      "scope": "part:valve-seat",
+      "title": "Conical seat",
+      "scene": "valve",
+      "file": "part-valve-seat.mp3",
+      "duration": 23.2,
+      "chars": 355,
+      "hash": "1fb08b7aa6151563",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 2.96,
+          "text": "The seat: it is what makes the seal."
+        },
+        {
+          "t0": 2.96,
+          "t1": 8.72,
+          "text": "A cone machined to the same angle as the head: at each stroke, the head comes to sit in it."
+        },
+        {
+          "t0": 8.72,
+          "t1": 9.96,
+          "text": "Why a cone?"
+        },
+        {
+          "t0": 9.96,
+          "t1": 13.44,
+          "text": "The contact is wider, and the head re-centres itself."
+        },
+        {
+          "t0": 13.44,
+          "t1": 19.76,
+          "text": "In the video, a flat valve with a gasket did not hold: the gasket was dead within twenty-four hours."
+        },
+        {
+          "t0": 19.76,
+          "t1": 23.2,
+          "text": "Machine it once the whole stack is tightened, never before."
+        }
+      ],
+      "cues": [
+        {
+          "t": 0,
+          "do": {
+            "xray": true
+          }
+        },
+        {
+          "t": 23.2,
+          "do": {
+            "xray": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "part-valve-head",
+      "scope": "part:valve-head",
+      "title": "Valve head",
+      "scene": "valve",
+      "file": "part-valve-head.mp3",
+      "duration": 22.72,
+      "chars": 373,
+      "hash": "d3e62a8972bdaa5e",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 4.48,
+          "text": "It is what closes: a stainless countersunk screw, shortened,"
+        },
+        {
+          "t0": 4.56,
+          "t1": 7.56,
+          "text": "and drilled along its axis to let the stem through."
+        },
+        {
+          "t0": 7.56,
+          "t1": 9.72,
+          "text": "The hard part is making it straight."
+        },
+        {
+          "t0": 9.72,
+          "t1": 13.2,
+          "text": "The threaded part of a screw is almost never in line with its head."
+        },
+        {
+          "t0": 13.2,
+          "t1": 17.12,
+          "text": "The first heads, cut crooked, leaked even when tightened."
+        },
+        {
+          "t0": 17.12,
+          "t1": 22.72,
+          "text": "Grip the screw in the chuck, and feed it down onto a drill bit held in a vice: it centres itself."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-valve-stem",
+      "scope": "part:valve-stem",
+      "title": "Valve stem",
+      "scene": "valve",
+      "file": "part-valve-stem.mp3",
+      "duration": 22.08,
+      "chars": 360,
+      "hash": "55ae70a4f799d30b",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 5.36,
+          "text": "The backbone of the valve: a plain threaded rod of six millimetres, found anywhere."
+        },
+        {
+          "t0": 5.36,
+          "t1": 11.28,
+          "text": "From bottom to top, it carries the head, two sleeves, the stroke nut, the weight and the lock nut."
+        },
+        {
+          "t0": 11.28,
+          "t1": 17.12,
+          "text": "With a pitch of one millimetre per turn, a tenth of a turn sets a tenth of a millimetre of stroke."
+        },
+        {
+          "t0": 17.12,
+          "t1": 22.08,
+          "text": "Don’t weld the head to the stem: in the video, the welded trial did not close."
+        }
+      ],
+      "cues": [
+        {
+          "t": 0,
+          "do": {
+            "explode": 0.6
+          }
+        },
+        {
+          "t": 22.08,
+          "do": {
+            "explode": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "part-stem-sleeves",
+      "scope": "part:stem-sleeves",
+      "title": "Stem sleeves",
+      "scene": "valve",
+      "file": "part-stem-sleeves.mp3",
+      "duration": 17.68,
+      "chars": 289,
+      "hash": "22c92423198392b2",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 4.92,
+          "text": "A threaded rod makes a poor axle: its threads would wear against the guide."
+        },
+        {
+          "t0": 4.92,
+          "t1": 8.08,
+          "text": "The builder slips two small machined sleeves over it,"
+        },
+        {
+          "t0": 8.12,
+          "t1": 12.48,
+          "text": "fitted to a tenth of a millimetre: you wear a sleeve, not the rod!"
+        },
+        {
+          "t0": 12.48,
+          "t1": 17.68,
+          "text": "Measure the bore of the guide in several places before machining: it is not perfectly round."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-valve-guide",
+      "scope": "part:valve-guide",
+      "title": "Thermowell guide",
+      "scene": "valve",
+      "file": "part-valve-guide.mp3",
+      "duration": 16.48,
+      "chars": 263,
+      "hash": "f3ffe01a3980705b",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 5.92,
+          "text": "A stainless thermowell, made to house solar water heater probes: the builder had some to hand."
+        },
+        {
+          "t0": 5.92,
+          "t1": 11.4,
+          "text": "It guides the stem, and its end face stops the stroke nut and the weight at each stroke."
+        },
+        {
+          "t0": 11.4,
+          "t1": 14.36,
+          "text": "One part guides the stem and sets the stroke."
+        },
+        {
+          "t0": 14.36,
+          "t1": 16.48,
+          "text": "Its face must be flat and square."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-valve-fins",
+      "scope": "part:valve-fins",
+      "title": "Fins",
+      "scene": "valve",
+      "file": "part-valve-fins.mp3",
+      "duration": 16.4,
+      "chars": 266,
+      "hash": "26c2517847a3ba9f",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 6.56,
+          "text": "On the original valve, small fins make it turn a little at each lift: the wear is spread all round."
+        },
+        {
+          "t0": 6.56,
+          "t1": 10,
+          "text": "In the video, the builder plans to file some under this one,"
+        },
+        {
+          "t0": 10.16,
+          "t1": 14.36,
+          "text": "without knowing whether it will make it turn: the effect is not proven."
+        },
+        {
+          "t0": 14.36,
+          "t1": 16.4,
+          "text": "Give all the fins the same slope."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-counterweight",
+      "scope": "part:counterweight",
+      "title": "Weight (rebar)",
+      "scene": "valve",
+      "file": "part-counterweight.mp3",
+      "duration": 24.88,
+      "chars": 416,
+      "hash": "11d5d8612f392bf1",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 5.12,
+          "text": "A length of rebar thirty millimetres across, drilled and tapped along its axis."
+        },
+        {
+          "t0": 5.12,
+          "t1": 8.08,
+          "text": "It drops the valve back down after each stroke."
+        },
+        {
+          "t0": 8.08,
+          "t1": 13.84,
+          "text": "According to the video, it matters a little for consumption; in the model, it is a major lever."
+        },
+        {
+          "t0": 13.84,
+          "t1": 17.6,
+          "text": "Double its mass: the rhythm falls to seventy-five strokes a minute,"
+        },
+        {
+          "t0": 17.64,
+          "t1": 20.8,
+          "text": "and consumption goes over fifteen litres a minute."
+        },
+        {
+          "t0": 20.8,
+          "t1": 24.88,
+          "text": "The first weight, made of stacked nuts, went crooked and stopped the ram."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-stroke-nut",
+      "scope": "part:stroke-nut",
+      "title": "Stroke nut",
+      "scene": "valve",
+      "file": "part-stroke-nut.mp3",
+      "duration": 17.2,
+      "chars": 263,
+      "hash": "624b25794a3a90d4",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 3.12,
+          "text": "The valve moves only about two millimetres."
+        },
+        {
+          "t0": 3.12,
+          "t1": 8.88,
+          "text": "This nut sets that stroke, and so the consumption: it is the most important adjustment."
+        },
+        {
+          "t0": 8.88,
+          "t1": 11.52,
+          "text": "Too short, and the stroke no longer delivers."
+        },
+        {
+          "t0": 11.52,
+          "t1": 15.04,
+          "text": "Too long, and the ram drinks more than the spring gives."
+        },
+        {
+          "t0": 15.04,
+          "t1": 17.2,
+          "text": "Turn by fractions of a turn."
+        }
+      ],
+      "cues": []
+    },
+    {
+      "id": "part-lock-nut",
+      "scope": "part:lock-nut",
+      "title": "Lock nut",
+      "scene": "valve",
+      "file": "part-lock-nut.mp3",
+      "duration": 16.8,
+      "chars": 276,
+      "hash": "71e97de6f6f80541",
+      "captions": [
+        {
+          "t0": 0,
+          "t1": 4.64,
+          "text": "A hundred strokes a minute: every vibration can loosen the stroke nut."
+        },
+        {
+          "t0": 4.64,
+          "t1": 8,
+          "text": "The ram drifts out of adjustment with nothing to show it."
+        },
+        {
+          "t0": 8,
+          "t1": 11.12,
+          "text": "The lock nut holds it, tightened against the weight."
+        },
+        {
+          "t0": 11.12,
+          "t1": 16.8,
+          "text": "Tighten it after every adjustment, with two spanners: hand-tight, it works loose within hours."
+        }
+      ],
+      "cues": []
+    }
+  ]
+}

@@ -98,3 +98,8 @@ the sentence); `src/narration.test.ts` checks it. Titles are the lab's English n
   simulation" only in the intro; the drinkability warning only in `part-house`; "in the model" only in `part-counterweight`. The test enforces it for both.
 - The builder of the valve is "the builder" (French "l'auteur"); no name, no brand. The principle's history is "the late eighteenth century".
 - Words the voice may stumble on: thermowell, snifter, rebar, spanner, tonnes, countersunk, "re-centres", "water hammer".
+- Audio generated 2026-10-29 (`public/audio/en`, 8 MB): 49 segments, 1 033.9 s (17 min 14 s), 83 cues, 16 482 credits.
+- Played in Chrome (dev server, headless, English interface): the intro's world hops (catchment, site, ram, valve, site), the mode hops (sim, lessons,
+  assembly, install, plans, explore) and the closing state follow the voice; `cutaway` (air-chamber), `xray` (valve-seat) and `explode` (valve-stem,
+  scene valve) switch on at the start. The known kit defect (`docs/kit-requests.md` 14) is timing dependent: the last "off" cue ran on `valve-seat` but
+  not on `air-chamber` and `valve-stem`.
