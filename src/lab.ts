@@ -80,8 +80,8 @@ function about(ctx: AppContext<RamSim>): HTMLElement[] {
         'https://www.youtube.com/watch?v=_6331LAYAA0',
         'Bernard Le Poder',
         fr
-          ? 'un bélier de potager (5 m³ par jour à 15 m), trois clapets en 1″'
-          : 'a vegetable-garden ram (5 m³ a day at 15 m), three 1″ valves',
+          ? 'un bélier de potager (5 m³ par jour à 15 m), trois montages successifs (clapets de 1″ et 1¼″)'
+          : 'a vegetable-garden ram (5 m³ a day at 15 m), three successive builds (1″ and 1¼″ valves)',
       ),
       li(
         'https://www.youtube.com/watch?v=WMldjNyxNWk',
@@ -146,8 +146,8 @@ export const lab: LabDefinition<RamSim> = {
       overview: {
         title: { fr: 'Un bélier hydraulique, à quoi ça sert ?', en: 'What is a hydraulic ram for?' },
         text: {
-          fr: `Un **bélier hydraulique** remonte l’eau d’une source jusqu’à une maison ou un potager situés bien plus haut, **sans électricité, sans carburant et sans moteur** : l’énergie vient de la chute de l’eau elle-même. Ici, l’installation d’une ferme : 7,5 m de chute, 65 m de dénivelé à remonter, environ 500 L d’eau par jour.\n\nSur cette page : quatre mondes en 3D (le **site**, le **captage**, le **bélier** et son **clapet de choc**, avec éclaté, coupe, flux et rayons X), le **montage** et l’**installation** pas à pas, la **simulation** (réglages, scénarios, cycle au ralenti, dimensionnement), ${SHEETS.length} **plans** A3, ${LESSONS.length} **leçons** avec quiz, le **catalogue** de ${PARTS.length} pièces et les **sources**.`,
-          en: `A **hydraulic ram** lifts spring water to a house or a vegetable garden much higher up, **with no electricity, no fuel and no motor**: the energy comes from the falling water itself. Here, a farm installation: 7.5 m of fall, 65 m of lift, about 500 L of water a day.\n\nOn this page: four 3D worlds (the **site**, the **catchment**, the **ram** and its **waste valve**, with explode, section, flows and X-ray), step-by-step **assembly** and **installation**, the **simulation** (settings, scenarios, the cycle in slow motion, sizing), ${SHEETS.length} A3 **drawings**, ${LESSONS.length} **lessons** with a quiz, the **catalogue** of ${PARTS.length} parts and the **sources**.`,
+          fr: 'Un **bélier hydraulique** est une pompe à eau **sans moteur, sans électricité, sans carburant**. L’eau d’une source tombe de quelques mètres ; un clapet la stoppe net une centaine de fois par minute, et chaque coup pousse un peu d’eau **bien plus haut**. Seule une petite part monte, le reste ressort au pied de la machine.\n\nCe labo reconstitue l’installation de la vidéo de L’énergie partout (7,5 m de chute, 65 m de montée, environ 500 L par jour). **Pour commencer** : « Voir le bélier », puis **Simulation** pour le voir battre au ralenti. **Pour comprendre** : les **Leçons**. **Pour voir comment c’est fait** : **Montage** et **Installation**. Reconstitution pédagogique, pas un plan à suivre.',
+          en: 'A **hydraulic ram** is a water pump with **no motor, no electricity and no fuel**. Spring water falls a few metres; a valve stops it dead about a hundred times a minute, and each blow pushes a little water **much higher**. Only a small share rises; the rest leaves at the foot of the machine.\n\nThis lab rebuilds the installation of the L’énergie partout video (7.5 m of fall, 65 m of lift, about 500 L a day). **To start**: “See the ram”, then **Simulation** to watch it beat in slow motion. **To understand**: the **Lessons**. **To see how it is made**: **Assembly** and **Installation**. An educational reconstruction, not a plan to follow.',
         },
         actions: [
           { label: strL('goRam'), scene: 'ram', primary: true },
@@ -204,8 +204,8 @@ export const lab: LabDefinition<RamSim> = {
       overview: {
         title: { fr: 'Le clapet de choc', en: 'The waste valve' },
         text: {
-          fr: 'Le clapet de la vidéo, fabriqué avec des **raccords de plomberie**, un **doigt de gant** inox, une **tige** et un **poids** taillé dans une barre d’armature. Tout le réglage du bélier se joue ici : la **course** et le **poids** décident du rythme et de la consommation.',
-          en: 'The video’s valve, made from **plumbing fittings**, a stainless **thermowell**, a **stem** and a **weight** cut from a rebar bar. All the tuning of the ram happens here: the **stroke** and the **weight** set the rhythm and the consumption.',
+          fr: 'Le clapet de choc, d’après celui de la vidéo (version simplifiée), fait de **raccords de plomberie**, un **doigt de gant** inox, une **tige** et un **poids** taillé dans une barre d’armature. Tout le réglage du bélier se joue ici : la **course** et le **poids** décident du rythme et de la consommation.',
+          en: 'The waste valve, after the video’s (simplified), made from **plumbing fittings**, a stainless **thermowell**, a **stem** and a **weight** cut from a rebar bar. All the tuning of the ram happens here: the **stroke** and the **weight** set the rhythm and the consumption.',
         },
         actions: [{ label: strL('goRam'), scene: 'ram', primary: true }],
       },
