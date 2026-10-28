@@ -6,9 +6,10 @@ import '../i18n/ui';
 import research from '../../docs/research.md?raw';
 import { partIds, WORLDS } from '../part-ids';
 import { RamSim } from '../sim/engine';
-import { area, G, RHO, WAVE_SPEED } from '../sim/physics';
+import { AIR_TAU_LOSS, area, G, RHO, WAVE_SPEED } from '../sim/physics';
 import {
   CONSUMPTION_VALVE_3,
+  CYCLE_PHASES,
   HEAVY_WEIGHT,
   NUT_INTERVAL,
   presetParams,
@@ -17,7 +18,7 @@ import {
   SOURCE_FLOW_BEFORE,
   TANK_HOURS_VALVE_3,
 } from '../sim/presets';
-import { expectedDelivery, GPM_TO_LPM, PIPE_SIZES, sizeRam } from '../sim/sizing';
+import { expectedDelivery, LENGTH_RATIO_S4, PIPE_SIZES, sizeRam, TYPICAL_ETA } from '../sim/sizing';
 import { CHAMBER, SITE, TANK, VALVE } from '../three/dims';
 import { LESSON_FIG, LESSONS, USED_FIGURES } from './lessons';
 import { DERIVED, MODEL as RAM } from './parts/ram';
@@ -75,12 +76,23 @@ const seconds = (ts: string): number => {
   return (m ?? 0) * 60 + (s ?? 0);
 };
 
-/** Sentences of a paragraph, ignoring the bold numbered label of a beat (« **1. Accélération.** »). */
-const sentences = (text: string): number =>
+/** Words of a text: the tokens that hold a letter or a digit, with « 5 700 » counted as one number and no bold markers. */
+const words = (text: string): number =>
+  text
+    .replace(/\*\*/g, '')
+    .replace(/(\d)[ \u202f\u00a0](?=\d{3}(?!\d))/g, '$1')
+    .split(/\s+/)
+    .filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
+
+/** Sentences of a paragraph, ignoring the bold numbered label of a phase (« **1. Accélération.** ») and « No. 1 ». */
+const sentenceList = (text: string): string[] =>
   text
     .replace(/^\*\*\d\. [^*]+\.\*\*\s*/, '')
-    .split(/[.!?](?:\s|$)/)
-    .filter((s) => s.trim().length > 0).length;
+    .replace(/\*\*/g, '')
+    .replace(/No\. (\d)/g, 'No\u00a0$1')
+    .split(/(?<=[.!?])\s+/)
+    .filter((x) => x.trim().length > 0);
+const sentences = (text: string): number => sentenceList(text).length;
 
 /** Numbers of a text, normalised so that the French and English spellings compare equal (same rule as data.test.ts). */
 function figures(text: string, lang: 'fr' | 'en'): string[] {
@@ -130,25 +142,43 @@ describe('lessons: structure', () => {
     }
   });
 
-  it('keeps the body to 3–5 short paragraphs of 2–3 sentences, and the summary to one sentence', () => {
+  it('keeps the body to 3–6 paragraphs of at most 60 words and sentences of at most 28, and the summary to one sentence', () => {
     for (const ls of LESSONS) {
       expect(ls.body.length, ls.id).toBeGreaterThanOrEqual(3);
-      expect(ls.body.length, ls.id).toBeLessThanOrEqual(5);
-      ls.body.forEach((p, i) => {
-        for (const lang of ['fr', 'en'] as const) {
+      expect(ls.body.length, ls.id).toBeLessThanOrEqual(6);
+      for (const lang of ['fr', 'en'] as const) {
+        let total = 0;
+        ls.body.forEach((p, i) => {
+          const w = words(p[lang]);
+          total += w;
+          expect(w, `${ls.id} body[${i}] ${lang}: ${w} words`).toBeLessThanOrEqual(60);
           const n = sentences(p[lang]);
           expect(n, `${ls.id} body[${i}] ${lang}`).toBeGreaterThanOrEqual(2);
-          expect(n, `${ls.id} body[${i}] ${lang}`).toBeLessThanOrEqual(3);
-        }
-      });
-      for (const lang of ['fr', 'en'] as const) expect(sentences(ls.summary[lang]), `${ls.id} summary ${lang}`).toBe(1);
+          expect(n, `${ls.id} body[${i}] ${lang}`).toBeLessThanOrEqual(5);
+          for (const sentence of sentenceList(p[lang]))
+            expect(words(sentence), `${ls.id} body[${i}] ${lang}: ${sentence}`).toBeLessThanOrEqual(28);
+        });
+        expect(total, `${ls.id} ${lang}: ${total} words in all`).toBeLessThanOrEqual(330);
+        expect(sentences(ls.summary[lang]), `${ls.id} summary ${lang}`).toBe(1);
+      }
     }
   });
 
-  it('gives 2 to 4 figure chips, at most one formula on one line, and no markup in titles, summaries, chips and choices', () => {
+  it('tells in the first paragraph what to look at in the view the lesson opens (« Regardez… » / « Look at… »)', () => {
+    for (const ls of LESSONS) {
+      expect(ls.body[0]!.fr, `${ls.id} fr`).toMatch(/\*\*Regardez\*\*/);
+      expect(ls.body[0]!.en, `${ls.id} en`).toMatch(/\*\*Look at\*\*/);
+      expect(
+        ls.body.slice(1).some((p) => /Regardez/.test(p.fr)),
+        `${ls.id}: one look-at sentence is enough`,
+      ).toBe(false);
+    }
+  });
+
+  it('gives 2 or 3 figure chips, at most one formula on one line, and no markup in titles, summaries, chips and choices', () => {
     for (const ls of LESSONS) {
       expect(ls.figures?.length ?? 0, ls.id).toBeGreaterThanOrEqual(2);
-      expect(ls.figures?.length ?? 0, ls.id).toBeLessThanOrEqual(4);
+      expect(ls.figures?.length ?? 0, ls.id).toBeLessThanOrEqual(3);
       if (ls.formula !== undefined) {
         expect(ls.formula.trim().length, ls.id).toBeGreaterThan(0);
         expect(ls.formula, ls.id).not.toMatch(/\n/);
@@ -172,7 +202,6 @@ describe('lessons: structure', () => {
       }
       // every body paragraph bolds at least one key term, in both languages
       ls.body.forEach((p, i) => {
-        if (ls.id === 'cycle' && i === 4) return;
         expect(p.fr, `${ls.id} body[${i}] fr`).toMatch(/\*\*[^*]+\*\*/);
         expect(p.en, `${ls.id} body[${i}] en`).toMatch(/\*\*[^*]+\*\*/);
       });
@@ -232,8 +261,6 @@ describe('lessons: focus and video', () => {
     const names: [string, string][] = [
       ['waste-valve', 'scenarioStrokeNut'],
       ['waste-valve', 'scenarioHeavyWeight'],
-      ['waste-valve', 'presetValve3'],
-      ['waste-valve', 'presetValve1'],
       ['air-chamber', 'scenarioWaterLogged'],
       ['air-chamber', 'scenarioSnifterBlocked'],
       ['sizing', 'scenarioShortPipe'],
@@ -257,46 +284,99 @@ describe('lessons: focus and video', () => {
 });
 
 describe('lessons: quiz', () => {
-  it('has exactly 2 questions of 3 distinct choices, a valid answer and an explanation in both languages', () => {
-    for (const ls of LESSONS) {
-      expect(ls.quiz?.length, ls.id).toBe(2);
-      for (const q of ls.quiz!) {
-        expect(q.choices.length, `${ls.id}: ${q.q.en}`).toBe(3);
-        expect(Number.isInteger(q.answer), `${ls.id}: ${q.q.en}`).toBe(true);
-        expect(q.answer).toBeGreaterThanOrEqual(0);
-        expect(q.answer).toBeLessThan(3);
-        expect(new Set(q.choices.map((c) => c.fr)).size, `${ls.id}: ${q.q.en} fr`).toBe(3);
-        expect(new Set(q.choices.map((c) => c.en)).size, `${ls.id}: ${q.q.en} en`).toBe(3);
-        expect(q.explain.fr.length, `${ls.id}: ${q.q.en}`).toBeGreaterThan(80);
-        expect(q.explain.en.length, `${ls.id}: ${q.q.en}`).toBeGreaterThan(80);
-        expect(q.q.fr.trim().endsWith('?') || q.q.fr.trim().endsWith('…'), `${ls.id}: ${q.q.fr}`).toBe(true);
-        expect(q.q.en.trim().endsWith('?') || q.q.en.trim().endsWith('…'), `${ls.id}: ${q.q.en}`).toBe(true);
+  type Question = NonNullable<Lesson['quiz']>[number];
+  const questions: { id: string; q: Question }[] = LESSONS.flatMap((ls) => ls.quiz!.map((q) => ({ id: ls.id, q })));
+  /** The questions whose choices are words, not the one-to-four character numbers of a calculation. */
+  const textual = questions.filter(({ q }) => Math.max(...q.choices.map((c) => c.en.length)) > 12);
+
+  it('has 2 questions per lesson (3 for the last one), 13 in all, of 3 distinct choices, a valid answer and a short explanation', () => {
+    for (const ls of LESSONS) expect(ls.quiz?.length, ls.id).toBe(ls.id === 'siting' ? 3 : 2);
+    expect(questions.length).toBe(13);
+    for (const { id, q } of questions) {
+      expect(q.choices.length, `${id}: ${q.q.en}`).toBe(3);
+      expect(Number.isInteger(q.answer), `${id}: ${q.q.en}`).toBe(true);
+      expect(q.answer).toBeGreaterThanOrEqual(0);
+      expect(q.answer).toBeLessThan(3);
+      for (const lang of ['fr', 'en'] as const) {
+        expect(new Set(q.choices.map((c) => c[lang])).size, `${id}: ${q.q[lang]}`).toBe(3);
+        expect(q.explain[lang].length, `${id}: ${q.q[lang]}`).toBeGreaterThan(80);
+        // 60 words is the aim, 90 the cap (the facts review adds a sentence to the first question of the valve lesson)
+        expect(words(q.explain[lang]), `${id}: ${q.q[lang]}`).toBeLessThanOrEqual(90);
+        expect(q.q[lang].trim().endsWith('?') || q.q[lang].trim().endsWith('…'), `${id}: ${q.q[lang]}`).toBe(true);
+      }
+    }
+  });
+
+  it('balances the three choices of a text question to within ±10 % of their mean length, in both languages', () => {
+    expect(textual.length).toBeGreaterThanOrEqual(9);
+    for (const { id, q } of textual) {
+      for (const lang of ['fr', 'en'] as const) {
+        const lengths = q.choices.map((c) => c[lang].length);
+        const mean = lengths.reduce((a, b) => a + b, 0) / lengths.length;
+        for (const n of lengths)
+          expect(Math.abs(n - mean) / mean, `${id}: ${q.q[lang]} (${lengths.join('/')}, ${lang})`).toBeLessThanOrEqual(
+            0.1,
+          );
       }
     }
   });
 
   it('puts the right answers in all three positions, and not twice in a row within a lesson', () => {
-    const positions = LESSONS.flatMap((ls) => ls.quiz!.map((q) => q.answer));
+    const positions = questions.map(({ q }) => q.answer);
     for (const p of [0, 1, 2]) {
       const n = positions.filter((x) => x === p).length;
       expect(n, `position ${p}`).toBeGreaterThanOrEqual(3);
-      expect(n, `position ${p}`).toBeLessThanOrEqual(5);
+      expect(n, `position ${p}`).toBeLessThanOrEqual(6);
     }
-    for (const ls of LESSONS) expect(ls.quiz![0]!.answer, ls.id).not.toBe(ls.quiz![1]!.answer);
+    for (const ls of LESSONS)
+      ls.quiz!.slice(1).forEach((q, i) => expect(q.answer, `${ls.id} q${i + 1}`).not.toBe(ls.quiz![i]!.answer));
   });
 
-  it('does not make the right answer the longest one every time', () => {
+  it('does not make the right answer the longest one in more than 40 % of the text questions, in either language', () => {
     for (const lang of ['fr', 'en'] as const) {
-      let longest = 0;
-      for (const ls of LESSONS) {
-        for (const q of ls.quiz!) {
-          const lengths = q.choices.map((c) => c[lang].length);
-          const right = lengths[q.answer]!;
-          if (lengths.every((n, i) => i === q.answer || n < right)) longest++;
-        }
-      }
-      expect(longest, lang).toBeLessThanOrEqual(6);
+      const longest = textual.filter(({ q }) => {
+        const lengths = q.choices.map((c) => c[lang].length);
+        const right = lengths[q.answer]!;
+        return lengths.every((n, i) => i === q.answer || n < right);
+      }).length;
+      expect(longest, `${lang}: ${longest} of ${textual.length}`).toBeLessThanOrEqual(Math.floor(0.4 * textual.length));
     }
+  });
+
+  it('asks the four phases in order, the law and potability, anchoring and the finger rule, the last two once each', () => {
+    const rightEn = (id: string): string[] => lesson(id).quiz!.map((q) => q.choices[q.answer]!.en);
+    const rightFr = (id: string): string[] => lesson(id).quiz!.map((q) => q.choices[q.answer]!.fr);
+    // the four phases, in the order of the engine
+    expect(rightEn('cycle')).toContain('Acceleration, closing, delivery, recoil');
+    expect(rightFr('cycle')).toContain('Accélération, fermeture, refoulement, recul');
+    expect(CYCLE_PHASES).toEqual(['accel', 'close', 'deliver', 'recoil']);
+    expect(lesson('cycle').quiz!.some((q) => /four phases/.test(q.q.en))).toBe(true);
+    // the law (DDT, OFB) and potability
+    const law = lesson('siting').quiz!.find((q) => /DDT/.test(q.choices[q.answer]!.fr))!;
+    expect(law, 'a question on the law').toBeDefined();
+    expect(law.choices[law.answer]!.fr).toMatch(/OFB/);
+    expect(law.choices[law.answer]!.fr).toMatch(/qualité de l’eau/);
+    expect(law.choices[law.answer]!.en).toMatch(/water quality/);
+    // anchoring and the finger rule: one question each, the right choice states it
+    const mentions = (re: RegExp) =>
+      questions.filter(({ q }) => re.test([q.q.fr, ...q.choices.map((c) => c.fr)].join(' ')));
+    const finger = mentions(/doigt/i);
+    const anchor = mentions(/ancrage|ancré|boulonné/i);
+    expect(
+      finger.map((x) => x.id),
+      'finger rule',
+    ).toEqual(['waste-valve']);
+    expect(
+      anchor.map((x) => x.id),
+      'anchoring',
+    ).toEqual(['siting']);
+    expect(finger[0]!.q.choices[finger[0]!.q.answer]!.fr).toMatch(/jamais avec les doigts/);
+    expect(anchor[0]!.q.choices[anchor[0]!.q.answer]!.fr).toMatch(/boulonné/);
+    expect(anchor[0]!.q.choices[anchor[0]!.q.answer]!.fr).toMatch(/rigide/);
+    const english = (re: RegExp) =>
+      questions.filter(({ q }) => re.test([q.q.en, ...q.choices.map((c) => c.en)].join(' '))).map((x) => x.id);
+    expect(english(/finger/i), 'finger rule (en)').toEqual(['waste-valve']);
+    expect(english(/anchor|bolted/i), 'anchoring (en)').toEqual(['siting']);
   });
 });
 
@@ -339,6 +419,17 @@ describe('lessons: figures against the model, the dims and the sources', () => {
     }
     return NaN;
   })();
+  /** The head above which valve n°1 delivers nothing (bisection, m): the model's limit, not a rule of the sources. */
+  const zeroHeadExact = (() => {
+    let lo = 60;
+    let hi = 100;
+    for (let i = 0; i < 30; i++) {
+      const mid = (lo + hi) / 2;
+      if (sweep({ deliveryHead: mid }).deliveredFlow > 0) lo = mid;
+      else hi = mid;
+    }
+    return (lo + hi) / 2;
+  })();
   const ceiling = (SITE.sourceFlowLpm * SITE.fall) / SITE.deliveryHead;
   const calc = sizeRam({ fall: SITE.fall, deliveryHead: SITE.deliveryHead, sourceFlow: SITE.sourceFlowLpm, pipe: '1' });
   const surgeNeeded = (RHO * G * (SITE.deliveryHead - SITE.fall)) / 1e5;
@@ -362,24 +453,20 @@ describe('lessons: figures against the model, the dims and the sources', () => {
     staticBarDrive: (RHO * G * SITE.fall) / 1e5,
     staticBarDelivery: (RHO * G * SITE.deliveryHead) / 1e5,
     driveLitres: area(SITE.driveBore) * SITE.driveLength * 1000,
-    bore: SITE.driveBore * 1000,
     chamberL: CHAMBER.volumeL,
     airPct: 100 * s1.airFraction,
     liftRatio: SITE.deliveryHead / SITE.fall,
     lenRatio: SITE.driveLength / SITE.fall,
     minLen: calc.minLength,
-    ceilingLpm: ceiling,
     ceilingDay: perDay(ceiling),
     ceilingPct: (100 * 500) / perDay(ceiling),
     eta04: 500 / perDay(ceiling),
-    etaLow: ((500 / 1440) * SITE.deliveryHead) / (10 * SITE.fall),
-    etaHigh: ((500 / 1440) * SITE.deliveryHead) / (5 * SITE.fall),
     minFlow1in: PIPE_SIZES.find((p) => p.id === '1')!.minSourceLpm,
-    min34: 2 * GPM_TO_LPM,
     sourcePct: 100 * calc.sourceRatio,
     calcDay: expectedDelivery(SITE.sourceFlowLpm, SITE.fall, SITE.deliveryHead, 0.6).lpd,
-    etaTypical: 0.6,
+    etaTypical: TYPICAL_ETA,
     etaMax: 0.8,
+    headRatioMax: 20, // Practical Action, technical brief, table of performances (facts review F11): a reported figure
     // the engine, preset valve n°1 (and n°3)
     drive1: m1.driveFlow,
     delivered1: m1.deliveredFlow,
@@ -392,13 +479,13 @@ describe('lessons: figures against the model, the dims and the sources', () => {
     vc: s1.closingVelocity,
     waveSteel: s1.waveSpeed,
     surge: s1.surgeBar,
-    deliverShare: 100 * m1.phaseShare[2]!,
+    deliverShare: 100 * m1.phaseShare[2]!, // the engine: 3.5 % (19 ms)
     ml: m1.deliveredPerStroke,
     takenPerL: m1.driveFlow / m1.deliveredFlow,
     swing: DERIVED.chamberSwingBar,
     etaD: m1.etaD,
     etaR: m1.etaR,
-    refillMin: RAM.refillMinutes,
+    tauLoss: AIR_TAU_LOSS / 3600,
     surplus1: SITE.sourceFlowLpm - m1.driveFlow,
     margin1Pct: (100 * (SITE.sourceFlowLpm - m1.driveFlow)) / SITE.sourceFlowLpm,
     days6: TANK.volumeL / (m1.driveFlow - 6) / 1440,
@@ -407,13 +494,11 @@ describe('lessons: figures against the model, the dims and the sources', () => {
     // stroke and weight
     s3: 3,
     q3: sweep({ stroke: 3 }).driveFlow,
-    d3: perDay(sweep({ stroke: 3 }).deliveredFlow),
     s22: presetParams('valve-1').stroke,
     s15: 1.5,
     s23: 2.3,
     turns: (RAM.springLimitStroke - RAM.noDeliveryStroke) / (VALVE.rodPitch * 1000),
     w720: HEAVY_WEIGHT,
-    spm75: heavy.averages.strokesPerMin,
     q155: heavy.averages.driveFlow,
     d788: perDay(heavy.averages.deliveredFlow),
     hoursHeavy: heavy.state.hoursToEmpty,
@@ -423,13 +508,11 @@ describe('lessons: figures against the model, the dims and the sources', () => {
     loggedHours: NaN, // measured below, by running the blocked snifter
     shortLen: short.params.driveLength,
     shortSpm: short.averages.strokesPerMin,
-    shortQ: short.averages.driveFlow,
-    zeroHead: 90,
-    zeroRatio: 90 / SITE.fall,
-    d75: perDay(sweep({ deliveryHead: 75 }).deliveredFlow),
+    etaLong: sweep({ driveLength: LENGTH_RATIO_S4 * SITE.fall }).etaD,
+    zeroHead: zeroHeadExact,
+    zeroRatio: zeroHeadExact / SITE.fall,
     pvcA: plastic.state.waveSpeed,
     pvcSurge: plastic.state.surgeBar,
-    pvcVc: plastic.state.closingVelocity,
     need: surgeNeeded,
     thrustN,
     kg: thrustN / G,
@@ -446,9 +529,9 @@ describe('lessons: figures against the model, the dims and the sources', () => {
     perDay: 5,
     drawN3: 0.1,
     drive3: 0.1,
-    etaLow: 0.05,
-    etaHigh: 0.05,
     eta04: 0.05,
+    deliverShare: 0.1,
+    etaLong: 0.006,
     slamMs: 1,
   };
 
@@ -496,11 +579,10 @@ describe('lessons: figures against the model, the dims and the sources', () => {
     expect(NUT_INTERVAL).toBe(10 * 60);
   });
 
-  it('delivers nothing from {zeroHead} m, a little just below, and the other head figures are below the 12 of the calculator', () => {
-    expect(sweep({ deliveryHead: 90 }).deliveredFlow).toBe(0);
+  it('delivers nothing from {zeroHead} m and a little just below it: a limit of the model’s valve No. 1, not a rule', () => {
     expect(sweep({ deliveryHead: 85 }).deliveredFlow).toBeGreaterThan(0);
+    expect(sweep({ deliveryHead: 86 }).deliveredFlow).toBe(0);
     expect(calc.warnings).not.toContain('headHigh');
-    expect(sizeRam({ fall: SITE.fall, deliveryHead: 91, sourceFlow: 7.5, pipe: '1' }).warnings).toContain('headHigh');
   });
 
   it('the delivery pipe rule: 5 × the fall is the minimum, the video’s 20 m is only 2.7 × and the 8 m of the scenario is 1.1 ×', () => {
@@ -596,7 +678,7 @@ describe('lessons: what they must not claim, and what they must say', () => {
       for (const sentence of all(lang)) {
         expect(sentence, lang).not.toMatch(/ailettes|\bfins\b/i);
         if (/5[ ,]700/.test(sentence) && /vidéo|video/i.test(sentence)) {
-          expect(sentence, `${lang}: the tank volume is derived`).toMatch(/déduit|derived/);
+          expect(sentence, `${lang}: the tank volume is derived`).toMatch(/déduit|dérivé|derived/);
         }
       }
     }
@@ -614,10 +696,10 @@ describe('lessons: what they must not claim, and what they must say', () => {
     const pvc = lesson('siting').body.find((p) => /PVC/.test(p.fr))!;
     expect(pvc.fr).toMatch(/résultat du modèle/);
     expect(pvc.fr).toMatch(/supposée/);
-    expect(pvc.fr).toMatch(/pas une mesure|non une mesure/);
+    expect(pvc.fr).toMatch(/non mesurée|pas une mesure/);
     expect(pvc.en).toMatch(/model result/);
     expect(pvc.en).toMatch(/assumed/);
-    expect(pvc.en).toMatch(/not a measurement/);
+    expect(pvc.en).toMatch(/not measured|not a measurement/);
   });
 
   it('says in the lessons that quote them that the 17 L/min is the author’s estimate and the volume of the tank is derived', () => {
@@ -634,8 +716,8 @@ describe('lessons: what they must not claim, and what they must say', () => {
     const siting = lesson('siting')
       .body.map((p) => p.fr + p.en)
       .join(' ');
-    expect(siting).toMatch(/déduite des dix heures de la vidéo/);
-    expect(siting).toMatch(/derived from the video’s ten hours/);
+    expect(siting).toMatch(/dérivés des dix heures de la vidéo, pour une source supposée à/);
+    expect(siting).toMatch(/derived from the video’s ten hours, for a spring assumed at/);
   });
 
   it('carries the safety and legal wording of the rules (rigid pipe, anchored ram, no finger, DDT and OFB, not potable)', () => {
@@ -680,14 +762,17 @@ describe('lessons: what they must not claim, and what they must say', () => {
   });
 
   it('makes the sizing lesson quote the 5 × rule, the NC State table and both efficiencies', () => {
-    const fr = lesson('sizing')
-      .body.map((p) => p.fr)
-      .join(' ');
-    const en = lesson('sizing')
-      .body.map((p) => p.en)
-      .join(' ');
-    for (const re of [/5 fois la chute/, /NC State/, /D’Aubuisson/, /Rankine/]) expect(fr).toMatch(re);
-    for (const re of [/5 times the fall/, /NC State/, /D’Aubuisson/, /Rankine/]) expect(en).toMatch(re);
+    const plain = (lang: 'fr' | 'en'): string =>
+      lesson('sizing')
+        .body.map((p) => p[lang].replace(/\*\*/g, ''))
+        .join(' ');
+    const fr = plain('fr');
+    const en = plain('en');
+    for (const re of [/5 fois la chute/, /NC State/, /d’Aubuisson/, /Rankine/]) expect(fr).toMatch(re);
+    for (const re of [/5 times the fall/, /NC State/, /d’Aubuisson/, /Rankine/]) expect(en).toMatch(re);
+    // the model result about the pipe length carries its caveat: the valve is not re-tuned (facts review F14)
+    expect(fr).toMatch(/ne réajuste pas le clapet/);
+    expect(en).toMatch(/does not re-tune the valve/);
     expect(lesson('sizing').formula).toBe('η = q · H / (Q · h)');
   });
 });
@@ -712,9 +797,102 @@ describe('lessons: the quiz questions that carry their own numbers', () => {
     expect(parseFloat(right('sizing', 1))).toBeCloseTo((0.5 * 50) / (10 * 5), 9);
     expect(wrong('sizing', 1).map(parseFloat)).toContain(0.5 / 10);
     expect(Math.max(...wrong('sizing', 1).map(parseFloat))).toBeGreaterThan(1);
-    // cycle: the surge ρ·a·v is proportional to the speed, the kinetic energy to its square
-    const surge = (v: number) => RHO * WAVE_SPEED.steel * v;
-    expect(surge(2 * 0.87) / surge(0.87)).toBeCloseTo(2, 9);
-    expect(right('cycle', 1)).toBe('twice as big');
+    // cycle: the surge ρ·a·v grows with the speed (the lesson says « plus de 7 bar » for 0.87 m/s), and the order of the phases
+    expect((RHO * WAVE_SPEED.steel * 0.87) / 1e5).toBeGreaterThan(7);
+    expect(CYCLE_PHASES.indexOf('close')).toBeLessThan(CYCLE_PHASES.indexOf('deliver'));
+  });
+});
+
+describe('lessons: the words of the glossary, and the words that must not reach the visitor', () => {
+  const body = (lang: 'fr' | 'en'): string => LESSONS.flatMap((ls) => texts(ls).map(({ v }) => v[lang])).join('\n');
+
+  it('keeps source codes, internal vocabulary and the farm out of the text', () => {
+    for (const lang of ['fr', 'en'] as const) {
+      const text = body(lang);
+      expect(text, lang).not.toMatch(/\bS[1-9]\b|\bK\d{1,2}\b/); // research codes
+      expect(text, lang).not.toMatch(/monde|world|\bmodèle 3D\b|\b3D model\b/i);
+      expect(text, lang).not.toMatch(lang === 'fr' ? /\b(la|une|de|d’une|cette) ferme\b/i : /\bfarm\b/i); // the farm of another source
+      expect(text, lang).not.toMatch(/contrepoids|counterweight/i); // « poids » / "weight"
+    }
+  });
+
+  it('uses the glossary: the ram pit is a « fosse », the English is British and writes No. 1', () => {
+    const fr = body('fr');
+    const en = body('en');
+    expect(fr).not.toMatch(/\bregard\b/i);
+    expect(fr).toMatch(/fosse du bélier/);
+    expect(en).toMatch(/ram pit/);
+    expect(en).not.toMatch(/n°|\bNo \d/); // « n° » never in English; « No. 1 » always with its full stop
+    expect(en).toMatch(/\bNo\. [123]\b/);
+    expect(en).not.toMatch(/\b(toward|color|meter|liter|center|gray|pressurized|gauge pressure)\b/i);
+    expect(fr).not.toMatch(/n° \d/); // the kit adds the fixed space: « n°1 » in the source
+  });
+
+  it('gives no time-speed instruction (the scenarios speed time up by themselves) and names no label of the old interface', () => {
+    for (const lang of ['fr', 'en'] as const) {
+      const text = body(lang);
+      expect(text, lang).not.toMatch(/×600|×3600|réglez le temps|set the time|set the speed/i);
+      expect(text, lang).not.toMatch(/P\. du corps|Body P\.|\bConsomme\b|\bUses\b/); // the labels the panel and the strip used to have
+      expect(text, lang).not.toMatch(/contrepoids|counterweight/i);
+    }
+    // what the visitor will see happen is said instead
+    expect(lesson('waste-valve').body[0]!.fr).toMatch(/le temps accélère de lui-même/);
+    expect(lesson('waste-valve').body[0]!.en).toMatch(/time speeds up by itself/);
+    expect(lesson('air-chamber').body[4]!.fr).toMatch(/le temps accélère de lui-même/);
+    expect(lesson('siting').body[1]!.fr).toMatch(/montre la réserve se vider/);
+    expect(lesson('siting').body[1]!.en).toMatch(/shows the tank emptying/);
+  });
+
+  it('quotes the water-logged peak as « plus de 7 bar », never as a figure of its own', () => {
+    for (const lang of ['fr', 'en'] as const) {
+      const text = body(lang);
+      expect(text, lang).toMatch(lang === 'fr' ? /plus de 7 bar/ : /over 7 bar/);
+      expect(text, lang).not.toMatch(/7[.,][23] bar/);
+    }
+  });
+
+  it('defines the terms before they are used: waste valve, tank, efficiency, bar in the first lesson; Joukowsky in the second; d’Aubuisson and Rankine in the fifth', () => {
+    const first = lesson('principle').body.map((p) => p.fr);
+    const idx = (re: RegExp): number => first.findIndex((p) => re.test(p));
+    expect(idx(/\*\*clapet de choc\*\*/), 'clapet de choc defined').toBeGreaterThanOrEqual(0);
+    expect(idx(/\*\*réserve\*\* \(/), 'réserve defined').toBe(0);
+    expect(idx(/\*\*rendement\*\*/), 'rendement defined').toBeGreaterThanOrEqual(0);
+    expect(idx(/\*\*bar\*\*/), 'bar defined').toBeGreaterThanOrEqual(0);
+    // each term is bold where it is defined, and is not used in an earlier paragraph of the lesson
+    expect(first.slice(0, idx(/\*\*clapet de choc\*\*/)).join(' ')).not.toMatch(/clapet de choc/);
+    expect(first.slice(0, idx(/\*\*bar\*\*/)).join(' ')).not.toMatch(/\d bar\b/);
+    expect(
+      lesson('cycle')
+        .body.map((p) => p.fr)
+        .join(' '),
+    ).toMatch(/\*\*Joukowsky\*\*/);
+    const sizing = lesson('sizing').body.map((p) => p.fr);
+    expect(sizing.findIndex((p) => /\*\*Aubuisson\*\*/.test(p))).toBeGreaterThanOrEqual(0);
+    expect(sizing.findIndex((p) => /\*\*Rankine\*\*/.test(p))).toBeGreaterThanOrEqual(0);
+  });
+
+  it('says in the cycle lesson that water slower than a walker gives more than 7 bar, and ends the sizing lesson on what the efficiencies mean', () => {
+    expect(lesson('cycle').body[1]!.fr).toMatch(/moins vite qu’un marcheur/);
+    expect(lesson('cycle').body[1]!.fr).toMatch(/plus de 7 bar/);
+    expect(lesson('cycle').body[1]!.en).toMatch(/slower than a walker/);
+    expect(lesson('cycle').body[1]!.en).toMatch(/more than 7 bar/);
+    const last = lesson('sizing').body.at(-1)!;
+    expect(last.fr).toMatch(/rendement compare des énergies, pas des litres/);
+    expect(last.en).toMatch(/efficiency compares energies, not litres/);
+  });
+
+  it('keeps the stroke-weight caveat of the valve lesson and the weight claim to what the video says', () => {
+    const valve = lesson('waste-valve')
+      .body.map((p) => p.fr)
+      .join(' ');
+    const valveEn = lesson('waste-valve')
+      .body.map((p) => p.en)
+      .join(' ');
+    expect(valve).toMatch(/selon le couple course–poids/);
+    expect(valveEn).toMatch(/depending on the stroke–weight pair/);
+    expect(valve).toMatch(/Selon la vidéo, il joue un peu/);
+    expect(valveEn).toMatch(/The video says it plays a small part/);
+    expect(valve).not.toMatch(/plutôt que de chercher|n’a pas trouvé plus d’eau/);
+    expect(valveEn).not.toMatch(/rather than look|did not find more water/);
   });
 });
