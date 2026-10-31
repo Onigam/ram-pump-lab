@@ -64,7 +64,7 @@ export function buildBench(): Bench {
   // it came out orange, then peach as a flat light colour (review D3). A beech that is less red and less light, and its grain
   const wood = MAT.woodLight();
   wood.color.set(0xc4b497).multiplyScalar(0.62);
-  wood.map = woodGrain(22);
+  wood.map = woodGrain(14);
   const steel = MAT.steel();
   // plinth: a thick wooden slab
   g.add(
