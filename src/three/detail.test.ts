@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
+import { BOX_FLOOR_Y } from './catchment/layout';
 import { createCatchmentScene } from './catchment/scene';
+import { CATCHMENT } from './dims';
+import { runningState, view } from './test-utils';
 import { FlowDots, dotAlpha, dotFade } from './common';
 import { buildStones, contactShadow, layStones, stoneGeometry } from './detail';
 import { FOUNDATION_BOTTOM } from './ram/foundation';
@@ -197,6 +200,15 @@ describe('the look of the worlds (kit 0.5)', () => {
       }
     });
     expect(worn).toBeGreaterThan(10);
+  });
+
+  it('the water of the spring box reaches into its silt, never in the plane of its top (review D1: the floor flickered)', () => {
+    catchment.update(runningState(), 0.1, view({ cutaway: true }));
+    const water = catchment.scene.getObjectByName('spring-box-water') as THREE.Mesh;
+    const bottom = water.position.y - water.scale.y / 2;
+    const siltTop = BOX_FLOOR_Y + CATCHMENT.boxSediment;
+    expect(siltTop - bottom).toBeGreaterThan(0.002);
+    expect(siltTop - bottom).toBeLessThan(CATCHMENT.boxSediment);
   });
 
   it('the grass tufts of the catchment melt into the ground once their blades are under 3 pixels (no crawling specks)', () => {

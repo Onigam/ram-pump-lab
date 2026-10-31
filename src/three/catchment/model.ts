@@ -244,6 +244,7 @@ export function createCatchmentModel(opts: ModelOptions): CatchmentModel {
     waterMaterial(0.5, 0x4a9bd0),
   );
   boxBody.renderOrder = 1;
+  boxBody.name = 'spring-box-water';
   // the surface of the water in the box: a clear blue that shines with the sky, so that it reads as water from afar too
   const boxSurfaceMat = waterMaterial(0.72, 0x6db9e6);
   boxSurfaceMat.roughness = 0.12;
@@ -568,8 +569,10 @@ export function createCatchmentModel(opts: ModelOptions): CatchmentModel {
     body.position.y = waterY / 2;
     surface.position.y = waterY;
     const boxY = C.boxWaterLevel - 0.012 * (1 - clamp(src / SITE.sourceFlowLpm, 0, 1));
-    boxBody.scale.y = boxY - C.boxSediment;
-    boxBody.position.y = BOX_FLOOR_Y + C.boxSediment + (boxY - C.boxSediment) / 2;
+    // the water body starts 4 mm down in the silt: its bottom in the plane of the silt's top fought it for the depth (the floor
+    // of the box flickered under the water, review D1); sunk into the opaque silt it is never drawn
+    boxBody.scale.y = boxY - C.boxSediment + WATER_IN_SILT;
+    boxBody.position.y = BOX_FLOOR_Y + C.boxSediment - WATER_IN_SILT + (boxY - C.boxSediment + WATER_IN_SILT) / 2;
     boxSurface.position.y = BOX_FLOOR_Y + boxY;
 
     // the pipe pours into the tank above the water, and the spring trickles onto the gravel
@@ -696,3 +699,6 @@ function shellAnchor(g: THREE.Group): THREE.Object3D {
   g.add(a);
   return a;
 }
+
+/** How deep the water body of the spring box reaches into its silt (metres): its bottom is hidden in it, never in its plane. */
+const WATER_IN_SILT = 0.004;
