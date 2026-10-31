@@ -104,7 +104,10 @@ export function applyWear(root: THREE.Object3D, freq: number, skip: (m: THREE.Me
       seen.add(std);
       std.userData.worn = true;
       const metal = std.metalness > 0.5;
-      patch(std, `wear-${freq}-${metal ? 'metal' : 'matte'}`, (shader) => {
+      // the stains of a part: warm by default (rust, dust, oil); a material may ask for its own (`userData.wearTint`, concrete greys)
+      const tint = (std.userData.wearTint as [number, number, number] | undefined) ?? [1.03, 0.99, 0.92];
+      const tintGlsl = `vec3( ${tint.map((v) => v.toFixed(3)).join(', ')} )`;
+      patch(std, `wear-${freq}-${metal ? 'metal' : 'matte'}-${tint.join('-')}`, (shader) => {
         shader.vertexShader = shader.vertexShader
           .replace('#include <common>', '#include <common>\nvarying vec3 vDtObj;')
           .replace('#include <begin_vertex>', '#include <begin_vertex>\nvDtObj = position;');
@@ -117,7 +120,7 @@ export function applyWear(root: THREE.Object3D, freq: number, skip: (m: THREE.Me
             float dtCpp = length( fwidth( dtP ) );
             float dtN = dtNoise3( dtP ) * dtKeep( dtCpp ) + 0.5 * dtNoise3( dtP * 3.1 + 5.0 ) * dtKeep( dtCpp * 3.1 );
             diffuseColor.rgb *= 1.0 + ${metal ? '0.05' : '0.08'} * dtN;
-            diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * vec3( 1.03, 0.99, 0.92 ), ${metal ? '0.10' : '0.18'} * smoothstep( 0.2, 0.8, dtN ) );`,
+            diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * ${tintGlsl}, ${metal ? '0.10' : '0.18'} * smoothstep( 0.2, 0.8, dtN ) );`,
           )
           .replace(
             '#include <roughnessmap_fragment>',
