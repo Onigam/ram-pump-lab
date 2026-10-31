@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { meltTuftsWithDistance } from '../detail';
+import { STUDIO_SHADE } from './ground';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { rng } from '@onigam/lab-kit/three';
 import { CATCHMENT as C } from '../dims';
@@ -84,7 +85,9 @@ export function buildVegetation(): THREE.Group {
   const m4 = new THREE.Matrix4();
   const q = new THREE.Quaternion();
   const up = new THREE.Vector3(0, 1, 0);
-  const pal = [0x6f8f35, 0x5c7a2c, 0x86a043, 0x7a8a3a].map((h) => new THREE.Color(h));
+  const pal = [0x6f8f35, 0x5c7a2c, 0x86a043, 0x7a8a3a].map((h) =>
+    new THREE.Color(h).multiplyScalar(STUDIO_SHADE.grass),
+  );
   tufts.forEach((t, i) => {
     q.setFromAxisAngle(up, t.r);
     m4.compose(
@@ -136,4 +139,4 @@ export function buildVegetation(): THREE.Group {
 }
 
 /** The grass of the block's top under the tufts: the middle of `grassA` and `grassB` of ground.ts, times its grain (sRGB 227 on average, 0.77 linear). */
-const TUFT_GROUND = new THREE.Color(0x7c9e44).multiplyScalar(0.77);
+const TUFT_GROUND = new THREE.Color(0x7c9e44).multiplyScalar(0.77 * STUDIO_SHADE.grass);

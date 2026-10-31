@@ -27,23 +27,33 @@ const Z1 = C.blockHalfWidth;
 export const BASE_Y = -C.blockBase;
 export const PLINTH_H = 0.09;
 
-/** The layers, as depths below the natural ground: [from, to, colour]. */
+/**
+ * The block is the same hillside as the site's, seen in the paper studio: its studio light is several times the site's sun on
+ * the meadow, so its grass and earth carry the site's colours darkened by these factors (review D4: under the studio's Neutral
+ * curve the grass came out lime, #d5f076, and the layers orange, where the site's meadow is an olive green and its earth a
+ * grey brown). The rocks of the scarp keep theirs. The studio's ambient light (`env`) and the sheen of its strong lights
+ * (`specular`, three's 4 % of a dielectric) are turned down on the ground: on a darkened green they added a neutral grey that
+ * washed the grass out (the site's meadow, lit less, keeps its colour with both).
+ */
+export const STUDIO_SHADE = { grass: 0.22, earth: 0.5, env: 0.35, specular: 0.15 };
+
+/** The layers, as depths below the natural ground: [from, to, colour] (the earth of the site, then `STUDIO_SHADE`). */
 const LAYERS: [number, number, number][] = [
   [0, 0.08, 0x5f7a37], // turf
   [0.08, 0.45, 0x4d3a28], // topsoil
-  [0.45, 1.05, 0x8d6c47], // subsoil
-  [1.05, 1.9, 0xa59272], // weathered rock and clay
+  [0.45, 1.05, 0x7d6a52], // subsoil
+  [1.05, 1.9, 0x958a76], // weathered rock and clay
   [1.9, 99, 0x77746c], // bedrock
 ];
 
 const C_ = {
-  grassA: new THREE.Color(0x6f9a3f),
-  grassB: new THREE.Color(0x8aa24a),
-  dry: new THREE.Color(0xa39a55),
+  grassA: new THREE.Color(0x6f9a3f).multiplyScalar(STUDIO_SHADE.grass),
+  grassB: new THREE.Color(0x8aa24a).multiplyScalar(STUDIO_SHADE.grass),
+  dry: new THREE.Color(0xa39a55).multiplyScalar(STUDIO_SHADE.grass),
   rock: new THREE.Color(0x85817a),
   rockDark: new THREE.Color(0x66635d),
-  gravel: new THREE.Color(0xa59d86),
-  dirt: new THREE.Color(0x9a8c64),
+  gravel: new THREE.Color(0xa59d86).multiplyScalar(STUDIO_SHADE.earth),
+  dirt: new THREE.Color(0x9a8c64).multiplyScalar(STUDIO_SHADE.earth),
 };
 
 /** Lines of a grid axis from `a` to `b`: a base step, finer ranges, and lines that must exist (edges of the excavations). */
@@ -184,7 +194,14 @@ export function buildBlock(): Block {
   geo.computeVertexNormals();
   const top = new THREE.Mesh(
     geo,
-    new THREE.MeshStandardMaterial({ vertexColors: true, map: grain(), roughness: 0.97, metalness: 0 }),
+    new THREE.MeshPhysicalMaterial({
+      vertexColors: true,
+      map: grain(),
+      roughness: 0.97,
+      metalness: 0,
+      envMapIntensity: STUDIO_SHADE.env,
+      specularIntensity: STUDIO_SHADE.specular,
+    }),
   );
   top.name = 'ground';
   top.receiveShadow = true;
@@ -210,7 +227,12 @@ export function buildBlock(): Block {
   // ---- layered sides
   const walls = new THREE.Mesh(
     new THREE.BufferGeometry(),
-    new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.97 }),
+    new THREE.MeshPhysicalMaterial({
+      vertexColors: true,
+      roughness: 0.97,
+      envMapIntensity: STUDIO_SHADE.env,
+      specularIntensity: STUDIO_SHADE.specular,
+    }),
   );
   walls.name = 'block-walls';
   walls.receiveShadow = true;
@@ -271,7 +293,13 @@ export function buildBlock(): Block {
   );
   const capMesh = new THREE.Mesh(
     cap.geometry(),
-    new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.97, side: THREE.DoubleSide }),
+    new THREE.MeshPhysicalMaterial({
+      vertexColors: true,
+      roughness: 0.97,
+      side: THREE.DoubleSide,
+      envMapIntensity: STUDIO_SHADE.env,
+      specularIntensity: STUDIO_SHADE.specular,
+    }),
   );
   capMesh.name = 'earth-section';
   capMesh.visible = false;
@@ -303,7 +331,7 @@ class WallBuilder {
 
   add(path: { x: number; z: number; top: number; ground: number }[], n: [number, number, number]): void {
     for (const [d0, d1, hex] of LAYERS) {
-      this.c.setHex(hex);
+      this.c.setHex(hex).multiplyScalar(d0 === 0 ? STUDIO_SHADE.grass : STUDIO_SHADE.earth);
       for (let i = 0; i < path.length - 1; i++) {
         const a = path[i];
         const b = path[i + 1];
