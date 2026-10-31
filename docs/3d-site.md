@@ -172,6 +172,33 @@ old smallest step was 10.6 m). `shadow.test.ts` follows the film's moves, an orb
 frame, against steps of 30 %), checks that the same camera gives the same box whatever came before, and that the draw aims the
 box before the shadow pass.
 
+## The picture of the site (kit 0.5.0, 31/10/2026)
+
+- **Tone**: the site asks for its own (`scene.userData.look = { toneMapping: 'neutral', exposure: 1.32, saturation: 0.86 }`).
+  - The Neutral curve keeps the colours of the light and of the materials.
+  - The extra exposure and the lower saturation keep the greens and the sky close to where ACES had them.
+- **Haze and light** (`sky.ts`): the haze of a summer valley instead of a cold blue-grey (`cfd5d2`, was `c4d3e2`), a slightly warmer
+  sun (`ffeed8`) and sky light (`c6d4e2`), and a warmer bounce from the grass (`5c5434`, was `4a4a32`).
+- **Far slopes without stripes** (`layout.ts`, `terrain.ts`).
+  - The ground's grid is a tensor product: at 1 km to the north its cells are a few metres wide along x (the columns of the site)
+    and 45 m along z. The 20 m octave of the relief was sampled through them and drew gullies down the mountains (film review m-a).
+  - Each octave is now faded by the size of the cell that carries it (`staticPart(x, z, cell)`), and so is the colour noise.
+  - Cells under 3 m keep everything, so nothing changes near the site. `detail.test.ts` checks both.
+- **Pipes and trickle at their width** (`pipes.ts`, `trackViewHeight`).
+  - Their minimum width (2.6 CSS px) comes from the projection and the real height of the view. It was a constant for an 800 px
+    view: 1.9 px in a 1080 px film, 1.2 px on a phone, where a line breaks up and crawls.
+- **Grass** (`detail.ts`, `grassDetail`): drier and greener patches tens of metres across, tufts a metre across and their bump. Each
+  layer fades out before it gets under about two pixels, so it adds detail close up and no shimmer from afar.
+- **Trees** (`crownShading`): a crown is darker at its bottom and inside, as the sky does not reach there.
+- **Stones** (`layStones`, `buildStones`).
+  - Nine groups: a large stone with smaller ones around it, on the edges of the clearings, by the house and the tower, and a few lone
+    boulders in the meadow. 32 stones, 0.1 to 1 m.
+  - They avoid the pit, the waste drain, the drive pipe and its tank, the delivery route and the buildings.
+  - Each sits a fifth of its height into the ground (its foot under the surface, its top above, checked) and follows the ground when
+    the sliders move it.
+  - Faceted, three shapes, five tones, moss where the faces look up. Not a scatter of pebbles: the owner found the study's pebbles too
+    many and too even.
+
 ## To wire in `src/lab.ts` (lead)
 
 - `catchment`: `xrayShell: (id) => ['tank-shell', 'tank-lid', 'spring-box'].includes(id)`, `stepFrame: { padding: 1.5, minRadius: 0.3 }`,

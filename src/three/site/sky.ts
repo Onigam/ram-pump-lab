@@ -113,18 +113,19 @@ export function createSky(scene: THREE.Scene): SkyRig {
   sun.shadow.normalBias = 0.05;
   scene.add(sun, sun.target);
 
-  const hemi = new THREE.HemisphereLight(0xbcd3ee, 0x4a4a32, 0.9);
+  const hemi = new THREE.HemisphereLight(0xbcd3ee, 0x5c5434, 0.9);
   scene.add(hemi);
 
   const sunDir = new THREE.Vector3(0, 1, 0);
   const moonDir = new THREE.Vector3(-0.35, 0.8, 0.45).normalize();
   const warm = new THREE.Color(0xffa860);
-  const white = new THREE.Color(0xfff3e2);
+  const white = new THREE.Color(0xffeed8);
   const moonCol = new THREE.Color(0x9fb4d8);
-  const fogDay = new THREE.Color(0xc4d3e2);
+  // the haze of a summer valley, warmer than the cold blue-grey it was (a warm bounce from the grass and the earth below)
+  const fogDay = new THREE.Color(0xcfd5d2);
   const fogDusk = new THREE.Color(0xd8b49a);
   const fogNight = new THREE.Color(0x0b1222);
-  const hemiDay = new THREE.Color(0xbcd3ee);
+  const hemiDay = new THREE.Color(0xc6d4e2);
   const hemiNight = new THREE.Color(0x3a4f80);
 
   const focus = new THREE.Vector3(30, 20, -60);

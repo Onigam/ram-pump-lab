@@ -190,6 +190,10 @@ Pelton Lab has the same pattern (`part-in-screen`: `flows:false` at 20.96 s, `pa
 
 ## 15. The grab pivot lands on a translucent shell in front of the selected part (QA D6, 2026-10-31)
 
+**Done in kit 0.5.0**: a drag turns around the selected part where the pointer is on it, even behind a translucent shell, then around
+the first part that is not see-through, then as before. Checked on the intake screen: after a 250 px drag it stays under the pointer
+(4 px off; 84 px with kit 0.4.0).
+
 With the intake screen of the catchment selected (framed from 2.2 m, through the wall of the tank), a drag pivots on the tank shell in
 front of it: `Stage.beginGrab` takes the first part under the pointer whose display is `solid`, and the shell is solid (its material is
 translucent, its display is not). After a 250 px drag the screen has left the view. The lab cannot tell the stage which hit to take: its

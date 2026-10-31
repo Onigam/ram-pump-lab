@@ -134,8 +134,12 @@ function mountains(x: number, z: number): number {
 }
 
 export interface Ground {
-  /** The part of the height that does not depend on the parameters (rolling noise and far mountains). */
-  staticPart(x: number, z: number): number;
+  /**
+   * The part of the height that does not depend on the parameters (rolling noise and far mountains). `cell` is the size of the
+   * grid cell that carries it (default 0: everything): an octave finer than the cell is faded out instead of being aliased into
+   * ridges along the long side of the cell (the vertical stripes of the far slopes, film review m-a).
+   */
+  staticPart(x: number, z: number, cell?: number): number;
   /** Height with the pads and the corridor graded in; `stat` is `staticPart(x, z)` when the caller cached it. */
   height(x: number, z: number, p: SiteParams, stat?: number): number;
 }
@@ -151,12 +155,16 @@ export function createGround(): Ground {
     return driveCache.d;
   };
 
-  const staticPart = (x: number, z: number): number => {
+  const staticPart = (x: number, z: number, cell = 0): number => {
     // rolling noise, none near the ram, the tank and the pads, plus the mountains of the horizon
     const dRam = Math.hypot(x - PIT_X, z);
     const amp = 4.2 * smoothstep(30, 110, dRam);
+    // each octave needs cells under about a quarter of its period: 0.05 /m (20 m) under ~5 m, 0.012 /m (80 m) under ~20 m
+    const keepFine = 1 - smoothstep(3, 9, cell);
+    const keepRolling = 1 - 0.7 * smoothstep(18, 45, cell);
     const noise =
-      amp * fbm(x * 0.012 + 11, z * 0.012 - 7, 3) + 0.9 * smoothstep(12, 60, dRam) * fbm(x * 0.05, z * 0.05, 2);
+      keepRolling * amp * fbm(x * 0.012 + 11, z * 0.012 - 7, 3) +
+      keepFine * 0.9 * smoothstep(12, 60, dRam) * fbm(x * 0.05, z * 0.05, 2);
     return noise + mountains(x, z);
   };
 

@@ -1,12 +1,14 @@
 import * as THREE from 'three';
 import { l } from '@onigam/lab-kit/i18n';
-import { PartRegistry } from '@onigam/lab-kit/three';
+import { PAPER_STUDIO, PartRegistry } from '@onigam/lab-kit/three';
 import type { Hotspot, SceneModule } from '@onigam/lab-kit/three';
 import type { RamState } from '../../sim/types';
 import { FlowDots } from '../common';
 import { installWarmup, type Warmable } from '../warm';
 import { CutKit } from '../cut';
-import { benchFloor, buildBench } from './bench';
+import { FLOOR_Y, benchFloor, buildBench } from './bench';
+import { BENCH } from '../dims';
+import { applyWear, contactShadow } from '../detail';
 import { EXPLODE_Y } from './explode';
 import { VALVE_PART_IDS, createWasteValveModel, type WasteValveModel } from './model';
 
@@ -51,6 +53,8 @@ export function createValveScene(): ValveScene {
   scene.background = new THREE.Color(0xefe6d3);
   scene.fog = new THREE.Fog(0xefe6d3, 2.2, 6);
   scene.userData.wantsEnv = true;
+  // the paper studio of kit 0.5: Neutral tone mapping keeps the paper the paper, the warm studio lights the metal
+  scene.userData.look = { ...PAPER_STUDIO };
 
   scene.add(new THREE.HemisphereLight(0xfff4e0, 0xb6a68c, 1.1));
   const key = new THREE.DirectionalLight(0xfff1dc, 2.4);
@@ -82,6 +86,12 @@ export function createValveScene(): ValveScene {
   const cut = new CutKit();
   const model = createWasteValveModel({ cut, hardware: 'bench', floorAt: benchFloor });
   scene.add(model.root);
+  // wear on the valve and its plinth, and the floor a little darker along the foot of the plinth
+  applyWear(model.root, 140);
+  applyWear(bench.group, 25);
+  const contact = contactShadow(BENCH.plinthLength, BENCH.plinthDepth, 0.06, 0.45);
+  contact.position.set(0, FLOOR_Y + 0.0002, 0);
+  scene.add(contact);
   for (const id of VALVE_PART_IDS) registry.add(id, model.parts[id], new THREE.Vector3(0, EXPLODE_Y[id], 0));
 
   const hotspots: Hotspot[] = HOTSPOTS.map((h) => ({

@@ -1,12 +1,14 @@
 import * as THREE from 'three';
 import { l } from '@onigam/lab-kit/i18n';
-import { PartRegistry } from '@onigam/lab-kit/three';
+import { PAPER_STUDIO, PartRegistry } from '@onigam/lab-kit/three';
 import type { Hotspot, SceneModule } from '@onigam/lab-kit/three';
 import type { RamState } from '../../sim/types';
 import { paperFloor } from '../common';
 import { installWarmup, type Warmable } from '../warm';
 import { createRamModel, type RamModel } from './model';
 import { FOUNDATION_BOTTOM } from './foundation';
+import { FOUNDATION, RAM } from '../dims';
+import { applyWear, contactShadow } from '../detail';
 
 // The "ram" world: the device on a drafting-table floor, lit like the Pelton Lab workshop (paper, copper, soft shadows).
 
@@ -43,6 +45,8 @@ export function createRamScene(): RamScene {
   scene.background = new THREE.Color(0xefe6d3);
   scene.fog = new THREE.Fog(0xefe6d3, 6, 14);
   scene.userData.wantsEnv = true;
+  // the paper studio of kit 0.5: Neutral tone mapping keeps the paper the paper, the warm studio lights the metal
+  scene.userData.look = { ...PAPER_STUDIO };
 
   scene.add(new THREE.HemisphereLight(0xfff4e0, 0xb6a68c, 1.1));
   const key = new THREE.DirectionalLight(0xfff1dc, 2.4);
@@ -72,6 +76,11 @@ export function createRamScene(): RamScene {
   const registry = new PartRegistry();
   const model = createRamModel(registry);
   scene.add(model.root);
+  // wear on the parts, and the floor a little darker along the foot of the anchor block
+  applyWear(model.root, 60);
+  const contact = contactShadow(FOUNDATION.length, FOUNDATION.width, 0.07, 0.5);
+  contact.position.set(RAM.bodyLength / 2, FOUNDATION_BOTTOM + 0.0002, 0);
+  scene.add(contact);
 
   const hotspots: Hotspot[] = HOTSPOTS.map((h) => ({
     partId: h.id,

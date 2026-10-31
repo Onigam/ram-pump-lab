@@ -59,7 +59,9 @@ export interface Bench {
 
 export function buildBench(): Bench {
   const g = group('bench');
+  // pale beech: the kit's light wood was tuned under ACES, which greyed it; under the paper studio's Neutral curve it is orange
   const wood = MAT.woodLight();
+  wood.color.set(0xcdb594);
   const steel = MAT.steel();
   // plinth: a thick wooden slab
   g.add(

@@ -28,11 +28,12 @@ import {
 } from './layout';
 import { DELIVERY_AT_TOWER, DELIVERY_IN_PIT, deliveryPolyline, spaced } from './routes';
 import { createShadowAim } from './shadow';
-import { minWidthMaterial, pickAlong, swapGeometry, tubeAlong } from './pipes';
+import { minWidthMaterial, pickAlong, swapGeometry, trackViewHeight, tubeAlong } from './pipes';
 import { createSky } from './sky';
 import { buildTerrain, type Terrain } from './terrain';
 import { buildVegetation } from './vegetation';
 import { buildWasteDrain, type WasteDrain } from './waste';
+import { applyWear, buildStones, grassDetail, layStones, type StoneGroup } from '../detail';
 
 // The "site" world: the hillside of the video. X east, Y up (0 = the ram's inlet axis), Z south; the hill rises to the
 // north. Everything that depends on the fall, the drive length, the delivery head and the pipe diameter is re-placed
@@ -70,6 +71,9 @@ export interface SiteScene extends SceneModule<RamState>, Warmable {
 export function createSiteScene(): SiteScene {
   const scene = new THREE.Scene();
   scene.name = 'site';
+  // the hillside's own tone (kit 0.5 `scene.userData.look`): the Neutral curve keeps the colours of the light and the materials,
+  // a little more exposure and less saturation keep the greens and the sky where ACES had them
+  scene.userData.look = { toneMapping: 'neutral', exposure: 1.32, saturation: 0.86 };
   const registry = new PartRegistry();
 
   let params: SiteParams = { ...DEFAULT_PARAMS };
@@ -294,7 +298,10 @@ export function createSiteScene(): SiteScene {
       new THREE.Vector3(tp.x + TOWER.troughX, tp.y + top + 0.36, tp.z + TOWER.troughZ),
     ]);
     veg.relevel();
+    relevelStones();
   };
+  /** The stones follow the ground (set once they are built, below). */
+  let relevelStones = (): void => {};
   layout(params, driveDiameterMm);
 
   // ---- register the parts (after they are placed)
@@ -317,6 +324,26 @@ export function createSiteScene(): SiteScene {
 
   // the sun's shadow box: a continuous function of the camera of each draw (shadow.ts)
   const aimShadow = createShadowAim(scene, terrain, sky);
+  // the minimum width of the pipes and of the trickle follows the height of the view
+  trackViewHeight(scene);
+
+  // ---- near detail (docs/scenery.md): the grass's patches and tufts, wear on the parts, a few groups of stones
+  grassDetail((terrain.mesh.children[0] as THREE.Mesh).material as THREE.MeshStandardMaterial);
+  applyWear(scene, 3, (m) => m.name === 'terrain' || m.name === 'stones' || m.parent?.name === 'vegetation');
+  const stones = buildStones(
+    layStones(STONE_GROUPS, (x, z) => {
+      const d = driveGeometry(DEFAULT_PARAMS);
+      const corridor = Math.abs(z) < 3 && x > d.start.x - 14 && x < PIT_X + 4; // the tank, its bench and the drive pipe
+      const pitAndDrain = Math.abs(x - PIT_X - 0.6) < 4 && z > -4 && z < 32; // the pit and the waste-water drain
+      const route = deliveryPts.some((q) => Math.hypot(q.x - x, q.z - z) < 2);
+      const buildings =
+        Math.hypot(x - HOUSE.planX, z - HOUSE.planZ) < 10 || Math.hypot(x - TOWER.planX, z - TOWER.planZ) < 6;
+      return corridor || pitAndDrain || route || buildings;
+    }),
+    (x, z) => terrain.surfaceY(x, z),
+  );
+  scene.add(stones.group);
+  relevelStones = stones.relevel;
 
   // ---- per-frame
   let sinceLayout = 1;
@@ -420,6 +447,22 @@ export function createSiteScene(): SiteScene {
   // any tile of the ground that is drawn hands over the renderer and the camera
   return installWarmup(mod, terrain.mesh.children) as SiteScene;
 }
+
+/**
+ * The stones of the site: a few groups (a large stone, smaller ones leaning on it and around), on the edges of the clearings and
+ * by the buildings, and lone boulders in the meadow; not a scatter of pebbles (too many and too even, owner, 31/10).
+ */
+const STONE_GROUPS: StoneGroup[] = [
+  { x: PIT_X + 9, z: 7, size: 0.55, count: 4 },
+  { x: -7, z: -8, size: 0.4, count: 3 },
+  { x: -17, z: 10, size: 0.7, count: 5 },
+  { x: TOWER.planX + 9, z: TOWER.planZ + 7, size: 0.5, count: 3 },
+  { x: HOUSE.planX - 14, z: HOUSE.planZ + 10, size: 0.6, count: 4 },
+  { x: 18, z: -40, size: 0.9, count: 1 },
+  { x: -22, z: -62, size: 0.8, count: 2 },
+  { x: 46, z: -96, size: 1, count: 2 },
+  { x: 13, z: 22, size: 0.6, count: 2 },
+];
 
 /** Where along the delivery polyline (0 = the ram, 1 = the tower) the label of the delivery pipe stands. */
 const DELIVERY_LABEL_AT = 0.5;

@@ -5,6 +5,7 @@ import { HOUSE, TOWER } from '../dims';
 import { PIT_X, routePlan } from './layout';
 import { forestMask, type Terrain } from './terrain';
 import { fbm } from './noise';
+import { crownShading } from '../detail';
 
 // Instanced low-poly trees (conifers and broadleaves) on the hillside, none on the route, the pipes, the pads and the
 // steep ground. The forest is cut into square tiles of `TILE` metres, each with its own instanced meshes (trunks, conifers,
@@ -147,6 +148,9 @@ export function buildVegetation(terrain: Terrain): Vegetation {
   const leafMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, flatShading: true });
   const coneGeo = coneStack();
   const blobGeo = blobs();
+  // darker at the bottom of a crown and inside it, as a real tree is
+  crownShading(coniferMat, 1.8, 9.1, 2.3);
+  crownShading(leafMat, 2.6, 8.8, 3.2);
   const conCols = [0x37603a, 0x3f6a3c, 0x2f5436, 0x46703f];
   const leafCols = [0x587f34, 0x4f7a34, 0x6a9640, 0x74913c, 0x8a9a3a];
   // the colour of each tree is drawn in tree order, as it always was: the forest looks the same

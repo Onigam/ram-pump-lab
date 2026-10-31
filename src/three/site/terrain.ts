@@ -84,6 +84,8 @@ function detailTexture(): THREE.DataTexture {
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.magFilter = THREE.LinearFilter;
   tex.minFilter = THREE.LinearMipmapLinearFilter;
+  // the ground is seen at grazing angles: without anisotropic filtering its texture blurs and shimmers there
+  tex.anisotropy = 16;
   tex.generateMipmaps = true;
   tex.needsUpdate = true;
   return tex;
@@ -160,6 +162,7 @@ export function buildTerrain(initial: SiteParams): Terrain {
   const tint = new Float32Array(count); // colour noise
   const forest = new Float32Array(count); // forest mask 0..1 (shared with the trees)
   const nearWest = new Uint8Array(count); // vertices that depend on the fall and the drive length
+  const cellOf = new Float32Array(count); // the longest side of the cells around the vertex (metres)
   for (let j = 0; j < NZ; j++) {
     for (let i = 0; i < NX; i++) {
       const v = j * NX + i;
@@ -169,8 +172,12 @@ export function buildTerrain(initial: SiteParams): Terrain {
       pos[v * 3 + 2] = z;
       uv[v * 2] = x / 4;
       uv[v * 2 + 1] = z / 4;
-      stat[v] = ground.staticPart(x, z);
-      tint[v] = fbm(x * 0.03 + 5, z * 0.03 + 9, 3);
+      // far away the cells are 45 m along z and a few metres along x (the grid is a tensor product): noise finer than the cell
+      // would be aliased into gullies down the slopes, so the relief and the colour noise are band-limited by the cell
+      const cell = Math.max(gridStep(xs, i), gridStep(zs, j));
+      cellOf[v] = cell;
+      stat[v] = ground.staticPart(x, z, cell);
+      tint[v] = (1 - smoothstep(10, 30, cell)) * fbm(x * 0.03 + 5, z * 0.03 + 9, 3);
       forest[v] = forestMask(x, z);
       nearWest[v] = x < 14 && Math.abs(z) < 110 ? 1 : 0;
     }
@@ -332,7 +339,7 @@ export function buildTerrain(initial: SiteParams): Terrain {
       c.lerp(n > 0 ? C.rock : C.rockDark, smoothstep(0.1, 0.26, slope));
       c.lerp(C.alpine, smoothstep(120, 260, y));
       c.lerp(C.snow, smoothstep(300, 380, y + n * 30) * (1 - smoothstep(0.25, 0.5, slope)));
-      c.multiplyScalar(0.94 + 0.12 * vnoise(x * 0.2, z * 0.2));
+      c.multiplyScalar(0.94 + 0.12 * (1 - smoothstep(1.5, 5, cellOf[v])) * vnoise(x * 0.2, z * 0.2));
       w.copy(c);
       col[v * 3] = w.r;
       col[v * 3 + 1] = w.g;
@@ -428,6 +435,11 @@ export function buildTerrain(initial: SiteParams): Terrain {
   };
   terrain.setParams(initial);
   return terrain;
+}
+
+/** The larger of the two grid steps on either side of line `k`. */
+function gridStep(arr: Float32Array, k: number): number {
+  return Math.max(k > 0 ? arr[k] - arr[k - 1] : 0, k < arr.length - 1 ? arr[k + 1] - arr[k] : 0);
 }
 
 function bracket(arr: Float32Array, v: number): number {

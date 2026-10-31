@@ -181,7 +181,7 @@ export function paperFloor(radius = 12, tile = 8, y = 0): THREE.Mesh {
   tex.generateMipmaps = true;
   tex.minFilter = THREE.LinearMipmapLinearFilter;
   tex.magFilter = THREE.LinearFilter;
-  tex.anisotropy = 4;
+  tex.anisotropy = 16;
   tex.needsUpdate = true;
   const floor = new THREE.Mesh(
     new THREE.CircleGeometry(radius, 64),
@@ -285,6 +285,14 @@ export interface FlowDotsOptions {
   throughWalls?: boolean;
 }
 
+/** Length over which a flow dot fades in at the start of its path and out at its end (metres): 8 % of it, at most 1.2 m. */
+export const dotFade = (length: number): number => Math.min(1.2, length * 0.08);
+
+/** Opacity of a dot at distance `u` along a path of `length`: 0 at both ends, 1 between the fades. */
+export function dotAlpha(u: number, length: number, fade = dotFade(length)): number {
+  return fade > 0 ? smoothstep(0, fade, u) * smoothstep(0, fade, length - u) : 1;
+}
+
 /**
  * Dots that travel along polylines: the speed of each path is set every frame (signed: negative runs backwards).
  * Positions only; the dots are decoration of a flow whose size is given by the simulation, not data.
@@ -293,6 +301,8 @@ export class FlowDots {
   readonly object: THREE.Points;
   private readonly paths: { path: DotPath; offset: number[]; first: number }[] = [];
   private readonly pos: Float32Array;
+  /** White, with an alpha that fades a dot in at the start of its path and out at its end (a dot wrapping round would pop). */
+  private readonly rgba: Float32Array;
   private total = 0;
   private readonly tmp = new THREE.Vector3();
   private geometry: THREE.BufferGeometry;
@@ -304,7 +314,10 @@ export class FlowDots {
     this.pos = new Float32Array(max * 3);
     this.geometry = new THREE.BufferGeometry();
     this.geometry.setAttribute('position', new THREE.BufferAttribute(this.pos, 3));
+    this.rgba = new Float32Array(max * 4).fill(1);
+    this.geometry.setAttribute('color', new THREE.BufferAttribute(this.rgba, 4));
     const mat = new THREE.PointsMaterial({
+      vertexColors: true,
       color: opts.color,
       size: opts.size,
       sizeAttenuation: !opts.pixels,
@@ -362,15 +375,18 @@ export class FlowDots {
   /** Write the positions after all `advance` calls of a frame. */
   place(): void {
     for (const p of this.paths) {
+      const fade = dotFade(p.path.length);
       for (let i = 0; i < p.offset.length; i++) {
         p.path.at(p.offset[i], this.tmp);
         const k = (p.first + i) * 3;
         this.pos[k] = this.tmp.x;
         this.pos[k + 1] = this.tmp.y;
         this.pos[k + 2] = this.tmp.z;
+        this.rgba[(p.first + i) * 4 + 3] = dotAlpha(p.offset[i], p.path.length, fade);
       }
     }
     (this.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true;
+    (this.geometry.attributes.color as THREE.BufferAttribute).needsUpdate = true;
   }
 
   get material(): THREE.PointsMaterial {

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { l } from '@onigam/lab-kit/i18n';
-import { PartRegistry, clamp } from '@onigam/lab-kit/three';
+import { PAPER_STUDIO, PartRegistry, clamp } from '@onigam/lab-kit/three';
 import type { Hotspot, SceneModule, ViewOpts } from '@onigam/lab-kit/three';
 import type { RamState } from '../../sim/types';
 import { paperFloor } from '../common';
@@ -11,6 +11,8 @@ import { BASE_Y, BLOCK, PLINTH_H, buildBlock, type Block } from './ground';
 import { SPRING_X } from './layout';
 import { createCatchmentModel, type CatchmentModel, type CatchmentPartId, type Hold, type ModelStatus } from './model';
 import { buildVegetation } from './vegetation';
+import { applyWear, contactShadow } from '../detail';
+import { trackViewHeight } from '../site/pipes';
 
 // The "catchment" world: the spring box, the gravel bed, the feed pipe, the buffer tank and the start of the drive pipe, as a
 // cut-out block of the hillside on a plinth (the look of the Coanda intake of Pelton Lab and of the ram world: paper floor,
@@ -82,8 +84,9 @@ export function createCatchmentScene(): CatchmentScene {
   scene.name = 'catchment';
   scene.background = new THREE.Color(0xefe6d3);
   scene.fog = new THREE.Fog(0xefe6d3, 26, 52);
-  // the lead fills scene.environment from the shared PMREM RoomEnvironment (metal and water reflections)
+  // the stage fills scene.environment (metal and water reflections): the warm paper studio of kit 0.5, with its Neutral tone
   scene.userData.wantsEnv = true;
+  scene.userData.look = { ...PAPER_STUDIO };
   scene.add(new THREE.HemisphereLight(0xfff4e0, 0xb6a68c, 0.85));
   const key = new THREE.DirectionalLight(0xfff1dc, 2.3);
   const lightDir = new THREE.Vector3(0.5, 0.72, 0.62).normalize();
@@ -101,6 +104,12 @@ export function createCatchmentScene(): CatchmentScene {
   rim.position.set(2, 8, -10);
   scene.add(rim);
   scene.add(paperFloor(36, 8, BASE_Y - PLINTH_H - 0.001));
+  // the floor a little darker along the foot of the plinth
+  const contact = contactShadow(BLOCK.x1 - BLOCK.x0 + 0.08, BLOCK.z1 - BLOCK.z0 + 0.08, 0.6, 0.45);
+  contact.position.set((BLOCK.x0 + BLOCK.x1) / 2, BASE_Y - PLINTH_H + 0.002, 0);
+  scene.add(contact);
+  // the trickle of the spring keeps its minimum width at any height of the view
+  trackViewHeight(scene);
 
   const root = new THREE.Group();
   root.name = 'catchment-root';
@@ -110,6 +119,10 @@ export function createCatchmentScene(): CatchmentScene {
   model.springFrame.position.x = SPRING_X;
   const vegetation = buildVegetation();
   root.add(block.group, model.springFrame, model.tankFrame, vegetation);
+  // wear on the stones, the box, the tank and the earth; the grass and the trees have their own colours
+  const plants = new Set<THREE.Object3D>();
+  vegetation.traverse((o) => plants.add(o));
+  applyWear(root, 6, (m) => plants.has(m));
   for (const m of block.clipped) model.clip(m);
   // the grass and the trees go with the ground they stand on: the section removes those of the front half with it
   model.clip(vegetation);

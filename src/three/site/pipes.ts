@@ -2,26 +2,49 @@ import * as THREE from 'three';
 import { SITE } from '../dims';
 
 // Pipes of the site. A real 33 mm pipe is invisible from 200 m, so the material widens the tube along its normals by the
-// distance to the camera: the pipe is never thinner than about `minPixels` on screen, and is drawn at its true size when
-// the camera is close. (Generic: docs/kit-requests.md §4.)
+// distance to the camera: the pipe is never thinner than `minPixels` CSS pixels on screen, and is drawn at its true size when
+// the camera is close. The width comes from the projection and the height of the view (`trackViewHeight`): a constant for an
+// 800 px view gave 1.9 px in a 1080 px film and 1.2 px on a phone, under two device pixels, where a line breaks up and crawls.
+// (Generic: docs/kit-requests.md §4.)
 
-/** World size of one screen pixel per metre of distance at the stage's 40 degree field of view and ~800 px height. */
-export const PIXEL_PER_METRE = 0.00091;
+/** Height of the 3D view in CSS pixels, shared by the pipe and stream materials; set by `trackViewHeight` before each draw. */
+export const VIEW_HEIGHT = { value: 800 };
+
+/** GLSL: half the world width of `px` CSS pixels at one metre from the camera (projection and view height). */
+const HALF_WIDTH_PER_METRE =
+  'float pipeHalfPerMetre( float px ) { return px / ( projectionMatrix[1][1] * uViewHeight ); }';
+
+/** Keep `VIEW_HEIGHT` up to date: chained on the scene's `onBeforeRender`, so it holds for every world that draws pipes. */
+export function trackViewHeight(scene: THREE.Scene): void {
+  const size = new THREE.Vector2();
+  const before = scene.onBeforeRender;
+  scene.onBeforeRender = function (renderer, s, camera, geometry, material, group) {
+    if (renderer) {
+      renderer.getDrawingBufferSize(size);
+      VIEW_HEIGHT.value = Math.max(1, size.y / renderer.getPixelRatio());
+    }
+    before.call(this, renderer, s, camera, geometry, material, group);
+  };
+}
 
 export function minWidthMaterial(base: THREE.MeshStandardMaterial, radius: number, minPixels = SITE.pipeMinPixels) {
-  const uniforms = { uPipeRadius: { value: radius }, uPipePix: { value: (PIXEL_PER_METRE * minPixels) / 2 } };
+  const uniforms = { uPipeRadius: { value: radius }, uPipeMinPx: { value: minPixels } };
   base.onBeforeCompile = (shader) => {
     shader.uniforms.uPipeRadius = uniforms.uPipeRadius;
-    shader.uniforms.uPipePix = uniforms.uPipePix;
+    shader.uniforms.uPipeMinPx = uniforms.uPipeMinPx;
+    shader.uniforms.uViewHeight = VIEW_HEIGHT;
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nuniform float uPipeRadius;\nuniform float uPipePix;')
+      .replace(
+        '#include <common>',
+        `#include <common>\nuniform float uPipeRadius;\nuniform float uPipeMinPx;\nuniform float uViewHeight;\n${HALF_WIDTH_PER_METRE}`,
+      )
       .replace(
         '#include <begin_vertex>',
         /* glsl */ `#include <begin_vertex>
         {
           vec4 wp = modelMatrix * vec4( transformed, 1.0 );
           float dist = distance( cameraPosition, wp.xyz );
-          transformed += normalize( normal ) * max( 0.0, dist * uPipePix - uPipeRadius );
+          transformed += normalize( normal ) * max( 0.0, dist * pipeHalfPerMetre( uPipeMinPx ) - uPipeRadius );
         }`,
       );
   };
@@ -43,17 +66,21 @@ export function minWidthStream(
 ) {
   const uniforms = {
     uRadius: { value: 0.01 },
-    uPix: { value: (PIXEL_PER_METRE * minPixels) / 2 },
+    uMinPx: { value: minPixels },
     uTime: { value: 0 },
   };
   base.onBeforeCompile = (shader) => {
     shader.uniforms.uStreamRadius = uniforms.uRadius;
-    shader.uniforms.uStreamPix = uniforms.uPix;
+    shader.uniforms.uStreamMinPx = uniforms.uMinPx;
     shader.uniforms.uStreamTime = uniforms.uTime;
+    shader.uniforms.uViewHeight = VIEW_HEIGHT;
     const head =
-      '#include <common>\nuniform float uStreamRadius;\nuniform float uStreamPix;\nuniform float uStreamTime;';
+      '#include <common>\nuniform float uStreamRadius;\nuniform float uStreamMinPx;\nuniform float uStreamTime;';
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', `${head}\nvarying float vStreamNear;\nvarying float vStreamV;`)
+      .replace(
+        '#include <common>',
+        `${head}\nuniform float uViewHeight;\n${HALF_WIDTH_PER_METRE}\nvarying float vStreamNear;\nvarying float vStreamV;`,
+      )
       .replace(
         '#include <begin_vertex>',
         /* glsl */ `#include <begin_vertex>
@@ -62,7 +89,7 @@ export function minWidthStream(
           float dist = distance( cameraPosition, wp.xyz );
           // the cylinder has a radius of 1 in its own frame: the growth is in parts of the radius
           vec2 side = normal.xz;
-          float grow = max( 0.0, dist * uStreamPix - uStreamRadius ) / max( uStreamRadius, 1e-5 );
+          float grow = max( 0.0, dist * pipeHalfPerMetre( uStreamMinPx ) - uStreamRadius ) / max( uStreamRadius, 1e-5 );
           vStreamNear = 1.0 - smoothstep( 3.0, 10.0, dist );
           vStreamV = position.y + 0.5;
           ${
