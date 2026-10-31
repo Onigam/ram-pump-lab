@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { rng } from '@onigam/lab-kit/three';
+import { VIEW_HEIGHT } from './site/pipes';
 
 // Near detail that keeps a view from feeling empty, without adding shimmer (docs/scenery.md, « Detail »): the grass's patches
 // and tufts, wear on the parts, occlusion in the tree crowns, contact shadows on the paper floors, and a few groups of stones.
@@ -125,6 +126,43 @@ export function applyWear(root: THREE.Object3D, freq: number, skip: (m: THREE.Me
           );
       });
     }
+  });
+}
+
+// ------------------------------------------------------------------------------------------------ grass tufts
+
+/**
+ * Grass tufts that would shimmer from afar: their blades are a centimetre or two wide, under a pixel from a few metres, and a
+ * sub-pixel blade with a light tip against the ground crawls as the camera moves. While a blade is over 2 pixels wide the tuft is
+ * drawn as it is; as it narrows to 1 pixel the tuft melts into the ground it stands on: its colour goes to the ground's
+ * (`ground`, linear, before lighting), its normal turns up (lit as the ground is) and it settles to 40 % of its height. Seen
+ * close, nothing changes; seen from afar, the grass is the ground's colour, as it would be. `bladeWidth`: width of a blade in the
+ * tuft's own frame (metres at scale 1). Needs `VIEW_HEIGHT` kept up to date (`trackViewHeight` on the world's scene).
+ */
+export function meltTuftsWithDistance(mat: THREE.MeshStandardMaterial, bladeWidth: number, ground: THREE.Color): void {
+  patch(mat, `tufts-${bladeWidth}`, (shader) => {
+    shader.uniforms.uViewHeight = VIEW_HEIGHT;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nuniform float uViewHeight;')
+      .replace(
+        '#include <color_vertex>',
+        /* glsl */ `#include <color_vertex>
+        float dtScale = length( modelMatrix[ 0 ].xyz );
+        #ifdef USE_INSTANCING
+          vec4 dtBase = modelViewMatrix * instanceMatrix * vec4( 0.0, 0.0, 0.0, 1.0 );
+          dtScale *= length( instanceMatrix[ 0 ].xyz );
+        #else
+          vec4 dtBase = modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 );
+        #endif
+        float dtMetresPerPixel = 2.0 * max( - dtBase.z, 1e-3 ) / ( projectionMatrix[ 1 ][ 1 ] * uViewHeight );
+        float dtK = smoothstep( 1.5, 3.0, ${bladeWidth.toFixed(4)} * dtScale / dtMetresPerPixel );
+        vColor.rgb = mix( vec3( ${ground.r.toFixed(4)}, ${ground.g.toFixed(4)}, ${ground.b.toFixed(4)} ), vColor.rgb, dtK );`,
+      )
+      .replace(
+        '#include <beginnormal_vertex>',
+        '#include <beginnormal_vertex>\nobjectNormal = normalize( mix( vec3( 0.0, 1.0, 0.0 ), objectNormal, dtK ) );',
+      )
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\ntransformed *= mix( 0.4, 1.0, dtK );');
   });
 }
 

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { meltTuftsWithDistance } from '../detail';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { rng } from '@onigam/lab-kit/three';
 import { CATCHMENT as C } from '../dims';
@@ -75,11 +76,11 @@ export function buildVegetation(): THREE.Group {
     const z = (R() - 0.5) * 2 * (C.blockHalfWidth - TUFT_MARGIN);
     if (keep(x, z)) tufts.push({ x, z, s: 0.1 + R() * 0.14, r: R() * 6.28 });
   }
-  const inst = new THREE.InstancedMesh(
-    tuft(3),
-    new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.85 }),
-    tufts.length,
-  );
+  const tuftMat = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.85 });
+  // a blade is 9 cm wide in the tuft's frame, 1 to 2 cm in place: under 2 pixels the tuft melts into the grass of the ground
+  // (its colour, between grassA and grassB of ground.ts), so it does not crawl from afar (detail.ts)
+  meltTuftsWithDistance(tuftMat, 0.09, TUFT_GROUND);
+  const inst = new THREE.InstancedMesh(tuft(3), tuftMat, tufts.length);
   const m4 = new THREE.Matrix4();
   const q = new THREE.Quaternion();
   const up = new THREE.Vector3(0, 1, 0);
@@ -133,3 +134,6 @@ export function buildVegetation(): THREE.Group {
   }
   return group;
 }
+
+/** The grass of the block's top under the tufts: the middle of `grassA` and `grassB` of ground.ts, times its grain (sRGB 227 on average, 0.77 linear). */
+const TUFT_GROUND = new THREE.Color(0x7c9e44).multiplyScalar(0.77);

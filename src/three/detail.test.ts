@@ -199,6 +199,18 @@ describe('the look of the worlds (kit 0.5)', () => {
     expect(worn).toBeGreaterThan(10);
   });
 
+  it('the grass tufts of the catchment melt into the ground once their blades are under 3 pixels (no crawling specks)', () => {
+    const tufts = catchment.scene.getObjectByName('tufts') as THREE.InstancedMesh;
+    const mat = tufts.material as THREE.MeshStandardMaterial;
+    expect(mat.customProgramCacheKey()).toContain('tufts-0.09');
+    // the shader reads the height of the view, which the world keeps up to date
+    const shader = { uniforms: {}, vertexShader: THREE.ShaderLib.standard.vertexShader, fragmentShader: '' } as never;
+    mat.onBeforeCompile(shader, null as never);
+    const { uniforms, vertexShader } = shader as { uniforms: Record<string, unknown>; vertexShader: string };
+    expect(uniforms.uViewHeight).toBe(VIEW_HEIGHT);
+    expect(vertexShader).toContain('smoothstep( 1.5, 3.0');
+  });
+
   it('contact shadows are drawn whatever the floor (no fight for the depth)', () => {
     const c = contactShadow(1, 1, 0.1);
     const mat = c.material as THREE.MeshBasicMaterial;
