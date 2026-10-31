@@ -26,8 +26,8 @@ export const CATCHMENT_PARTS: PartInfo[] = [
       'Small stone basin that collects the spring where it comes out of the ground and shields it from surface pollution.',
     ),
     description: lf(
-      'Le regard de captage est une chambre fermée posée là où l’eau sort de terre : le filtre à gravier y amène l’eau par des orifices percés dans le mur côté source, un piège à sédiments en occupe le fond, et une seule sortie la conduit vers la réserve, à l’abri du ruissellement, des feuilles et des animaux.\n\nSa règle d’or est de ne jamais gêner l’eau, car une source mise en contre-pression peut se déplacer ou perdre du débit : la sortie est donc au niveau du sol, plus bas que le point où la source sort, et un petit trop-plein, juste au-dessus du niveau de service et sous le haut du lit de gravier, empêche tout reflux dans le gravier (Oxfam). Le bouchon de vidange sur chaîne, dans le fond, permet de vider les sédiments (chez Oxfam, un bouchon vissé).\n\nLa vidéo ne détaille pas le captage (elle dit seulement que la réserve tampon capte la source) ; ce regard et ses dimensions sont dessinés par le laboratoire d’après la pratique courante de protection des sources (fiche Oxfam), et il doit recueillir les {source} à {sourceHigh} L/min de la vidéo sans rien perdre.',
-      'The spring box is a closed chamber set where the water comes out of the ground: the gravel filter brings the water in through ports in the wall on the spring side, a sediment trap fills its bottom, and a single outlet leads the water to the tank, sheltered from run-off, leaves and animals.\n\nIts golden rule is never to obstruct the water, since a spring put under back-pressure can shift or lose flow: the outlet is therefore at ground level, lower than the point where the spring comes out, and a small overflow, just above the working level and under the top of the gravel bed, stops anything backing up into the gravel (Oxfam). The washout plug on a chain, in the floor, lets the sediment be emptied (at Oxfam, a screwed cap).\n\nThe video does not detail the catchment (it only says that the buffer tank captures the spring); this box and its dimensions are drawn by the lab, after the common practice of spring protection (Oxfam brief), and it has to collect the video’s {source}–{sourceHigh} L/min without losing any of it.',
+      'Le regard de captage est une chambre fermée posée là où l’eau sort de terre : le filtre à gravier y amène l’eau par des orifices percés dans le mur côté source, un piège à sédiments en occupe le fond, et une seule sortie la conduit vers la réserve, à l’abri du ruissellement, des feuilles et des animaux.\n\nSa règle d’or est de ne jamais gêner l’eau, car une source mise en contre-pression peut se déplacer ou perdre du débit : la sortie est donc au niveau du sol, plus bas que le point où la source sort, et un petit trop-plein, juste au-dessus du niveau de service et sous le haut du lit de gravier, empêche tout reflux dans le gravier (Oxfam). Le bouchon de vidange sur chaîne, dans le fond, permet de vider les sédiments (chez Oxfam, un bouchon vissé).\n\nLa vidéo ne détaille pas le captage (elle dit seulement que la réserve tampon capte la source) ; ce regard et ses dimensions sont dessinés par le laboratoire d’après la pratique courante de protection des sources (fiche Oxfam), et il doit recueillir les {source} à {sourceHigh} L/min de la vidéo sans rien perdre. Le laboratoire le montre couvercle rabattu sur le sol derrière lui, pour qu’on voie l’eau (en service, il reste fermé), et son petit trop-plein donne dans une rigole bordée de pierres, humide mais sans eau qui coule : dans le modèle, la source ne fait jamais monter l’eau jusqu’à lui.',
+      'The spring box is a closed chamber set where the water comes out of the ground: the gravel filter brings the water in through ports in the wall on the spring side, a sediment trap fills its bottom, and a single outlet leads the water to the tank, sheltered from run-off, leaves and animals.\n\nIts golden rule is never to obstruct the water, since a spring put under back-pressure can shift or lose flow: the outlet is therefore at ground level, lower than the point where the spring comes out, and a small overflow, just above the working level and under the top of the gravel bed, stops anything backing up into the gravel (Oxfam). The washout plug on a chain, in the floor, lets the sediment be emptied (at Oxfam, a screwed cap).\n\nThe video does not detail the catchment (it only says that the buffer tank captures the spring); this box and its dimensions are drawn by the lab, after the common practice of spring protection (Oxfam brief), and it has to collect the video’s {source}–{sourceHigh} L/min without losing any of it. The lab shows it with its lid thrown back onto the ground behind it, so that the water can be seen (in service it stays closed), and its small overflow gives onto a runnel lined with stones, damp but with no water running: in the model the spring never raises the water that far.',
     ),
     material: l(
       'Pierre maçonnée ou béton, couvercle en acier galvanisé (hypothèse du laboratoire ; non détaillé dans la vidéo)',
@@ -65,8 +65,8 @@ export const CATCHMENT_PARTS: PartInfo[] = [
         'Lid',
         tagged(
           'estimate',
-          `acier galvanisé, ${mm(CATCHMENT.boxLidThickness).fr} mm`,
-          `galvanised steel, ${mm(CATCHMENT.boxLidThickness).en} mm`,
+          `tôle larmée galvanisée de ${mm(CATCHMENT.boxLidThickness).fr} mm sur un cadre de fers plats de ${mm(CATCHMENT.boxLidFrameDepth).fr} mm, deux charnières`,
+          `galvanised checker plate, ${mm(CATCHMENT.boxLidThickness).en} mm, on a frame of ${mm(CATCHMENT.boxLidFrameDepth).en} mm flats, two hinges`,
         ),
       ),
       sp(
@@ -85,6 +85,15 @@ export const CATCHMENT_PARTS: PartInfo[] = [
           'estimate',
           `tuyau Ø ${mm(CATCHMENT.boxOverflowDiameter).fr} mm à clapet anti-animaux, axe à ${mm(CATCHMENT.boxOverflowHeight).fr} mm du fond`,
           `pipe Ø ${mm(CATCHMENT.boxOverflowDiameter).en} mm with an animal flap, axis ${mm(CATCHMENT.boxOverflowHeight).en} mm above the floor`,
+        ),
+      ),
+      sp(
+        'Rigole du trop-plein',
+        'Overflow runnel',
+        tagged(
+          'estimate',
+          `${nFrTrim(CATCHMENT.boxRunnelLength)} × ${nFrTrim(CATCHMENT.boxRunnelWidth)} m, bordée de pierres`,
+          `${nEnTrim(CATCHMENT.boxRunnelLength)} × ${nEnTrim(CATCHMENT.boxRunnelWidth)} m, lined with stones`,
         ),
       ),
       sp(

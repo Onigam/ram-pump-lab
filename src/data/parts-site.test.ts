@@ -458,8 +458,16 @@ describe('site and catchment sheets: dimensions are those of dims.ts', () => {
         'spring-box',
         'Couvercle',
         est(
-          `acier galvanisé, ${mmOf(CATCHMENT.boxLidThickness)} mm`,
-          `galvanised steel, ${mmOf(CATCHMENT.boxLidThickness)} mm`,
+          `tôle larmée galvanisée de ${mmOf(CATCHMENT.boxLidThickness)} mm sur un cadre de fers plats de ${mmOf(CATCHMENT.boxLidFrameDepth)} mm, deux charnières`,
+          `galvanised checker plate, ${mmOf(CATCHMENT.boxLidThickness)} mm, on a frame of ${mmOf(CATCHMENT.boxLidFrameDepth)} mm flats, two hinges`,
+        ),
+      ],
+      [
+        'spring-box',
+        'Rigole du trop-plein',
+        est(
+          `${nFr(CATCHMENT.boxRunnelLength, 1)} × ${nFr(CATCHMENT.boxRunnelWidth, 1)} m, bordée de pierres`,
+          `${nEn(CATCHMENT.boxRunnelLength, 1)} × ${nEn(CATCHMENT.boxRunnelWidth, 1)} m, lined with stones`,
         ),
       ],
       [
