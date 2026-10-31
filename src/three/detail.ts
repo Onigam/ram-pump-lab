@@ -243,6 +243,47 @@ export function contactShadow(w: number, d: number, falloff: number, strength = 
   return m;
 }
 
+// ------------------------------------------------------------------------------------------------ wood
+
+/**
+ * The grain of a plank (a DataTexture, no canvas): growth lines along the texture's u, wavering, darker latewood every few
+ * millimetres, and a slow variation along the board. Mapped on a box, the lines run along each face's u.
+ */
+export function woodGrain(lines = 24): THREE.DataTexture {
+  const W = 512;
+  const H = 128;
+  const r = rng(5);
+  const phase = Array.from({ length: 8 }, () => r() * Math.PI * 2);
+  const data = new Uint8Array(W * H * 4);
+  for (let j = 0; j < H; j++) {
+    for (let i = 0; i < W; i++) {
+      const u = i / W;
+      const v = j / H;
+      // the lines waver along the board
+      const wave = 0.018 * Math.sin(u * 9 + phase[0]) + 0.01 * Math.sin(u * 23 + phase[1] + v * 3);
+      const t = (v + wave) * lines;
+      const ring = t - Math.floor(t);
+      const late = Math.exp(-Math.pow((ring - 0.82) / 0.07, 2)); // a thin dark line of latewood
+      const board = 0.04 * Math.sin(u * 5 + phase[2]) + 0.03 * Math.sin(v * 7 + phase[3]);
+      const g = 1 - 0.16 * late + board;
+      const k = (j * W + i) * 4;
+      data[k] = Math.round(255 * Math.min(1, g));
+      data[k + 1] = Math.round(255 * Math.min(1, g * 0.985));
+      data[k + 2] = Math.round(255 * Math.min(1, g * 0.96));
+      data[k + 3] = 255;
+    }
+  }
+  const tex = new THREE.DataTexture(data, W, H, THREE.RGBAFormat);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.magFilter = THREE.LinearFilter;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.generateMipmaps = true;
+  tex.anisotropy = 16;
+  tex.needsUpdate = true;
+  return tex;
+}
+
 // ------------------------------------------------------------------------------------------------ stones
 
 /** A stone: an icosahedron pushed about by a few bumps, flattened, faceted, with a little moss where its faces look up. */

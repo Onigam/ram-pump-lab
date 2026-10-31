@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { MAT, group, mesh } from '@onigam/lab-kit/three';
 import { BENCH, VALVE } from '../dims';
 import { paperFloor } from '../common';
+import { woodGrain } from '../detail';
 
 // The workshop staging of the `valve` world: a plain wooden plinth on the paper floor, the two steel parallels the base plate
 // stands on (so that the head and the fins nut can leave downwards when exploded), and a steel rule for the scale.
@@ -59,9 +60,11 @@ export interface Bench {
 
 export function buildBench(): Bench {
   const g = group('bench');
-  // pale beech: the kit's light wood was tuned under ACES, which greyed it; under the paper studio's Neutral curve it is orange
+  // pale beech with its grain: the kit's light wood was tuned under ACES, which greyed it; under the paper studio's Neutral curve
+  // it came out orange, then peach as a flat light colour (review D3). A beech that is less red and less light, and its grain
   const wood = MAT.woodLight();
-  wood.color.set(0xcdb594);
+  wood.color.set(0xc4b497).multiplyScalar(0.62);
+  wood.map = woodGrain(22);
   const steel = MAT.steel();
   // plinth: a thick wooden slab
   g.add(
