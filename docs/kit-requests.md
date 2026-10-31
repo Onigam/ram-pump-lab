@@ -187,3 +187,15 @@ Pelton Lab has the same pattern (`part-in-screen`: `flows:false` at 20.96 s, `pa
 - **Fix in the kit**: when the audio ends, apply the state at the end of the segment (the last cue of each kind, as `replayCues` does for a seek to
   the end) instead of only the cues up to `currentTime`; or clamp every cue time to the audio duration. No lab or script change, no new audio.
 - **Needed by**: every lab with a spoken guide (Pelton Lab in production, this lab).
+
+## 15. The grab pivot lands on a translucent shell in front of the selected part (QA D6, 2026-10-31)
+
+With the intake screen of the catchment selected (framed from 2.2 m, through the wall of the tank), a drag pivots on the tank shell in
+front of it: `Stage.beginGrab` takes the first part under the pointer whose display is `solid`, and the shell is solid (its material is
+translucent, its display is not). After a 250 px drag the screen has left the view. The lab cannot tell the stage which hit to take: its
+scene module does not see the selection, and changing the shell's display from `src/lab.ts` on every selection would be a hack.
+
+- **Fix in the kit**: when a part is selected, let the grab prefer a hit on the selected part (or skip the parts a lab declares as shells,
+  `xrayShell`, when the selection is not one of them), and fall back to the current rule.
+- **Needed by**: this lab (the intake screen, the anti-vortex plate and the drain inside the tank; the stem of the waste valve inside its
+  housing in the `valve` world), any lab with a translucent shell around a part.

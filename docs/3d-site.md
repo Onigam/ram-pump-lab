@@ -67,6 +67,31 @@ build in both worlds (`catchment/spring.ts`):
   (five vertical rays), the runnel lies on the ground, the tufts are inside the block and on grass, the section clips the plants.
   (`site.test.ts`): the openings of the ground follow the box and the bed for three settings of the sliders.
 
+## Second pass after the independent review (`docs/qa.md`, 31/10/2026)
+
+- **D1, the runnel read as running water.** Its bed is now dark wet earth with moss along its edges and in patches (vertex colours,
+  roughness 0.62, little reflection), its stones damp and darker. No blue surface: the model's box never overflows.
+- **D3, the box stood up to 1.2 m out of the ground at long drive pipes, its lid in the air.** The fine part of the site's grid
+  (0.8 m cells) stopped 36 m west of the ram; at 52 to 60 m of drive pipe the catchment lay in cells of up to 3.7 m, which smeared the
+  shelf, the scarp and the bench into one slope. The fine part now reaches the far side of the catchment for the longest drive pipe
+  the sliders allow (`CATCHMENT_WEST` in `terrain.ts`). The lid is its own small mesh on a hinge flagged dynamic, and the site rests it
+  on its own ground at every layout (`CatchmentModel.restLid`). Test: rim 0.1 m over the ground and lid touching it at eight settings.
+- **D4, close up the trickle was a white rod.** From under 3 m to 10 m away it turns clear and blue-grey, its thickness wavers, streaks
+  run down it and its lower third breaks into drops (`minWidthStream(…, water)`, driven by the view's clock); from afar it stays the
+  same bright line of at least 4 px. Where it lands: more drops thrown up (`Splash`) and a faint ring of white water (decoration).
+- **The z-fight beside the spring box (S17).** The earth's section cap drew a sliver of earth over the caps of the gravel bed, in their
+  plane: where the bed and the box share an edge, the cap took a sample at ground height. The cap now steps from the bottom of one
+  excavation to the next, leaves the excavations to the caps of the parts (the bed's notch goes down to the underside of its slab,
+  `BED_SLAB_BOTTOM`), and holds every layer above the base (a layer ending under it made a twisted quad over the plinth's cap). The
+  linings of the excavations stand 4 mm outside the box and the bed. Chosen over a polygon offset: no two caps overlap at all.
+  Measured over 41 frames of the S17 dolly: brown pixels in the crop in 25 frames before, 0 after; pixels that jump in 4 or more frames
+  of the move 1,644 before, 898 after (what remains are edges in motion). Test: no triangle of the earth's cap over an excavation
+  above its bottom, none under the base.
+- **D5**: the sheet of `spring-box` says the lid is shown thrown back and names the runnel, with its size, in both languages.
+- **D6** (the grab pivots on the tank shell in front of a selected part) needs the kit: request 15 in `kit-requests.md`.
+- Budgets at the home view (Metal, 1280 x 800): site 266 -> 279 draw calls, 247,694 -> 268,846 triangles (mostly the finer grid of the
+  ground over the catchment's range; the lid on its own; the foam and drops); catchment 189 -> 196, 68,057 -> 69,289.
+
 ## The pipes reach the pit (fixes after the film, 31/10/2026)
 
 - **Drive pipe.** The pad of the pit was graded over the corridor of the pipe: the pipe hung up to 1.6 m over the ground on the
