@@ -3,8 +3,10 @@ import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { partIds } from '../part-ids';
 import type { RamState } from '../sim/types';
-import { H_FULL, SPRING_X } from './catchment/layout';
+import { BED_X0, BED_X1, BOX_HL, BOX_HW, H_FULL, SPRING_X } from './catchment/layout';
 import * as DIMS from './dims';
+import { PIT_EAST_FACE, PIT_WEST_FACE } from './site/layout';
+import { OUT_X } from './site/routes';
 import { createSiteScene, type SiteScene } from './site/scene';
 import { runningState, sceneBoxes, stalledState, touches, view } from './test-utils';
 
@@ -75,8 +77,8 @@ describe('site world', () => {
     const buried: Record<string, string> = {
       'ram-pit': 'a chamber below the ground, the ram stands in it',
       'buffer-tank': 'its slab is sunk into the bench',
-      'drive-pipe': 'the pipe goes under the ground before the pit wall',
-      'delivery-pipe': 'the pipe leaves the pit under the ground',
+      'drive-pipe': 'the pipe goes through the west wall of the pit, below the ground, at the bottom of its trench',
+      'delivery-pipe': 'the pipe starts at the stub of the ram, in the pit, and rises up its east wall',
       'waste-drain': 'the drain pipe is buried from the pit to its headwall',
       spring: 'the box and the gravel bed are dug into the shelf, the rocks into the scarp',
     };
@@ -235,6 +237,184 @@ describe('site world', () => {
       expect(mod.waste.flowing).toBeLessThan(8);
       mod.update(stalledState(), 1 / 60, view());
       expect(mod.waste.flowing).toBe(0);
+    });
+  });
+
+  describe('the pipes reach the pit, in sight, and the dots stay on them', () => {
+    // the film found the drive pipe going into the grass 6 m before the pit (with its dots running on in the grass) and the blue
+    // line of the delivery pipe stopping short of the pit from afar: both were buried there. The drive pipe also hung up to
+    // 1.6 m over the ground before it (the pad of the pit was graded over its corridor).
+    const SETTINGS = [
+      { fall: 7.5, driveLength: 20, deliveryHead: 65, driveDiameter: 27 },
+      { fall: 3, driveLength: 12, deliveryHead: 40, driveDiameter: 20 },
+      { fall: 15, driveLength: 40, deliveryHead: 100, driveDiameter: 54 },
+    ];
+    const tube = (id: string): THREE.Mesh =>
+      reg.get(id)!.meshes.find((m) => (m.geometry as THREE.BufferGeometry).attributes.position.count > 500)!;
+    /** The centre line of a tube: the middle of each ring of its vertices (TubeGeometry, or two of them merged). */
+    const centreline = (m: THREE.Mesh, radial: number): THREE.Vector3[] => {
+      const pos = m.geometry.attributes.position;
+      const ring = radial + 1;
+      const out: THREE.Vector3[] = [];
+      for (let i = 0; i + ring <= pos.count; i += ring) {
+        const c = new THREE.Vector3();
+        for (let k = 0; k < radial; k++) c.add(new THREE.Vector3().fromBufferAttribute(pos, i + k));
+        out.push(c.divideScalar(radial));
+      }
+      return out;
+    };
+    const ringRadius = (m: THREE.Mesh, radial: number): number => {
+      const pos = m.geometry.attributes.position;
+      const c = centreline(m, radial)[0];
+      return new THREE.Vector3().fromBufferAttribute(pos, 0).distanceTo(c);
+    };
+    const toLine = (p: THREE.Vector3, line: THREE.Vector3[]): number => {
+      let best = Infinity;
+      const seg = new THREE.Line3();
+      const q = new THREE.Vector3();
+      for (let i = 1; i < line.length; i++) {
+        seg.set(line[i - 1], line[i]);
+        best = Math.min(best, seg.closestPointToPoint(p, true, q).distanceTo(p));
+      }
+      return best;
+    };
+
+    it('lays the drive pipe on its saddles all the way down, 0.23 m over the ground, into a trench to the west wall of the pit', () => {
+      for (const st of SETTINGS) {
+        mod.follow(st);
+        mod.scene.updateMatrixWorld(true);
+        const pipe = tube('drive-pipe');
+        const r = ringRadius(pipe, 14);
+        const line = centreline(pipe, 14);
+        const name = JSON.stringify(st);
+        // from the end of the bench to the wall: never under the ground, never more than its saddle over it
+        const x0 = mod.catchment.tankFrame.position.x + 3;
+        let checked = 0;
+        for (const c of line) {
+          if (c.x < x0 || c.x > PIT_WEST_FACE - 0.02) continue;
+          const clearance = c.y - groundAt(mod, c.x, c.z);
+          expect(clearance, `${name} at x = ${c.x.toFixed(2)}`).toBeGreaterThan(r + 0.005);
+          expect(clearance, `${name} at x = ${c.x.toFixed(2)}`).toBeLessThan(DIMS.CATCHMENT.driveAboveGround + 0.12);
+          checked++;
+        }
+        expect(checked, name).toBeGreaterThan(40);
+        // it ends past the wall, at the stub of the ram, on the axis
+        const end = line[line.length - 1];
+        expect(end.x, name).toBeGreaterThan(PIT_WEST_FACE + DIMS.PIT.wall);
+        expect(Math.abs(end.y), name).toBeLessThan(1e-3);
+        // at the wall, the ground is the floor of the trench, well under the pad of the pit
+        expect(groundAt(mod, PIT_WEST_FACE - 0.05, 0), name).toBeLessThan(DIMS.SITE.groundAtRam - 0.8);
+      }
+      mod.follow(SETTINGS[0]);
+    });
+
+    it('rests every saddle of the drive pipe on the ground', () => {
+      for (const st of SETTINGS) {
+        mod.follow(st);
+        mod.scene.updateMatrixWorld(true);
+        const saddles = reg
+          .get('drive-pipe')!
+          .meshes.find((m) => (m as THREE.InstancedMesh).isInstancedMesh) as THREE.InstancedMesh;
+        expect(saddles.count).toBeGreaterThan(2);
+        const m4 = new THREE.Matrix4();
+        const corner = new THREE.Vector3();
+        for (let i = 0; i < saddles.count; i++) {
+          saddles.getMatrixAt(i, m4);
+          // the four bottom corners of the block: none in the air by more than 6 cm, none deeper than 10 cm in the ground
+          let lowest = Infinity;
+          let deepest = -Infinity;
+          for (const [x, z] of [
+            [-0.25, -0.14],
+            [0.25, -0.14],
+            [-0.25, 0.14],
+            [0.25, 0.14],
+          ]) {
+            corner.set(x, -0.1, z).applyMatrix4(m4);
+            const gap = corner.y - groundAt(mod, corner.x, corner.z);
+            lowest = Math.min(lowest, gap);
+            deepest = Math.max(deepest, -gap);
+          }
+          expect(lowest, `${JSON.stringify(st)} saddle ${i}`).toBeLessThan(0.06);
+          expect(deepest, `${JSON.stringify(st)} saddle ${i}`).toBeLessThan(0.1);
+        }
+      }
+      mod.follow(SETTINGS[0]);
+    });
+
+    it('lays the delivery pipe on the ground from the east wall of the pit, which it leaves under the curb', () => {
+      for (const st of SETTINGS) {
+        mod.follow(st);
+        mod.scene.updateMatrixWorld(true);
+        const pipe = tube('delivery-pipe');
+        const r = ringRadius(pipe, 8);
+        const line = centreline(pipe, 8);
+        const name = JSON.stringify(st);
+        // it starts at the stub of the ram, in the pit
+        expect(line[0].x).toBeCloseTo(OUT_X, 2);
+        expect(line[0].y).toBeCloseTo(DIMS.CHAMBER.outletHeight, 2);
+        // through the wall above the ground and under the top of the curb
+        const exit = line.find((c) => c.x >= PIT_EAST_FACE)!;
+        expect(exit.y - r, name).toBeGreaterThan(DIMS.SITE.groundAtRam - 0.005);
+        expect(exit.y + r, name).toBeLessThan(DIMS.SITE.groundAtRam + DIMS.PIT.curb);
+        // then on the ground, never under it, for the first 40 m (and on: the route lies on the ground to the tower)
+        let s = 0;
+        let prev = exit;
+        for (const c of line.filter((q) => q.x > PIT_EAST_FACE)) {
+          s += c.distanceTo(prev);
+          prev = c;
+          if (s > 40) break;
+          const clearance = c.y - groundAt(mod, c.x, c.z);
+          expect(clearance, `${name} ${s.toFixed(1)} m from the pit`).toBeGreaterThan(r - 0.02);
+          expect(clearance, `${name} ${s.toFixed(1)} m from the pit`).toBeLessThan(r + 0.06);
+        }
+      }
+      mod.follow(SETTINGS[0]);
+    });
+
+    it('keeps every flow dot of the drive and delivery pipes on its pipe', () => {
+      const run = runningState();
+      for (const st of SETTINGS) {
+        mod.follow(st);
+        for (let i = 0; i < 30; i++) mod.update({ ...run, ...st }, 1 / 30, view({ schematic: true }));
+        mod.scene.updateMatrixWorld(true);
+        const drive = tube('drive-pipe');
+        const delivery = tube('delivery-pipe');
+        const lines: [THREE.Vector3[], number][] = [
+          [centreline(drive, 14), ringRadius(drive, 14)],
+          [centreline(delivery, 8), ringRadius(delivery, 8)],
+        ];
+        const dots = mod.scene.getObjectByName('flow-pipes') as THREE.Points;
+        expect(dots.visible).toBe(true);
+        const pos = dots.geometry.attributes.position;
+        const p = new THREE.Vector3();
+        let n = 0;
+        for (
+          let i = 0;
+          i < (dots.geometry.drawRange.count === Infinity ? pos.count : dots.geometry.drawRange.count);
+          i++
+        ) {
+          p.fromBufferAttribute(pos, i).applyMatrix4(dots.matrixWorld);
+          if (!p.lengthSq()) continue;
+          const off = Math.min(...lines.map(([line, r]) => toLine(p, line) - r));
+          expect(off, `${JSON.stringify(st)} dot ${i} at ${p.toArray().map((v) => v.toFixed(2))}`).toBeLessThan(0.01);
+          n++;
+        }
+        expect(n).toBeGreaterThan(100);
+      }
+      mod.follow(SETTINGS[0]);
+    });
+
+    it('does not draw the ground over the water of the spring box nor over the gravel bed', () => {
+      for (const st of SETTINGS) {
+        mod.follow(st);
+        const sx = mod.catchment.springFrame.position.x;
+        const [box, bed] = mod.terrain.openings;
+        expect(box).toEqual([sx - BOX_HL, -BOX_HW, sx + BOX_HL, BOX_HW]);
+        expect(bed[0]).toBeCloseTo(sx + BED_X0, 9);
+        expect(bed[2]).toBeCloseTo(sx + BED_X1, 9);
+        expect(bed[3] - bed[1]).toBeCloseTo(DIMS.CATCHMENT.filterWidth, 9);
+      }
+      mod.follow(SETTINGS[0]);
     });
   });
 

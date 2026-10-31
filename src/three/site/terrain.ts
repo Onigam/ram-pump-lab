@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { smoothstep } from '../common';
 import { HOUSE, PIT, TOWER } from '../dims';
 import { fbm, vnoise } from './noise';
-import { PIT_X, createGround, driveGeometry, type Ground, type SiteParams } from './layout';
+import { PIT_X, TRENCH, createGround, driveGeometry, type Ground, type SiteParams } from './layout';
 
 // The hillside as one tensor-product grid whose cells grow with the distance to the places that matter (the ram, the
 // drive pipe, the route, the buildings), so a few tens of thousands of vertices reach the far mountains. The height is
@@ -58,7 +58,7 @@ function axisLines(
     x = Math.min(max, x + step);
     out.push(x);
   }
-  // lines that must exist (the edges of the pit hole): they replace the generated lines closer than 0.2 m
+  // lines that must exist (the edges of the pit hole, the trench): they replace the generated lines closer than 0.2 m
   const kept = out.filter((v) => !forced.some((f) => Math.abs(f - v) < 0.2));
   return Float32Array.from([...kept, ...forced].sort((a, b) => a - b));
 }
@@ -131,7 +131,8 @@ export function buildTerrain(initial: SiteParams): Terrain {
       { a: -185, b: -125, fine: 3 },
       { a: -125, b: -12, fine: 5 },
     ],
-    [-HOLE_Z, HOLE_Z],
+    // the edges of the pit hole, and the floor of the trench of the drive pipe (on z = 0, whatever the sliders)
+    [-HOLE_Z, HOLE_Z, -TRENCH.floor / 2, 0, TRENCH.floor / 2],
   );
   const NX = xs.length;
   const NZ = zs.length;

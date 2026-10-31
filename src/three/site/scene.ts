@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { l } from '@onigam/lab-kit/i18n';
 import { MAT, PartRegistry, clamp, group, roundedPath } from '@onigam/lab-kit/three';
 import type { Hotspot, SceneModule, ViewOpts } from '@onigam/lab-kit/three';
@@ -15,8 +16,17 @@ import { createRamModel } from '../ram/model';
 import { STUB_X0 } from '../ram/inlet';
 import { buildHouse, buildTower } from './buildings';
 import { buildPit } from './pit';
-import { DEFAULT_PARAMS, GROUND_PIT, PIT_X, driveGeometry, tankAxisX, type SiteParams } from './layout';
-import { deliveryPolyline, spaced } from './routes';
+import {
+  DEFAULT_PARAMS,
+  GROUND_PIT,
+  PIT_EAST_FACE,
+  PIT_WEST_FACE,
+  PIT_X,
+  driveGeometry,
+  tankAxisX,
+  type SiteParams,
+} from './layout';
+import { DELIVERY_AT_TOWER, DELIVERY_IN_PIT, deliveryPolyline, spaced } from './routes';
 import { createShadowAim } from './shadow';
 import { minWidthMaterial, pickAlong, swapGeometry, tubeAlong } from './pipes';
 import { createSky } from './sky';
@@ -99,20 +109,26 @@ export function createSiteScene(): SiteScene {
   const pipeMat = minWidthMaterial(MAT.zinc(), SITE.driveOuterDiameter / 2);
   const driveMesh = new THREE.Mesh(new THREE.BufferGeometry(), pipeMat.material);
   driveMesh.castShadow = false;
-  const supports = new THREE.InstancedMesh(new THREE.BoxGeometry(0.5, 0.2, 0.28), MAT.concrete(), 24);
+  const supports = new THREE.InstancedMesh(new THREE.BoxGeometry(0.5, 0.2, 0.28), MAT.concrete(), SUPPORTS);
   supports.castShadow = true;
   supports.receiveShadow = true;
   supports.frustumCulled = false;
+  // mortar collars where the pipes go through the walls of the pit (a ring of unit radius along X, scaled to the pipe in Y and Z)
+  const collarGeo = new THREE.CylinderGeometry(1, 1, 0.03, 20).rotateZ(Math.PI / 2);
+  const driveCollar = new THREE.Mesh(collarGeo, MAT.concrete());
+  driveCollar.name = 'drive-collar';
   const drive = group('drive-pipe');
-  drive.add(driveMesh, supports);
+  drive.add(driveMesh, supports, driveCollar);
   let pipeKind: PipeKind = 'steel';
 
   const delMat = minWidthMaterial(MAT.pvcBlue(), SITE.deliveryOuterDiameter / 2);
   const deliveryMesh = new THREE.Mesh(new THREE.BufferGeometry(), delMat.material);
   deliveryMesh.castShadow = false;
   deliveryMesh.frustumCulled = false;
+  const deliveryCollar = new THREE.Mesh(collarGeo, MAT.concrete());
+  deliveryCollar.name = 'delivery-collar';
   const delivery = group('delivery-pipe');
-  delivery.add(deliveryMesh);
+  delivery.add(deliveryMesh, deliveryCollar);
   let deliveryPts: THREE.Vector3[] = [];
   let drivePts: THREE.Vector3[] = [];
   let driveRadius = SITE.driveOuterDiameter / 2;
@@ -131,6 +147,7 @@ export function createSiteScene(): SiteScene {
 
   // ---- flows ("Flux"): dots of constant screen size along the pipes (the catchment and the waste drain have their own)
   const flows = new FlowDots(400, { color: 0x2f8cff, size: 5, pixels: true, throughWalls: true, opacity: 0.95 });
+  flows.object.name = 'flow-pipes';
   scene.add(flows.object);
   const pDrive = flows.addPath([new THREE.Vector3(), new THREE.Vector3(1, 0, 0)], 40);
   const pDelivery = flows.addPath([new THREE.Vector3(), new THREE.Vector3(1, 0, 0)], 320);
@@ -197,10 +214,15 @@ export function createSiteScene(): SiteScene {
       new THREE.Vector3(STUB_X0, 0, 0),
     ];
     const bend = Math.max(CORNER, driveOuter * 8);
-    swapGeometry(driveMesh, new THREE.TubeGeometry(roundedPath(drivePoints, bend), 160, r, 14, false));
+    const driveCurve = roundedPath(drivePoints, bend);
+    swapGeometry(driveMesh, new THREE.TubeGeometry(driveCurve, 160, r, 14, false));
     pipeMat.uniforms.uPipeRadius.value = r;
     driveRadius = r;
-    drivePts = spaced(drivePoints, 0.5);
+    // the dots run on the curve of the tube itself (a spline through the four corners strayed off it, onto the grass)
+    drivePts = driveCurve.getSpacedPoints(Math.max(8, Math.round(driveCurve.getLength() / 0.5)));
+    // the collar where the pipe goes through the west wall of the pit
+    driveCollar.scale.set(1, r + 0.02, r + 0.02);
+    driveCollar.position.set(PIT_WEST_FACE - 0.015, 0, 0);
     // supports: a concrete saddle on the bench and one every 3 m on the slope, where the pipe lies 0.23 m above the surface
     const m = new THREE.Matrix4();
     const q = new THREE.Quaternion();
@@ -209,25 +231,50 @@ export function createSiteScene(): SiteScene {
     q.identity();
     m.compose(new THREE.Vector3(d.start.x + 0.9, p.fall - r - 0.1, 0), q, new THREE.Vector3(1, 1, 1));
     supports.setMatrixAt(n++, m);
-    q.setFromEuler(new THREE.Euler(0, 0, slopeAngle));
-    for (let x = d.outlet.x + 1.45; x < d.elbow.x - 6 && n < 24; x += 3) {
+    // tilted with the slope, which falls towards +X (they were tilted the other way, a corner 18 cm in the ground)
+    q.setFromEuler(new THREE.Euler(0, 0, -slopeAngle));
+    // (all the way down to the trench at the pit: the ground stays 0.23 m under the pipe, layout.ts)
+    for (let x = d.outlet.x + 1.45; x < d.elbow.x - 0.6 && n < SUPPORTS; x += 3) {
       const y = p.fall * (1 - (x - d.outlet.x) / d.run);
       m.compose(new THREE.Vector3(x, y - r - 0.1, 0), q, new THREE.Vector3(1, 1, 1));
       supports.setMatrixAt(n++, m);
     }
     supports.count = n;
     supports.instanceMatrix.needsUpdate = true;
-    // the pipe passes the pit wall: no support there
     hotAnchors['drive-pipe'].position.set((d.outlet.x + d.elbow.x) / 2, p.fall / 2 + 1.4, 0);
 
     // delivery pipe: the stub of the ram, the route on the ground, the riser and the gooseneck over the trough
-    const pts = deliveryPolyline(terrain, p);
     const dr = (0.6 * diameterMm) / 1000 + 2 * 0.0044;
-    swapGeometry(deliveryMesh, tubeAlong(pts, dr / 2, delMat.material, 8).geometry);
+    const pts = deliveryPolyline(terrain, p, dr / 2);
+    // three tubes in one mesh: in the pit, short straight runs and tight bends; the route, rounded by a spline through its
+    // points and sampled every 0.6 m; the riser and the gooseneck at the tower, sampled finely (one tube sampled every 0.6 m
+    // along the whole pipe cut the corners of the pit and of the gooseneck, and the dots, on the true curve, left it)
+    const inPit = roundedPath(pts.slice(0, DELIVERY_IN_PIT), 0.06);
+    const routePts = pts.slice(DELIVERY_IN_PIT - 1, pts.length - DELIVERY_AT_TOWER + 1);
+    const towerPts = pts.slice(pts.length - DELIVERY_AT_TOWER);
+    const atTower = new THREE.CatmullRomCurve3(towerPts, false, 'centripetal');
+    const parts = [
+      new THREE.TubeGeometry(inPit, 40, dr / 2, 8, false),
+      tubeAlong(routePts, dr / 2, delMat.material, 8).geometry,
+      new THREE.TubeGeometry(atTower, Math.round(atTower.getLength() / 0.1), dr / 2, 8, false),
+    ];
+    swapGeometry(deliveryMesh, mergeGeometries(parts)!);
+    for (const g of parts) g.dispose();
     delMat.uniforms.uPipeRadius.value = dr / 2;
     deliveryRadius = dr / 2;
-    deliveryPts = spaced(pts, 1.0);
-    lengthDelivery = new THREE.CatmullRomCurve3(pts, false, 'centripetal').getLength();
+    // the dots on the same three curves
+    // (a dot runs straight from one point of its path to the next: the points are close where the pipe bends)
+    deliveryPts = [
+      ...inPit.getSpacedPoints(Math.max(4, Math.round(inPit.getLength() / 0.05))),
+      ...spaced(routePts, 1.0).slice(1),
+      ...atTower.getSpacedPoints(Math.max(4, Math.round(atTower.getLength() / 0.1))).slice(1),
+    ];
+    // the collar where it leaves the pit through the east wall, under the curb
+    const exit = pts.find((v) => v.x >= PIT_EAST_FACE - 1e-6) ?? pts[0];
+    deliveryCollar.scale.set(1, dr / 2 + 0.015, dr / 2 + 0.015);
+    deliveryCollar.position.set(PIT_EAST_FACE + 0.015, exit.y, 0);
+    lengthDelivery =
+      inPit.getLength() + new THREE.CatmullRomCurve3(routePts, false, 'centripetal').getLength() + atTower.getLength();
     const tp = new THREE.Vector3(TOWER.planX, p.head - TOWER.groundBelowInlet, TOWER.planZ);
     const top = TOWER.groundBelowInlet;
     // on the pipe, on its first diagonal: the label runs to the right, so its dot must stand left of the middle of the view
@@ -379,6 +426,9 @@ const DELIVERY_LABEL_AT = 0.5;
 /** Distance (m) from which the ram in its pit is drawn coarser, and the side of the cube its vertices are welded in. */
 const RAM_FAR = 9;
 const FAR_CELL = 0.012;
+
+/** Most saddles of the drive pipe (one on the bench, then one every 3 m down the slope). */
+const SUPPORTS = 24;
 
 /** X (TANK frame) where the overflow ditch of the tank ends on the slope. */
 const GUTTER_END = 9.6;

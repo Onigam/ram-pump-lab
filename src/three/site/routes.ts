@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { CHAMBER, FITTINGS, RAM, TOWER } from '../dims';
+import { CHAMBER, FITTINGS, PIT, RAM, SITE, TOWER } from '../dims';
 import { CH } from '../ram/chamber';
-import { routeHeights, routePlan, type SiteParams } from './layout';
+import { PIT_EAST_FACE, PIT_X, routeHeights, routePlan, type SiteParams } from './layout';
 import type { Terrain } from './terrain';
 
 // Paths of the site that follow the ground: the delivery pipe, from the end of the ram's outlet stub to its end over the
@@ -10,10 +10,31 @@ import type { Terrain } from './terrain';
 /** Where the delivery pipe starts: the end of the PE stub of the ram's outlet (ram frame = site frame). */
 export const OUT_X = RAM.xDelivery + CH.R + 0.009 + 0.04 + FITTINGS.smallBallValveLength + FITTINGS.outletStubLength;
 
-/** Points of the delivery pipe: ram stub, the route on the ground, the riser up the tower and the gooseneck over the trough. */
-export function deliveryPolyline(terrain: Terrain, p: SiteParams): THREE.Vector3[] {
-  const route = routeHeights(routePlan(), terrain.ground, p);
-  const pts: THREE.Vector3[] = [new THREE.Vector3(OUT_X, CHAMBER.outletHeight, 0)];
+/** The first points of `deliveryPolyline`, from the stub of the ram to the outer face of the east wall of the pit. */
+export const DELIVERY_IN_PIT = 6;
+/** The last points of `deliveryPolyline`: the bend at the foot of the riser, the riser and the gooseneck over the trough. */
+export const DELIVERY_AT_TOWER = 12;
+
+/**
+ * Points of the delivery pipe: the ram's stub, along the floor of the pit to its east wall and up the wall, out through the curb
+ * just above the ground (`DELIVERY_IN_PIT` points so far), the route on the ground, the riser up the tower and the gooseneck
+ * over the trough.
+ */
+export function deliveryPolyline(terrain: Terrain, p: SiteParams, r = SITE.deliveryOuterDiameter / 2): THREE.Vector3[] {
+  const route = routeHeights(routePlan(), terrain.ground, p, r);
+  const y0 = CHAMBER.outletHeight;
+  // up the inside of the east wall, a pipe radius and 2 cm off it; out at the height the pipe has on the ground outside
+  const xUp = PIT_X + PIT.innerLength / 2 - r - 0.02;
+  const yOut = route[0].y;
+  const bend = 0.12;
+  const pts: THREE.Vector3[] = [
+    new THREE.Vector3(OUT_X, y0, 0),
+    new THREE.Vector3(xUp - bend, y0, 0),
+    new THREE.Vector3(xUp, y0 + bend, 0),
+    new THREE.Vector3(xUp, yOut - bend, 0),
+    new THREE.Vector3(xUp + bend, yOut, 0),
+    new THREE.Vector3(PIT_EAST_FACE, yOut, 0),
+  ];
   for (const a of route) pts.push(new THREE.Vector3(a.x, a.y, a.z));
   const tx = TOWER.planX;
   const tz = TOWER.planZ;
@@ -21,9 +42,30 @@ export function deliveryPolyline(terrain: Terrain, p: SiteParams): THREE.Vector3
   const top = ty + TOWER.groundBelowInlet;
   const rx = tx + TOWER.riserX;
   const rz = tz + TOWER.riserZ;
-  const last = pts[pts.length - 1];
+  // the foot of the riser: the last point of the route is the corner; it is replaced by a short round bend, and the riser
+  // starts with short steps (a spline through a square corner dipped 5 cm under the ground and swung 8 cm past the riser)
+  const foot = pts.pop()!;
+  const back = foot
+    .clone()
+    .sub(pts[pts.length - 1])
+    .setY(0)
+    .normalize();
+  const y = foot.y;
   pts.push(
-    new THREE.Vector3(rx, last.y + 0.3, rz),
+    foot.clone().addScaledVector(back, -0.3),
+    foot
+      .clone()
+      .addScaledVector(back, -0.09)
+      .setY(y + 0.03),
+    foot
+      .clone()
+      .addScaledVector(back, -0.02)
+      .setY(y + 0.12),
+  );
+  pts.push(
+    new THREE.Vector3(rx, y + 0.3, rz),
+    new THREE.Vector3(rx, y + 0.7, rz),
+    new THREE.Vector3(rx, y + 1.5, rz),
     new THREE.Vector3(rx, top - 0.4, rz),
     new THREE.Vector3(rx, top + 1.1, rz),
     new THREE.Vector3(tx + 1.7, top + 1.3, tz + 0.35),

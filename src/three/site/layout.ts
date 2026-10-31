@@ -69,14 +69,33 @@ export function driveGeometry(p: SiteParams): DriveGeometry {
 export const tankAxisX = (d: DriveGeometry): number => d.start.x - TANK.diameter / 2 - TANK.outletLength;
 
 /**
- * Ground along the axis of the corridor: the bench of the tank, then the slope with the pipe on its saddles 0.23 m above the
- * surface (the profile of the catchment world), and the ground rises over the pipe near the pit, where it dives under it.
+ * The ground under the drive pipe, `driveAboveGround` (0.23 m) under its axis all the way: the bench of the tank, the slope (the
+ * profile of the catchment world), and beyond the elbow the level run into the pit. Where it is lower than the pad of the pit,
+ * it is the floor of the trench the pipe reaches the pit in.
  */
-function corridorHeight(x: number, d: DriveGeometry, p: SiteParams): number {
+export function driveBedY(x: number, d: DriveGeometry, p: SiteParams): number {
   const bench = p.fall - TANK.outletAboveFloor - CATCHMENT.benchDepth;
-  const line = bench - (p.fall / d.run) * softRamp(Math.min(x, d.elbow.x) - d.outlet.x);
-  const near = (GROUND_PIT + CATCHMENT.driveAboveGround) * smoothstep(d.elbow.x - 6, d.elbow.x, x);
-  return line + near;
+  return bench - (p.fall / d.run) * softRamp(Math.min(x, d.elbow.x) - d.outlet.x);
+}
+
+/** Ground along the axis of the corridor: the pipe on its saddles down the slope, which comes down to the pad of the pit. */
+function corridorHeight(x: number, d: DriveGeometry, p: SiteParams): number {
+  return Math.max(driveBedY(x, d, p), GROUND_PIT);
+}
+
+/** West face of the pit (outside), where the trench of the drive pipe ends against the wall. */
+export const PIT_WEST_FACE = PIT_X - PIT.innerLength / 2 - PIT.wall;
+/** East face of the pit (outside), where the delivery pipe leaves through the curb. */
+export const PIT_EAST_FACE = PIT_X + PIT.innerLength / 2 + PIT.wall;
+
+/**
+ * The trench of the drive pipe near the pit: a flat floor `TRENCH.floor` wide under the pipe, banks of `TRENCH.bank` (height per
+ * metre: steep, a cut lined with stones, no wider at the top than the pit). The ground is cut down to it where it is higher, from where the slope reaches the pad to the west wall of the pit.
+ */
+export const TRENCH = { floor: 0.5, bank: 2.0 };
+
+function trenchCut(x: number, z: number, d: DriveGeometry, p: SiteParams): number {
+  return driveBedY(x, d, p) + TRENCH.bank * Math.max(0, Math.abs(z) - TRENCH.floor / 2);
 }
 
 // ------------------------------------------------------------------------------------------------ pads
@@ -149,16 +168,17 @@ export function createGround(): Ground {
     // the valley falls away a little to the south whatever the head, so that the waste water of the pit always drains
     const south = -0.06 * Math.max(0, z) * smoothstep(-2, 6, z);
     let y = GROUND_PIT + rise + west + south + (stat ?? staticPart(x, z));
-    // drive-pipe corridor (a capsule along the pipe, from the tank to the pit)
+    for (const pad of PADS) {
+      const w = 1 - smoothstep(pad.r0, pad.r1, Math.hypot(x - pad.x, z - pad.z));
+      if (w > 0) y += (pad.height(p) - y) * w;
+    }
+    // drive-pipe corridor (a capsule along the pipe, from the tank to the pit), over the pad of the pit: the pipe lies on its
+    // saddles down to the pad (graded under the pad, the pipe used to hang up to 1.6 m over the ground)
     const xa = d.start.x - 3;
     const xb = d.elbow.x + 6;
     const cx = Math.min(Math.max(x, xa), xb);
     const wCor = 1 - smoothstep(2.2, 11, Math.hypot(x - cx, z));
     if (wCor > 0) y += (corridorHeight(x, d, p) - y) * wCor;
-    for (const pad of PADS) {
-      const w = 1 - smoothstep(pad.r0, pad.r1, Math.hypot(x - pad.x, z - pad.z));
-      if (w > 0) y += (pad.height(p) - y) * w;
-    }
     // the catchment: upland shelf of the spring, scarp, bench of the tank and the first metres of the slope, as in the catchment world
     const tx = tankAxisX(d);
     const xr = x - tx;
@@ -168,6 +188,10 @@ export function createGround(): Ground {
       smoothstep(-11.5, -8, xr) *
       (1 - smoothstep(bendRel + 2, bendRel + 4, xr));
     if (wc > 0) y += (p.fall - TANK.outletAboveFloor + catchmentGround(xr, z, p.fall / d.run) - y) * wc;
+    // the trench of the drive pipe, from 3 m before the slope reaches the pad to the west wall of the pit (the grid line of the
+    // inner face of that wall is the last one cut: the cut stays off the sides of the pit)
+    const meet = d.elbow.x - (GROUND_PIT - driveBedY(d.elbow.x, d, p)) / (p.fall / d.run);
+    if (x > meet - 3 && x < PIT_WEST_FACE + PIT.wall + 0.01 && Math.abs(z) < 4) y = Math.min(y, trenchCut(x, z, d, p));
     return y;
   };
   return { staticPart, height };
@@ -181,9 +205,12 @@ export interface RoutePoint {
   z: number;
 }
 
-/** Plan points of the delivery route sampled every ~1.5 m: from the ram outlet stub, east through the pit wall, up the hill. */
+/** Plan points of the delivery route sampled every ~1.5 m: from the east wall of the pit, which it leaves under the curb, up the hill. */
 export function routePlan(): { x: number; z: number }[] {
-  const pts: [number, number][] = [[PIT_X + 0.7, 0], ...DELIVERY_ROUTE.map(([x, z]) => [x, z] as [number, number])];
+  const pts: [number, number][] = [
+    [PIT_EAST_FACE + 0.1, 0],
+    ...DELIVERY_ROUTE.map(([x, z]) => [x, z] as [number, number]),
+  ];
   // Catmull-Rom through the waypoints for rounded switchbacks
   const out: { x: number; z: number }[] = [];
   const n = pts.length;
@@ -208,20 +235,17 @@ export function routePlan(): { x: number; z: number }[] {
   return out;
 }
 
-/** The sampled delivery route in 3D, lying on the ground (the pipe axis a pipe radius above it). */
-export function routeHeights(plan: { x: number; z: number }[], ground: Ground, p: SiteParams): RoutePoint[] {
-  const r = SITE.deliveryOuterDiameter / 2;
-  const out: RoutePoint[] = [];
-  let s = 0;
-  for (let i = 0; i < plan.length; i++) {
-    const a = plan[i];
-    if (i > 0) s += Math.hypot(a.x - plan[i - 1].x, a.z - plan[i - 1].z);
-    const g = ground.height(a.x, a.z, p);
-    // buried near the pit (cover decreasing over the first 9 m), then on the surface
-    const cover = Math.max(0, GROUND_PIT - CHAMBER.outletHeight) * (1 - smoothstep(1, 10, s));
-    out.push({ x: a.x, z: a.z, y: Math.max(g + r - cover, CHAMBER.outletHeight) });
-  }
-  return out;
+/**
+ * The sampled delivery route in 3D, lying on the ground from the wall of the pit on (the pipe axis a pipe radius above it). It
+ * used to be buried over its first 9 m: from afar, its blue line stopped short of the pit.
+ */
+export function routeHeights(
+  plan: { x: number; z: number }[],
+  ground: Ground,
+  p: SiteParams,
+  r = SITE.deliveryOuterDiameter / 2,
+): RoutePoint[] {
+  return plan.map((a) => ({ x: a.x, z: a.z, y: Math.max(ground.height(a.x, a.z, p) + r, CHAMBER.outletHeight) }));
 }
 
 export function polylineLength(pts: RoutePoint[]): number {
