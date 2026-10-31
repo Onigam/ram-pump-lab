@@ -201,8 +201,9 @@ export function createSiteScene(): SiteScene {
     ]);
     relocate('water-tower', tower.group, TOWER.planX, p.head - TOWER.groundBelowInlet, TOWER.planZ);
     relocate('house', house, HOUSE.planX, HOUSE.terraceFraction * p.head, HOUSE.planZ);
-    // the overflow ditch lies on the ground, in the frame of the tank
+    // the overflow ditch lies on the ground, in the frame of the tank, and the lid of the spring box on the ground behind it
     catchment.layGutter((xr, zr) => terrain.surfaceY(tx + xr, zr) - tankFloor, GUTTER_END);
+    catchment.restLid((xs, zs) => terrain.surfaceY(tx + SPRING_X + xs, zs) - tankFloor);
 
     // drive pipe: out of the gate valve of the tank, level on the bench, down the slope, level run through the pit wall to the stub of the ram
     const driveOuter = diameterMm / 1000 + 2 * 0.0033;

@@ -32,15 +32,28 @@ export function minWidthMaterial(base: THREE.MeshStandardMaterial, radius: numbe
 /**
  * The same for a stream of water drawn as a unit open cylinder scaled to (radius, length, radius) (catchment/model.ts): the
  * trickle of the spring is a finger thick, a pixel at 30 m; it is drawn at least `minPixels` wide. Set `uniforms.uRadius` to the
- * radius the stream has now.
+ * radius the stream has now. With `water`, the stream also reads as falling water from close up: from a few metres it turns
+ * clear, its thickness wavers, streaks run down it and its lower third breaks into drops (set `uniforms.uTime`, seconds); from
+ * afar it stays whole and bright, as a line that can be seen. The cylinder needs height segments for the wavering.
  */
-export function minWidthStream(base: THREE.MeshStandardMaterial, minPixels: number = SITE.pipeMinPixels) {
-  const uniforms = { uRadius: { value: 0.01 }, uPix: { value: (PIXEL_PER_METRE * minPixels) / 2 } };
+export function minWidthStream(
+  base: THREE.MeshStandardMaterial,
+  minPixels: number = SITE.pipeMinPixels,
+  water = false,
+) {
+  const uniforms = {
+    uRadius: { value: 0.01 },
+    uPix: { value: (PIXEL_PER_METRE * minPixels) / 2 },
+    uTime: { value: 0 },
+  };
   base.onBeforeCompile = (shader) => {
     shader.uniforms.uStreamRadius = uniforms.uRadius;
     shader.uniforms.uStreamPix = uniforms.uPix;
+    shader.uniforms.uStreamTime = uniforms.uTime;
+    const head =
+      '#include <common>\nuniform float uStreamRadius;\nuniform float uStreamPix;\nuniform float uStreamTime;';
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nuniform float uStreamRadius;\nuniform float uStreamPix;')
+      .replace('#include <common>', `${head}\nvarying float vStreamNear;\nvarying float vStreamV;`)
       .replace(
         '#include <begin_vertex>',
         /* glsl */ `#include <begin_vertex>
@@ -49,11 +62,36 @@ export function minWidthStream(base: THREE.MeshStandardMaterial, minPixels: numb
           float dist = distance( cameraPosition, wp.xyz );
           // the cylinder has a radius of 1 in its own frame: the growth is in parts of the radius
           vec2 side = normal.xz;
-          if ( dot( side, side ) > 1e-6 ) transformed.xz += normalize( side ) * max( 0.0, dist * uStreamPix - uStreamRadius ) / max( uStreamRadius, 1e-5 );
+          float grow = max( 0.0, dist * uStreamPix - uStreamRadius ) / max( uStreamRadius, 1e-5 );
+          vStreamNear = 1.0 - smoothstep( 3.0, 10.0, dist );
+          vStreamV = position.y + 0.5;
+          ${
+            water
+              ? `float waver = 1.0 + vStreamNear * ( 0.22 * sin( position.y * 37.0 + uStreamTime * 11.0 ) + 0.14 * sin( position.y * 13.0 - uStreamTime * 6.0 ) );
+          if ( dot( side, side ) > 1e-6 ) transformed.xz = normalize( side ) * ( ( 1.0 + grow ) * waver );
+          transformed.x += vStreamNear * 0.35 * sin( position.y * 6.0 + uStreamTime * 2.3 );`
+              : 'if ( dot( side, side ) > 1e-6 ) transformed.xz += normalize( side ) * grow;'
+          }
         }`,
       );
+    if (water) {
+      shader.fragmentShader = shader.fragmentShader
+        .replace('#include <common>', `${head}\nvarying float vStreamNear;\nvarying float vStreamV;`)
+        .replace(
+          '#include <color_fragment>',
+          /* glsl */ `#include <color_fragment>
+          {
+            // streaks running down, the stream clear from close up, its lower third in drops
+            float streak = 0.5 + 0.5 * sin( vStreamV * 48.0 + uStreamTime * 14.0 );
+            diffuseColor.rgb *= mix( vec3( 1.0 ), vec3( 0.74, 0.86, 0.97 ) * ( 0.88 + 0.24 * streak ), vStreamNear );
+            float drops = step( 0.5, fract( vStreamV * 9.0 + uStreamTime * 3.1 ) );
+            float lower = 1.0 - smoothstep( 0.05, 0.4, vStreamV );
+            diffuseColor.a *= mix( 1.0, 0.5 * mix( 1.0, drops, lower ), vStreamNear );
+          }`,
+        );
+    }
   };
-  base.customProgramCacheKey = () => 'min-width-stream';
+  base.customProgramCacheKey = () => (water ? 'min-width-stream-water' : 'min-width-stream');
   return { material: base, uniforms };
 }
 

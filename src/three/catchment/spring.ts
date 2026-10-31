@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { MAT, group, mesh, rng } from '@onigam/lab-kit/three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { CATCHMENT as C, SPRING } from '../dims';
-import { dynamic } from '../merge';
+import { vnoise } from '../site/noise';
+import { dynamic, mergeStatic } from '../merge';
 import type { Detail } from './tank';
 import {
   boulderGeometry,
@@ -18,6 +19,7 @@ import {
 } from './geo';
 import {
   BED_FLOOR_Y,
+  BED_SLAB_BOTTOM,
   BED_TOP_Y,
   BED_X0,
   BED_X1,
@@ -90,6 +92,8 @@ const BOX_OVERFLOW_X = -0.3;
 export interface SpringBox {
   group: THREE.Group;
   anchor: THREE.Object3D;
+  /** The hinge of the lid (its rotation is the opening): the site rests it again on its own ground (`boxLidOpenAngle`). */
+  lid: THREE.Object3D;
 }
 
 export function buildSpringBox(detail: Detail): SpringBox {
@@ -149,7 +153,9 @@ export function buildSpringBox(detail: Detail): SpringBox {
   lid.add(mesh(new THREE.BoxGeometry(0.22, hh, 0.03), steel, [0, C.boxLidThickness / 2 + hh / 2, BOX_LID_HANDLE.z]));
   hinge.add(lid);
   hinge.rotation.x = -boxLidOpenAngle();
-  g.add(hinge);
+  // the lid is one mesh per material of its own, and turns on its hinges when the ground under it changes (the site's sliders)
+  mergeStatic(lid, { name: 'box-lid' });
+  g.add(dynamic(hinge));
   // two hinges: a leaf on the rim, a leaf on the cover, the knuckles on the pin between them
   const knuckleR = C.boxLidHingeDiameter / 2;
   for (const x of [-0.5, 0.5]) {
@@ -216,37 +222,58 @@ export function buildSpringBox(detail: Detail): SpringBox {
   anchor.name = 'anchor-spring-box';
   anchor.position.set(0.3, BOX_RIM_Y + 0.3, 0.3);
   g.add(anchor);
-  return { group: g, anchor };
+  return { group: g, anchor, lid: hinge };
 }
 
 /**
- * The runnel under the overflow of the box (SPRING frame): a damp strip of earth between two rows of small stones, laid on the
- * ground from `z0` southwards. It is damp and glossy, not running (the overflow only runs above the working level of the box).
+ * The runnel under the overflow of the box (SPRING frame): a damp strip of earth and moss between two rows of small stones,
+ * laid on the ground from `z0` southwards. It is damp, not running: the overflow only runs above the working level of the box,
+ * which the model's spring never reaches.
  */
 function buildRunnel(detail: Detail, x: number, z0: number): THREE.Group {
   const r = group('box-runnel');
   const L = C.boxRunnelLength;
   const W = C.boxRunnelWidth;
   const ground = (xx: number, zz: number) => groundY(xx + SPRING_X, zz);
-  // the damp bed, a strip that follows the ground (a little sunk between its stones)
-  const n = 8;
+  // the damp bed, a strip that follows the ground: dark wet earth with moss along its edges and patches of it on the way, a
+  // faint sheen at most (the model's box never overflows: nothing runs in it)
+  const n = 16;
+  const across = [-1, -0.35, 0.35, 1];
   const pos: number[] = [];
+  const col: number[] = [];
   const idx: number[] = [];
+  const earth = new THREE.Color(0x2e2a20);
+  const moss = new THREE.Color(0x3f4a22);
+  const c = new THREE.Color();
   for (let i = 0; i <= n; i++) {
     const z = z0 + (L * i) / n;
     const w = (W / 2) * (0.8 + 0.2 * Math.sin(i * 1.7));
-    pos.push(x - w, ground(x - w, z) + 0.004, z, x + w, ground(x + w, z) + 0.004, z);
-    if (i < n) idx.push(i * 2, i * 2 + 2, i * 2 + 1, i * 2 + 1, i * 2 + 2, i * 2 + 3);
+    for (const a of across) {
+      const xx = x + a * w;
+      pos.push(xx, ground(xx, z) + 0.004, z);
+      // moss on the edges, in patches along the middle; a little lighter where it dries, at the far end
+      const patch = 0.5 + 0.5 * vnoise(i * 0.9 + 3, a * 2 + 7);
+      c.copy(earth).lerp(moss, Math.min(1, Math.abs(a) * 0.7 + patch * 0.45));
+      c.multiplyScalar(0.9 + 0.25 * (i / n));
+      col.push(c.r, c.g, c.b);
+    }
+    if (i < n) {
+      const k = across.length;
+      for (let j = 0; j < k - 1; j++) {
+        const a = i * k + j;
+        idx.push(a, a + k, a + 1, a + 1, a + k, a + k + 1);
+      }
+    }
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
   geo.setIndex(idx);
   geo.computeVertexNormals();
-  // a film of water on dark earth: it shines with the sky (the worlds' environment is dim, hence the strong reflection)
   const damp = new THREE.MeshStandardMaterial({
-    color: 0x5d7c8c,
-    roughness: 0.06,
-    envMapIntensity: 2.5,
+    vertexColors: true,
+    roughness: 0.62,
+    envMapIntensity: 0.5,
     polygonOffset: true,
     polygonOffsetFactor: -2,
     polygonOffsetUnits: -2,
@@ -256,12 +283,12 @@ function buildRunnel(detail: Detail, x: number, z0: number): THREE.Group {
   strip.castShadow = false;
   strip.receiveShadow = true;
   r.add(strip);
-  // the stones along both sides
+  // the stones along both sides, darker than the dry ones (damp), some with moss
   const R = rng(13);
   const count = detail === 'full' ? 24 : 14;
   const stones = new THREE.InstancedMesh(
     stoneGeometry(),
-    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, flatShading: true }),
+    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, flatShading: true }),
     count,
   );
   const m4 = new THREE.Matrix4();
@@ -278,7 +305,11 @@ function buildRunnel(detail: Detail, x: number, z0: number): THREE.Group {
     q.setFromEuler(e);
     m4.compose(v3(xx, ground(xx, z) + s * 0.2, z), q, v3(s, s * 0.6, s * 1.2));
     stones.setMatrixAt(k, m4);
-    stones.setColorAt(k, tint.setHex(0x7c776d).multiplyScalar(0.8 + R() * 0.35));
+    tint
+      .setHex(0x6a665c)
+      .lerp(moss, R() * 0.35)
+      .multiplyScalar(0.7 + R() * 0.25);
+    stones.setColorAt(k, tint);
   }
   stones.castShadow = detail === 'full';
   stones.receiveShadow = true;
@@ -368,7 +399,7 @@ export function buildGravelBed(detail: Detail): GravelBed {
   // a bottom slab and the stone kerbs on the north and south sides and against the rock on the west
   const concrete = MAT.concrete();
   g.add(
-    boxBetween(BED_X0, BED_FLOOR_Y - 0.1, -W / 2 - C.filterKerb, BED_X1, BED_FLOOR_Y, W / 2 + C.filterKerb, concrete),
+    boxBetween(BED_X0, BED_SLAB_BOTTOM, -W / 2 - C.filterKerb, BED_X1, BED_FLOOR_Y, W / 2 + C.filterKerb, concrete),
   );
   const kerbTop = SHELF_Y + 0.1;
   const courses = 4;

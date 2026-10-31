@@ -3,7 +3,7 @@ import { CATCHMENT as C } from '../dims';
 import { smoothstep } from '../common';
 import { fbm, vnoise } from '../site/noise';
 import {
-  BED_FLOOR_Y,
+  BED_SLAB_BOTTOM,
   BED_X0,
   BED_X1,
   BOX_OHL,
@@ -191,13 +191,15 @@ export function buildBlock(): Block {
   top.castShadow = true;
   group.add(top);
 
-  // earthen lining of the two excavations: what shows when the box or the bed is hidden or exploded (inner faces only)
+  // earthen lining of the two excavations: what shows when the box or the bed is hidden or exploded (inner faces only). It
+  // stands 4 mm outside the box and the bed, so that no face of it lies in a face of theirs (coplanar faces flicker)
   const liner = new THREE.MeshStandardMaterial({ color: 0x5a4632, roughness: 1, side: THREE.BackSide });
   const linings: THREE.Mesh[] = [];
+  const gap = 0.004;
   for (const [i, h] of holes.entries()) {
-    const floor = i === 0 ? BOX_SLAB_BOTTOM : BED_FLOOR_Y - 0.1;
+    const floor = (i === 0 ? BOX_SLAB_BOTTOM : BED_SLAB_BOTTOM) - gap;
     const top = groundY((h.x0 + h.x1) / 2, 0) + 0.01;
-    const m = new THREE.Mesh(new THREE.BoxGeometry(h.x1 - h.x0, top - floor, h.z1 - h.z0), liner);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(h.x1 - h.x0 + 2 * gap, top - floor, h.z1 - h.z0 + 2 * gap), liner);
     m.position.set((h.x0 + h.x1) / 2, (top + floor) / 2, (h.z0 + h.z1) / 2);
     m.receiveShadow = true;
     m.name = 'excavation';
@@ -246,13 +248,21 @@ export function buildBlock(): Block {
   for (const x of xsCut) {
     const inside = NOTCHES.filter(([a, b]) => x > a - 1e-9 && x < b + 1e-9);
     const g = surfaceY(x, 0);
-    if (inside.length === 0) section.push({ x, top: g, ground: groundY(x, 0) });
+    const ground = groundY(x, 0);
+    const through = inside.filter(([a, b]) => x > a + 1e-9 && x < b - 1e-9);
+    if (inside.length === 0) section.push({ x, top: g, ground });
+    else if (through.length) section.push({ x, top: Math.min(...through.map((n) => n[2])), ground });
     else {
-      // on a notch edge: one sample at the top of the ground, one at the bottom of the excavation (a vertical edge)
-      const bottom = Math.min(...inside.map((n) => n[2]));
-      const edge = inside.some(([a, b]) => Math.abs(x - a) < 1e-9 || Math.abs(x - b) < 1e-9);
-      if (edge) section.push({ x, top: g, ground: groundY(x, 0) });
-      section.push({ x, top: bottom, ground: groundY(x, 0) });
+      // on the edge of an excavation: a vertical step, from what lies to the left (the ground, or the bottom of the excavation
+      // that ends here) to what lies to the right. Two excavations side by side (the gravel bed against the box) share an
+      // edge with no ground between them: a sample at ground height there drew a sliver of earth over the caps of the bed,
+      // in their plane, that flickered (S17).
+      const ends = inside.filter(([, b]) => Math.abs(x - b) < 1e-9).map((n) => n[2]);
+      const starts = inside.filter(([a]) => Math.abs(x - a) < 1e-9).map((n) => n[2]);
+      const left = ends.length ? Math.min(...ends) : g;
+      const right = starts.length ? Math.min(...starts) : g;
+      section.push({ x, top: left, ground });
+      if (right !== left) section.push({ x, top: right, ground });
     }
   }
   cap.add(
@@ -298,7 +308,9 @@ class WallBuilder {
         const a = path[i];
         const b = path[i + 1];
         const wob = (p: typeof a, d: number) => d + (d > 0 && d < 90 ? 0.07 * fbm(p.x * 0.6 + d * 5, p.z * 0.6, 2) : 0);
-        const up = (p: typeof a) => Math.min(p.top, p.ground - wob(p, d0));
+        // both ends held above the base: a layer that ends under the base on one side only made a twisted quad that reached
+        // into the plinth's cap, in its plane, and flickered
+        const up = (p: typeof a) => Math.max(BASE_Y, Math.min(p.top, p.ground - wob(p, d0)));
         const lo = (p: typeof a) => Math.max(BASE_Y, Math.min(p.top, p.ground - wob(p, d1)));
         const [a0, a1, b0, b1] = [up(a), lo(a), up(b), lo(b)];
         if (a0 - a1 < 1e-5 && b0 - b1 < 1e-5) continue;

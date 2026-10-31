@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { smoothstep } from '../common';
-import { HOUSE, PIT, TOWER } from '../dims';
+import { HOUSE, PIT, SPRING, TOWER } from '../dims';
 import { fbm, vnoise } from './noise';
-import { PIT_X, TRENCH, createGround, driveGeometry, type Ground, type SiteParams } from './layout';
+import { RANGES } from '../../sim/presets';
+import { PIT_X, TRENCH, createGround, driveGeometry, tankAxisX, type Ground, type SiteParams } from './layout';
 
 // The hillside as one tensor-product grid whose cells grow with the distance to the places that matter (the ram, the
 // drive pipe, the route, the buildings), so a few tens of thousands of vertices reach the far mountains. The height is
@@ -92,6 +93,17 @@ function detailTexture(): THREE.DataTexture {
 const HOLE_X = PIT.innerLength / 2;
 const HOLE_Z = PIT.innerWidth / 2;
 
+/**
+ * West end of the fine part of the grid: the far side of the catchment (its outcrop and the blend of its profile into the hill)
+ * for the longest drive pipe the sliders allow, at the smallest fall. Beyond 36 m the grid used to grow coarse (3.7 m cells at
+ * 60 m), and the shelf, the scarp and the bench of the catchment were smeared into one slope: the spring box stood up to 1.2 m
+ * out of the ground.
+ */
+const CATCHMENT_WEST =
+  tankAxisX(driveGeometry({ fall: RANGES.fall.min, driveLength: RANGES.driveLength.max, head: 0 })) -
+  SPRING.distanceToTank -
+  10;
+
 /** Cells per side of a tile of the ground. */
 const CHUNK = 40;
 
@@ -113,12 +125,13 @@ const C = {
 
 export function buildTerrain(initial: SiteParams): Terrain {
   const ground = createGround();
-  // fine around the ram and its drive pipe, medium along the route and at the buildings, coarse beyond
+  // fine around the ram, its drive pipe and the catchment wherever the sliders put them, medium along the route and at the
+  // buildings, coarse beyond
   const xs = axisLines(
     -1800,
     1800,
     [
-      { a: -36, b: 12, fine: 0.8 },
+      { a: CATCHMENT_WEST, b: 12, fine: 0.8 },
       { a: 0, b: 85, fine: 3 },
     ],
     [PIT_X - HOLE_X, PIT_X + HOLE_X],

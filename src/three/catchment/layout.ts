@@ -44,6 +44,8 @@ export const BOX_WATER_Y = BOX_FLOOR_Y + C.boxWaterLevel;
 export const BED_X1 = -BOX_OHL;
 export const BED_X0 = BED_X1 - C.filterLength;
 export const BED_FLOOR_Y = BOX_FLOOR_Y;
+/** Underside of the concrete slab under the gravel bed (0.1 m thick). */
+export const BED_SLAB_BOTTOM = BED_FLOOR_Y - 0.1;
 export const BED_TOP_Y = SHELF_Y + C.filterTop;
 /** The feed pipe leaves the box at ground level; it falls at `feedFall` all the way to the tank. */
 export const FEED_X0 = BOX_HL - 0.15 - C.boxStrainerLength; // far end of the strainer, inside the box (SPRING frame)
@@ -116,6 +118,6 @@ export function boxLidOpenAngle(ground: (x: number, z: number) => number = (x, z
 /** x-intervals of the section where something occupies the ground: [x0, x1, y of the bottom of the excavation]. */
 export const NOTCHES: readonly (readonly [number, number, number])[] = [
   [SPRING_X - BOX_OHL, SPRING_X + BOX_OHL, BOX_SLAB_BOTTOM], // spring box
-  [SPRING_X + BED_X0 - C.filterKerb, SPRING_X + BED_X1, BED_FLOOR_Y], // gravel bed with the stone end against the rock
+  [SPRING_X + BED_X0 - C.filterKerb, SPRING_X + BED_X1, BED_SLAB_BOTTOM], // gravel bed and its slab, with the stone end against the rock
   [-SLAB_R, SLAB_R, SLAB_BOTTOM], // slab of the tank
 ];

@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { partIds } from '../part-ids';
 import type { RamState } from '../sim/types';
-import { BED_X0, BED_X1, BOX_HL, BOX_HW, H_FULL, SPRING_X } from './catchment/layout';
+import { BED_X0, BED_X1, BOX_HL, BOX_HW, BOX_OHL, BOX_OHW, BOX_RIM_Y, H_FULL, SPRING_X } from './catchment/layout';
 import * as DIMS from './dims';
 import { PIT_EAST_FACE, PIT_WEST_FACE } from './site/layout';
 import { OUT_X } from './site/routes';
@@ -199,6 +199,51 @@ describe('site world', () => {
       const s = mod.catchment.springFrame.position;
       expect(groundAt(mod, t.x, 0)).toBeCloseTo(t.y - DIMS.CATCHMENT.benchDepth, 1);
       expect(groundAt(mod, s.x, 0)).toBeCloseTo(t.y + DIMS.CATCHMENT.shelfHeight, 1);
+    });
+
+    it('keeps the spring box in the ground and its lid resting on it, whatever the fall and the drive length', () => {
+      // at long drive pipes the catchment was beyond the fine part of the grid of the ground: the box stood up to 1.2 m out
+      // of it, and the lid, laid for the ground of the catchment world, hung in the air
+      for (const [fall, driveLength] of [
+        [7.5, 20],
+        [2, 52],
+        [12, 60],
+        [7.5, 56],
+        [24, 60],
+        [30, 60],
+        [2, 60],
+        [30, 5],
+      ]) {
+        mod.follow({ fall, driveLength, deliveryHead: 65, driveDiameter: 27 });
+        mod.scene.updateMatrixWorld(true);
+        const name = `fall ${fall}, L ${driveLength}`;
+        const s = mod.catchment.springFrame.position;
+        for (const [x, z] of [
+          [-BOX_OHL, -BOX_OHW],
+          [BOX_OHL, -BOX_OHW],
+          [-BOX_OHL, BOX_OHW],
+          [BOX_OHL, BOX_OHW],
+        ]) {
+          const above = s.y + BOX_RIM_Y - groundAt(mod, s.x + x, z);
+          expect(Math.abs(above - DIMS.SPRING.boxRim), `${name}: rim above the ground`).toBeLessThan(0.05);
+        }
+        const lid = mod.catchment.springFrame.getObjectByName('box-lid-hinge')!;
+        let lowest = Infinity;
+        const v = new THREE.Vector3();
+        lid.traverse((o) => {
+          const m = o as THREE.Mesh;
+          if (!m.isMesh) return;
+          const pos = m.geometry.attributes.position;
+          for (let i = 0; i < pos.count; i++) {
+            v.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld);
+            lowest = Math.min(lowest, v.y - groundAt(mod, v.x, v.z));
+          }
+        });
+        // resting: nothing of it in the ground, and it touches it
+        expect(lowest, `${name}: lid`).toBeGreaterThan(-0.005);
+        expect(lowest, `${name}: lid`).toBeLessThan(0.01);
+      }
+      mod.follow({ fall: 7.5, driveLength: 20, deliveryHead: 65, driveDiameter: 27 });
     });
 
     it('draws the water at the level of the state and the overflow only when the tank is full and the spring gives more than the ram takes', () => {

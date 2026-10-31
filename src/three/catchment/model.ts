@@ -9,6 +9,7 @@ import { dynamic, mergeStatic } from '../merge';
 import { applyPipeKind, pipeKindOf, pipeLine, v3, type PipeKind } from './geo';
 import {
   BED_FLOOR_Y,
+  BED_SLAB_BOTTOM,
   BED_TOP_Y,
   BED_X0,
   BED_X1,
@@ -30,6 +31,7 @@ import {
   SLAB_R,
   SLAB_TOP,
   SHELF_Y,
+  boxLidOpenAngle,
   feedY,
   groundY,
 } from './layout';
@@ -134,6 +136,8 @@ export interface CatchmentModel {
   };
   /** The overflow's gutter (TANK frame): lay it again on a new ground. */
   layGutter(ground: (x: number, z: number) => number, xEnd: number): void;
+  /** Rest the lid of the spring box on a new ground (height in the SPRING frame at a SPRING-frame position). */
+  restLid(ground: (x: number, z: number) => number): void;
   /**
    * Animate from the state. `hold`: what is exploded or hidden (see `Hold`). `registry` is only
    * needed to hide section caps of parts that are shown as ghosts. `cutRoot`: the object whose z = 0 is the section plane.
@@ -257,8 +261,9 @@ export function createCatchmentModel(opts: ModelOptions): CatchmentModel {
   // thinner than a few pixels, so that the spring reads as a spring from across the hillside
   const trickleMat = waterMaterial(0.92, 0xd2ecfc);
   trickleMat.envMapIntensity = 0.9;
-  const trickleWidth = minWidthStream(trickleMat, TRICKLE_MIN_PIXELS);
-  const trickle = new THREE.Mesh(unit(), trickleMat);
+  const trickleWidth = minWidthStream(trickleMat, TRICKLE_MIN_PIXELS, true);
+  // height segments: the stream wavers from close up
+  const trickle = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 12, 24, true), trickleMat);
   const overJet = new THREE.Mesh(unit(), streamMat());
   const drainJet = new THREE.Mesh(unit(), streamMat());
   fallIn.name = 'jet-feed';
@@ -321,14 +326,34 @@ export function createCatchmentModel(opts: ModelOptions): CatchmentModel {
     floorY: () => gutterFloor() + 0.02,
     max: 70,
   });
+  // where the trickle lands: a little white water on the gravel, and drops thrown up around it
   const splashSeep = new Splash({
     emitter: bed.drop.clone(),
     radius: 0.02,
-    spread: 0.18,
-    up: 0.5,
+    spread: 0.32,
+    up: 1.05,
     floorY: () => BED_TOP_Y - 0.01,
-    max: 70,
+    size: 0.012,
+    max: 120,
   });
+  const foam = new THREE.Mesh(
+    new THREE.RingGeometry(0.008, 0.032, 20),
+    new THREE.MeshStandardMaterial({
+      color: 0xf2f8fb,
+      roughness: 0.4,
+      transparent: true,
+      opacity: 0.28,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -3,
+      polygonOffsetUnits: -3,
+    }),
+  );
+  foam.name = 'trickle-foam';
+  foam.rotation.x = -Math.PI / 2;
+  foam.position.set(bed.drop.x, BED_TOP_Y + 0.002, bed.drop.z);
+  foam.renderOrder = 2;
+  jetsS.add(noShadow(foam));
   jetsT.add(splashIn.object, splashOver.object, splashDrain.object);
   jetsS.add(splashSeep.object);
 
@@ -392,7 +417,7 @@ export function createCatchmentModel(opts: ModelOptions): CatchmentModel {
   };
   if (cut) {
     for (const id of CATCHMENT_PART_IDS) if (id !== 'drive-gate-valve') clipMesh(parts[id]);
-    for (const o of [body, surface, boxBody, boxSurface, fallIn, trickle, overJet, drainJet, ribbon]) clipMesh(o);
+    for (const o of [body, surface, boxBody, boxSurface, fallIn, trickle, foam, overJet, drainJet, ribbon]) clipMesh(o);
     clipMesh(outcrop.group);
     addCaps();
   }
@@ -435,7 +460,7 @@ export function createCatchmentModel(opts: ModelOptions): CatchmentModel {
       const c = cut.cap('gravel-filter', bed.group, [rect(x0, BED_FLOOR_Y, x1, BED_TOP_Y - 0.035)]);
       c.material = new THREE.MeshStandardMaterial({ color: zoneColours[i], roughness: 1, side: THREE.DoubleSide });
     });
-    cut.cap('gravel-filter', bed.group, [rect(BED_X0, BED_FLOOR_Y - 0.1, BED_X1, BED_FLOOR_Y)]);
+    cut.cap('gravel-filter', bed.group, [rect(BED_X0, BED_SLAB_BOTTOM, BED_X1, BED_FLOOR_Y)]);
     const endStones = cut.cap('gravel-filter', bed.group, [
       rect(BED_X0 - C.filterKerb, BED_FLOOR_Y, BED_X0, SHELF_Y + 0.1),
     ]);
@@ -556,7 +581,10 @@ export function createCatchmentModel(opts: ModelOptions): CatchmentModel {
     const dropTop = SHELF_Y + C.seepHeight;
     placeStream(trickle, bed.drop.x, dropTop, BED_TOP_Y, bed.drop.z, 0.008 * fall, src > 0.05);
     trickleWidth.uniforms.uRadius.value = trickle.scale.x;
-    splashSeep.update(dt, wet && src > 0.05 ? 10 * fall : 0, wet && src > 0.05);
+    trickleWidth.uniforms.uTime.value = finite(view.time, 0) % 1000;
+    foam.visible = wet && src > 0.05;
+    foam.scale.setScalar(0.85 + 0.15 * Math.sin(finite(view.time, 0) * 9));
+    splashSeep.update(dt, wet && src > 0.05 ? 80 * fall : 0, wet && src > 0.05);
     (bed.wet.material as THREE.MeshStandardMaterial).opacity = wet ? 0.55 * clamp(src / SITE.sourceFlowLpm, 0, 1) : 0;
 
     // overflow and drain pour into the head of the ditch
@@ -647,6 +675,10 @@ export function createCatchmentModel(opts: ModelOptions): CatchmentModel {
       over.layGutter(ground, end);
       layRibbon();
       setGutterDots();
+    },
+    restLid(ground) {
+      box.lid.rotation.x = -boxLidOpenAngle(ground);
+      box.lid.updateMatrixWorld(true);
     },
     update,
     setRegistry(r) {

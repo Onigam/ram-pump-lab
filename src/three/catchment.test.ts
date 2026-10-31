@@ -21,6 +21,7 @@ import {
   R,
   SHELF_Y,
   SLAB_R,
+  NOTCHES,
   SPRING_X,
   boxLidOpenAngle,
   feedY,
@@ -464,6 +465,34 @@ describe('catchment world', () => {
       expect(shellCaps.every((c) => !c.visible)).toBe(true);
       reg.setDisplay('tank-shell', 'solid');
       step(run, { cutaway: false });
+    });
+
+    it('draws the section of the ground beside the caps of the parts, never in their place (coplanar faces flicker)', () => {
+      // the earth's cap and the caps of the box, the bed and the tank lie in the same plane: the earth must leave the
+      // excavations alone (a sliver of earth over the bed flickered at the film's S17), and stop at the plinth
+      const cap = mod.block.caps[0];
+      const pos = cap.geometry.attributes.position;
+      const a = new THREE.Vector3();
+      const b = new THREE.Vector3();
+      const c = new THREE.Vector3();
+      const tri = new THREE.Triangle();
+      let checked = 0;
+      for (let i = 0; i < pos.count; i += 3) {
+        a.fromBufferAttribute(pos, i);
+        b.fromBufferAttribute(pos, i + 1);
+        c.fromBufferAttribute(pos, i + 2);
+        tri.set(a, b, c);
+        if (tri.getArea() < 1e-9) continue;
+        checked++;
+        const mid = new THREE.Vector3().add(a).add(b).add(c).divideScalar(3);
+        // over an excavation, only the earth under its bottom
+        for (const [x0, x1, bottom] of NOTCHES) {
+          if (mid.x > x0 + 1e-6 && mid.x < x1 - 1e-6)
+            expect(Math.max(a.y, b.y, c.y), `triangle over ${x0}..${x1}`).toBeLessThanOrEqual(bottom + 1e-6);
+        }
+        expect(Math.min(a.y, b.y, c.y)).toBeGreaterThanOrEqual(BLOCK.base - 1e-6);
+      }
+      expect(checked).toBeGreaterThan(100);
     });
 
     it('takes the grass and the trees of the front half away with the ground (no tuft is left in the air or on the floor)', () => {
