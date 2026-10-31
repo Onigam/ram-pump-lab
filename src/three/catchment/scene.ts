@@ -4,6 +4,7 @@ import { PartRegistry, clamp } from '@onigam/lab-kit/three';
 import type { Hotspot, SceneModule, ViewOpts } from '@onigam/lab-kit/three';
 import type { RamState } from '../../sim/types';
 import { paperFloor } from '../common';
+import { aimOnDraw, type CameraPose } from '../shadow-fit';
 import { installWarmup, type Warmable } from '../warm';
 import { partIds } from '../../part-ids';
 import { BASE_Y, BLOCK, PLINTH_H, buildBlock, type Block } from './ground';
@@ -51,6 +52,23 @@ export const EXPLODE: Record<CatchmentPartId, [number, number, number]> = {
   'drive-gate-valve': [0, 1.0, 0],
   'tank-drain': [0, 0.7, 0],
 };
+
+/** Height of the plane of the work the sun's box is aimed at (the middle of the tank, the box, the bed), metres. */
+const WORK_Y = 1;
+
+/**
+ * The sun's box: centred where the view axis meets the plane of the work, or the plane 0.5 m under a camera that is lower than
+ * that (a close view of the gate valve, of the drain), with a half size of 0.85 times that distance, from 2.2 m to 10.6 m (the
+ * limits the box had when its size went by steps of 30 %). A view that never meets the plane gets the largest box. Every case
+ * joins the next without a step: the box is a continuous function of the camera.
+ */
+export const CATCHMENT_SHADOW = { near: 0.5, far: 10.6 / 0.85, halfPerMetre: 0.85, halfMin: 2.2, halfMax: 10.6 };
+
+export function catchmentShadowDistance(pos: THREE.Vector3, dir: THREE.Vector3): number {
+  const plane = Math.min(WORK_Y, pos.y - 0.5);
+  if (dir.y > -1e-6) return CATCHMENT_SHADOW.far;
+  return clamp((pos.y - plane) / -dir.y, CATCHMENT_SHADOW.near, CATCHMENT_SHADOW.far);
+}
 
 export interface CatchmentScene extends SceneModule<RamState>, Warmable {
   readonly model: CatchmentModel;
@@ -107,35 +125,32 @@ export function createCatchmentScene(): CatchmentScene {
     goto: h.goto,
   }));
 
-  // ---- the sun's shadow box follows what the camera looks at (a tight box on the valve, the whole block from afar)
-  const camPos = new THREE.Vector3(7, 4.5, 11);
-  const camDir = new THREE.Vector3(-0.5, -0.2, -0.8).normalize();
-  block.top.onBeforeRender = (_r, _s, camera) => {
-    if ((camera as THREE.PerspectiveCamera).isPerspectiveCamera) {
-      camera.getWorldPosition(camPos);
-      camera.getWorldDirection(camDir);
-    }
+  // ---- the sun's shadow box follows what the camera of each draw looks at (a tight box on the valve, the whole block from
+  // afar), continuously (see CATCHMENT_SHADOW)
+  const pose: CameraPose = {
+    position: new THREE.Vector3(8.2, 5.0, 12.6),
+    direction: new THREE.Vector3(-10.1, -4, -12.6).normalize(),
+    right: new THREE.Vector3(1, 0, 0),
+    up: new THREE.Vector3(0, 1, 0),
   };
   const focus = new THREE.Vector3();
   const right = new THREE.Vector3();
   const upv = new THREE.Vector3();
   const snapped = new THREE.Vector3();
   const worldUp = new THREE.Vector3(0, 1, 0);
-  let half = 11;
+  let half = 0;
   const aimShadow = () => {
-    // where the view axis meets the plane of the work (y = 1), or 10 m ahead
-    let t = 10;
-    if (camDir.y < -0.02) t = clamp((1 - camPos.y) / camDir.y, 0.5, 40);
-    focus.copy(camPos).addScaledVector(camDir, t);
-    const h = clamp(t * 0.85, 2.2, 12);
-    const level = Math.max(2, Math.pow(1.3, Math.round(Math.log(h) / Math.log(1.3))));
-    if (level !== half) {
-      half = level;
+    const t = catchmentShadowDistance(pose.position, pose.direction);
+    focus.copy(pose.position).addScaledVector(pose.direction, t);
+    const h = clamp(t * CATCHMENT_SHADOW.halfPerMetre, CATCHMENT_SHADOW.halfMin, CATCHMENT_SHADOW.halfMax);
+    if (h !== half) {
+      half = h;
       const c = key.shadow.camera;
       c.left = c.bottom = -half;
       c.right = c.top = half;
       c.updateProjectionMatrix();
     }
+    // the focus snapped to the texels of the map, so that a pan or an orbit at a constant size does not shimmer
     right.crossVectors(worldUp, lightDir).normalize();
     upv.crossVectors(lightDir, right).normalize();
     const texel = (2 * half) / 2048;
@@ -145,14 +160,11 @@ export function createCatchmentScene(): CatchmentScene {
     snapped.set(0, 0, 0).addScaledVector(right, a).addScaledVector(upv, b).addScaledVector(lightDir, c);
     key.target.position.copy(snapped);
     key.position.copy(snapped).addScaledVector(lightDir, 30);
+    key.updateMatrixWorld();
     key.target.updateMatrixWorld();
   };
-  {
-    const c = key.shadow.camera;
-    c.left = c.bottom = -half;
-    c.right = c.top = half;
-  }
   aimShadow();
+  aimOnDraw(scene, pose, aimShadow);
 
   /** What is missing from the picture: parts exploded, hidden (isolate) or shown as wires (guide) leave no water to show. */
   const hold: Hold = { tank: false, box: false, flows: false };
@@ -171,7 +183,6 @@ export function createCatchmentScene(): CatchmentScene {
   };
 
   const update = (s: RamState, dt: number, view: ViewOpts) => {
-    aimShadow();
     model.update(s, dt, view, holdNow(), root);
     for (const c of block.caps) c.visible = view.cutaway;
   };

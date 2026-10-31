@@ -258,7 +258,8 @@ export function createSiteScene(): SiteScene {
     minor: h.minor,
   }));
 
-  const aimShadow = createShadowAim(terrain, sky);
+  // the sun's shadow box: a continuous function of the camera of each draw (shadow.ts)
+  const aimShadow = createShadowAim(scene, terrain, sky);
 
   // ---- per-frame
   let sinceLayout = 1;

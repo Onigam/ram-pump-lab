@@ -147,6 +147,8 @@ export function createSky(scene: THREE.Scene): SkyRig {
     snapped.set(0, 0, 0).addScaledVector(right, a).addScaledVector(upv, b).addScaledVector(lightDir, c);
     sun.target.position.copy(snapped);
     sun.position.copy(snapped).addScaledVector(lightDir, 400);
+    // the box may be aimed in the scene's onBeforeRender, after the renderer has updated the world matrices
+    sun.updateMatrixWorld();
     sun.target.updateMatrixWorld();
   };
 
@@ -183,10 +185,11 @@ export function createSky(scene: THREE.Scene): SkyRig {
         .lerp(fogDusk, low * day * 0.6);
     },
     focusShadow(f, h) {
-      const level = Math.max(8, Math.pow(1.3, Math.round(Math.log(h) / Math.log(1.3))));
+      // the size follows the camera continuously (a size by steps made the shadows jump in a slow camera move); the
+      // focus is snapped to the texels of the map in place(), so that a pan or an orbit at a constant size does not shimmer
       focus.copy(f);
-      if (level !== half) {
-        half = level;
+      if (h !== half) {
+        half = h;
         const cam = sun.shadow.camera;
         cam.left = -half;
         cam.right = half;

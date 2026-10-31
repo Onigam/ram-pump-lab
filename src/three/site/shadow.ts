@@ -1,38 +1,44 @@
 import * as THREE from 'three';
-import { clamp } from '@onigam/lab-kit/three';
+import { aimOnDraw, fitShadow, newFit, type CameraPose, type FitOptions } from '../shadow-fit';
 import type { SkyRig } from './sky';
 import type { Terrain } from './terrain';
 
-// The sun's shadow map follows what the camera looks at: a tight box when the visitor is at the ram, a wide one over the
-// whole hillside. The scene module does not receive the camera, so the terrain remembers it from its own draw call.
+// The sun's shadow map of the site follows what the camera looks at (see shadow-fit.ts): a box of 10 m half size at the ram,
+// up to 320 m over the whole hillside, 0.55 times the distance to the ground the middle of the picture shows.
 
-export function createShadowAim(terrain: Terrain, sky: SkyRig): () => void {
-  const camPos = new THREE.Vector3(-60, 80, 150);
-  const camDir = new THREE.Vector3(0.2, -0.3, -1).normalize();
-  const remember = (_renderer: THREE.WebGLRenderer, _scene: THREE.Scene, camera: THREE.Camera) => {
-    // the shadow pass renders with an orthographic camera: keep the visitor's camera only
-    if ((camera as THREE.PerspectiveCamera).isPerspectiveCamera) {
-      camera.getWorldPosition(camPos);
-      camera.getWorldDirection(camDir);
-    }
+export const SITE_SHADOW: FitOptions = {
+  near: 2,
+  far: 600,
+  growth: 1.06,
+  halfPerMetre: 0.55,
+  halfMin: 10,
+  halfMax: 320,
+  // five rows of three over the middle of the picture: a crest of the hills the view comes down over is met row by row
+  rows: [-8, -4, 0, 4, 8],
+  columns: [-10, 0, 10],
+  // and each ray a fan of ±1 degree: a crest is passed over in 2 degrees of tilt
+  soft: 1,
+};
+
+/**
+ * Aim the sun's box at what the camera of each draw looks at. Returns `aim()`, which re-aims at the last camera seen (the scene
+ * calls it in `update`, after the sun has moved with the hour); every draw re-aims at its own camera before the shadow pass.
+ */
+export function createShadowAim(scene: THREE.Scene, terrain: Terrain, sky: SkyRig): () => void {
+  const pose: CameraPose = {
+    position: new THREE.Vector3(-57, 58, 120),
+    direction: new THREE.Vector3(85, -38, -190).normalize(),
+    right: new THREE.Vector3(1, 0, 0),
+    up: new THREE.Vector3(0, 1, 0),
   };
-  // any tile of the ground that is drawn will do
-  for (const tile of terrain.mesh.children) tile.onBeforeRender = remember;
-  const focus = new THREE.Vector3();
-  const probe = new THREE.Vector3();
-  return () => {
-    let t = 4;
-    let hit = false;
-    for (let i = 0; i < 90 && t < 4000; i++) {
-      probe.copy(camPos).addScaledVector(camDir, t);
-      if (probe.y <= terrain.surfaceY(probe.x, probe.z)) {
-        hit = true;
-        break;
-      }
-      t *= 1.07;
-    }
-    if (!hit) t = 200;
-    focus.copy(camPos).addScaledVector(camDir, t);
-    sky.focusShadow(focus, clamp(t * 0.55, 10, 320));
+  pose.right.crossVectors(pose.direction, pose.up).normalize();
+  pose.up.crossVectors(pose.right, pose.direction).normalize();
+  const fit = newFit();
+  const ground = (x: number, z: number) => terrain.surfaceY(x, z);
+  const aim = () => {
+    fitShadow(pose.position, pose.direction, pose.right, pose.up, ground, SITE_SHADOW, fit);
+    sky.focusShadow(fit.focus, fit.half);
   };
+  aimOnDraw(scene, pose, aim);
+  return aim;
 }
