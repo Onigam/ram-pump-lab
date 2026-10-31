@@ -6,7 +6,7 @@ import { SITE } from '../dims';
 // the camera is close. (Generic: docs/kit-requests.md §4.)
 
 /** World size of one screen pixel per metre of distance at the stage's 40 degree field of view and ~800 px height. */
-const PIXEL_PER_METRE = 0.00091;
+export const PIXEL_PER_METRE = 0.00091;
 
 export function minWidthMaterial(base: THREE.MeshStandardMaterial, radius: number, minPixels = SITE.pipeMinPixels) {
   const uniforms = { uPipeRadius: { value: radius }, uPipePix: { value: (PIXEL_PER_METRE * minPixels) / 2 } };
@@ -26,6 +26,34 @@ export function minWidthMaterial(base: THREE.MeshStandardMaterial, radius: numbe
       );
   };
   base.customProgramCacheKey = () => 'min-width-pipe';
+  return { material: base, uniforms };
+}
+
+/**
+ * The same for a stream of water drawn as a unit open cylinder scaled to (radius, length, radius) (catchment/model.ts): the
+ * trickle of the spring is a finger thick, a pixel at 30 m; it is drawn at least `minPixels` wide. Set `uniforms.uRadius` to the
+ * radius the stream has now.
+ */
+export function minWidthStream(base: THREE.MeshStandardMaterial, minPixels: number = SITE.pipeMinPixels) {
+  const uniforms = { uRadius: { value: 0.01 }, uPix: { value: (PIXEL_PER_METRE * minPixels) / 2 } };
+  base.onBeforeCompile = (shader) => {
+    shader.uniforms.uStreamRadius = uniforms.uRadius;
+    shader.uniforms.uStreamPix = uniforms.uPix;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nuniform float uStreamRadius;\nuniform float uStreamPix;')
+      .replace(
+        '#include <begin_vertex>',
+        /* glsl */ `#include <begin_vertex>
+        {
+          vec4 wp = modelMatrix * vec4( transformed, 1.0 );
+          float dist = distance( cameraPosition, wp.xyz );
+          // the cylinder has a radius of 1 in its own frame: the growth is in parts of the radius
+          vec2 side = normal.xz;
+          if ( dot( side, side ) > 1e-6 ) transformed.xz += normalize( side ) * max( 0.0, dist * uStreamPix - uStreamRadius ) / max( uStreamRadius, 1e-5 );
+        }`,
+      );
+  };
+  base.customProgramCacheKey = () => 'min-width-stream';
   return { material: base, uniforms };
 }
 

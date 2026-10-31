@@ -166,6 +166,11 @@ export const CATCHMENT = {
   boxOverflowHeight: 0.495,
   /** Outer diameter of the overflow stub (a flap valve keeps animals and insects out). estimate: PVC 32, the size of the feed pipe. */
   boxOverflowDiameter: 0.032,
+  /** Length and width of the stone-lined runnel under the overflow stub, which leads what the overflow throws out away from the
+   *  walls (it would soak back round the box). estimate: Oxfam TB5 drains the overflow away from the catchment. The overflow
+   *  only runs when the box rises above its working level: the runnel is damp, not running. */
+  boxRunnelLength: 1.6,
+  boxRunnelWidth: 0.2,
   /** Diameter of the washout plug in the floor of the box (a rubber plug on a chain to empty the silt; Oxfam TB5 closes its washout with a screwed end cap). estimate: 60 mm, a size a hand removes. */
   boxWashoutDiameter: 0.06,
   /** Diameter of the strainer at the start of the feed pipe, inside the box. estimate: twice the 32 mm pipe, so its open area exceeds the pipe's. */
@@ -176,8 +181,12 @@ export const CATCHMENT = {
   boxLidThickness: 0.004,
   /** How far the lid overhangs the rim. estimate: 5 cm, to shed the rain over the walls. */
   boxLidMargin: 0.05,
-  /** Angle the lid is propped open at, degrees from closed. estimate: laid back behind the box on its stay, clear of the work. */
-  boxLidOpenDeg: 135,
+  /** Depth of the frame of steel flats under the lid plate. estimate: 30 mm flats, stiff enough to stand on. */
+  boxLidFrameDepth: 0.03,
+  /** Diameter of the knuckles of the two lid hinges. estimate: 40 mm, a gate hinge. The lid is thrown back over them and lies
+   *  on the ground behind the box (its angle is derived from the ground, layout.ts), clear of the work and of the view into the
+   *  box. */
+  boxLidHingeDiameter: 0.04,
   /** Outer diameter of the vent pipe of the box. estimate: PVC 40, enough for the little air the level moves. */
   boxVentDiameter: 0.04,
   /** Height of the vent above the rim. estimate: 0.25 m, above the snow and the splash. */

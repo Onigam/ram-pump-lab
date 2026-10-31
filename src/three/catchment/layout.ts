@@ -85,6 +85,34 @@ export function groundY(x: number, z = 0, slope = C.driveSlope): number {
   return BENCH_Y - slope * softRamp(x - BEND_X);
 }
 
+/** Size of the lid of the spring box (it overhangs the walls by `boxLidMargin`), along X and along Z. */
+export const BOX_LID_L = 2 * (BOX_OHL + C.boxLidMargin);
+export const BOX_LID_W = 2 * (BOX_OHW + C.boxLidMargin);
+/** Lifting handle on the top face of the lid: how far from the hinge, how high above the plate. */
+export const BOX_LID_HANDLE = { z: 0.82 * BOX_LID_W, height: 0.022 };
+
+/**
+ * Angle (radians from closed) of the lid of the spring box thrown back over its hinges (north edge, at the rim): a little more
+ * than half a turn, until the first of its far corners or its handle (the lid is upside down) rests on the ground behind the box.
+ * `ground` is the height of the ground in the SPRING frame (the profile of this world by default).
+ */
+export function boxLidOpenAngle(ground: (x: number, z: number) => number = (x, z) => groundY(x + SPRING_X, z)): number {
+  const hingeZ = -BOX_OHW - C.boxLidMargin;
+  // points of the top face (facing down once thrown back): distance from the hinge, height above the plate, x
+  const points: [number, number, number][] = [
+    [BOX_LID_W, 0, -BOX_LID_L / 2],
+    [BOX_LID_W, 0, BOX_LID_L / 2],
+    [BOX_LID_HANDLE.z, BOX_LID_HANDLE.height, 0],
+  ];
+  let delta = Math.PI / 2;
+  for (const [d, h, x] of points) {
+    // thrown back by π + δ, a point d from the hinge and h above the plate is h + d·sin δ under the rim
+    const room = BOX_RIM_Y - h - ground(x, hingeZ - d);
+    delta = Math.min(delta, Math.asin(Math.max(-1, Math.min(1, room / d))));
+  }
+  return Math.PI + delta;
+}
+
 /** x-intervals of the section where something occupies the ground: [x0, x1, y of the bottom of the excavation]. */
 export const NOTCHES: readonly (readonly [number, number, number])[] = [
   [SPRING_X - BOX_OHL, SPRING_X + BOX_OHL, BOX_SLAB_BOTTOM], // spring box

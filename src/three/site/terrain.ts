@@ -21,6 +21,13 @@ export interface Terrain {
   surfaceY(x: number, z: number): number;
   /** Mean surface slope 1 - n.y at (x, z). */
   slopeAt(x: number, z: number): number;
+  /**
+   * Openings in the drawn ground, rectangles in plan (x0, z0, x1, z1), at most `MAX_OPENINGS`: what is dug in there (the spring
+   * box, the gravel bed) shows instead of the grass. They follow the parts when the sliders move them; `surfaceY` ignores them.
+   */
+  setOpenings(rects: readonly (readonly [number, number, number, number])[]): void;
+  /** The openings set last. */
+  readonly openings: readonly (readonly [number, number, number, number])[];
   /** Parameters the surface currently has. */
   readonly params: SiteParams;
 }
@@ -87,6 +94,9 @@ const HOLE_Z = PIT.innerWidth / 2;
 
 /** Cells per side of a tile of the ground. */
 const CHUNK = 40;
+
+/** Number of openings the ground's material can cut (see `Terrain.setOpenings`). */
+export const MAX_OPENINGS = 2;
 
 const C = {
   grassA: new THREE.Color(0x6f9a3f),
@@ -164,6 +174,29 @@ export function buildTerrain(initial: SiteParams): Terrain {
     roughness: 0.97,
     metalness: 0,
   });
+  // openings: rectangles in plan where the ground is not drawn (the grid is too coarse, and fixed, to have holes there: the parts
+  // dug into it move with the sliders); an empty rectangle has x0 > x1
+  const openings = { value: Array.from({ length: MAX_OPENINGS }, () => new THREE.Vector4(1, 1, 0, 0)) };
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.uOpenings = openings;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec2 vPlan;')
+      .replace(
+        '#include <begin_vertex>',
+        '#include <begin_vertex>\nvPlan = (modelMatrix * vec4(transformed, 1.0)).xz;',
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>\nvarying vec2 vPlan;\nuniform vec4 uOpenings[${MAX_OPENINGS}];`)
+      .replace(
+        'void main() {',
+        `void main() {
+          for (int i = 0; i < ${MAX_OPENINGS}; i++) {
+            vec4 o = uOpenings[i];
+            if (vPlan.x > o.x && vPlan.x < o.z && vPlan.y > o.y && vPlan.y < o.w) discard;
+          }`,
+      );
+  };
+  mat.customProgramCacheKey = () => 'site-ground-openings';
   const mesh = new THREE.Group();
   mesh.name = 'terrain';
   interface Chunk {
@@ -206,6 +239,7 @@ export function buildTerrain(initial: SiteParams): Terrain {
   }
 
   let params: SiteParams = { fall: NaN, driveLength: NaN, head: NaN };
+  let openingRects: readonly (readonly [number, number, number, number])[] = [];
 
   const evalFull = (i: number, j: number, p: SiteParams): number => {
     const v = j * NX + i;
@@ -359,6 +393,17 @@ export function buildTerrain(initial: SiteParams): Terrain {
       return true;
     },
     surfaceY,
+    get openings() {
+      return openingRects;
+    },
+    setOpenings(rects) {
+      openingRects = rects.slice(0, MAX_OPENINGS);
+      openings.value.forEach((v, i) => {
+        const r = rects[i];
+        if (r) v.set(r[0], r[1], r[2], r[3]);
+        else v.set(1, 1, 0, 0);
+      });
+    },
     slopeAt(x, z) {
       const e = 1.5;
       const dx = (surfaceY(x + e, z) - surfaceY(x - e, z)) / (2 * e);

@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { MAT, group, mesh, rng } from '@onigam/lab-kit/three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { CATCHMENT as C, SPRING } from '../dims';
-import { DEG } from '../common';
 import { dynamic } from '../merge';
 import type { Detail } from './tank';
 import {
@@ -23,6 +22,9 @@ import {
   BED_X0,
   BED_X1,
   BOX_FLOOR_Y,
+  BOX_LID_HANDLE,
+  BOX_LID_L,
+  BOX_LID_W,
   BOX_HL,
   BOX_HW,
   BOX_OHL,
@@ -34,7 +36,9 @@ import {
   H_LID,
   SHELF_Y,
   SPRING_X,
+  boxLidOpenAngle,
   feedY,
+  groundY,
 } from './layout';
 
 // The spring side of the catchment, in the SPRING frame (origin: centre of the spring box, Y measured from the inner floor of
@@ -43,7 +47,45 @@ import {
 
 const lowRes = (d: Detail, full: number, site: number) => (d === 'full' ? full : site);
 
+/** The tread of a checker plate: raised diagonal bars, lighter, on the grey of the zinc (a DataTexture, so it builds in Node). */
+const checkerPlate = (() => {
+  let tex: THREE.DataTexture | null = null;
+  return () => {
+    if (tex) return tex;
+    const N = 32;
+    const data = new Uint8Array(N * N * 4);
+    for (let j = 0; j < N; j++) {
+      for (let i = 0; i < N; i++) {
+        // two bars per cell, one on each diagonal, alternating between the quarters
+        const u = (i + 0.5) / N;
+        const v = (j + 0.5) / N;
+        const q = u < 0.5 !== v < 0.5;
+        const a = (u % 0.5) * 2 - 0.5;
+        const b = (v % 0.5) * 2 - 0.5;
+        const along = q ? Math.abs(a + b) : Math.abs(a - b);
+        const across = q ? Math.abs(a - b) : Math.abs(a + b);
+        const bar = along < 0.55 && across < 0.16 ? 1 : 0;
+        const g = Math.round(205 + 50 * bar);
+        const k = (j * N + i) * 4;
+        data.set([g, g, g, 255], k);
+      }
+    }
+    tex = new THREE.DataTexture(data, N, N, THREE.RGBAFormat);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(24, 24);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.magFilter = THREE.LinearFilter;
+    tex.minFilter = THREE.LinearMipmapLinearFilter;
+    tex.generateMipmaps = true;
+    tex.needsUpdate = true;
+    return tex;
+  };
+})();
+
 // ------------------------------------------------------------------------------------------------ spring box
+
+/** X of the overflow stub of the box, through its south wall (SPRING frame). */
+const BOX_OVERFLOW_X = -0.3;
 
 export interface SpringBox {
   group: THREE.Group;
@@ -79,50 +121,63 @@ export function buildSpringBox(detail: Detail): SpringBox {
   );
   silt.castShadow = false;
   g.add(silt);
-  // the hinged galvanised cover, propped open: hinge on the north edge
+  // the hinged galvanised cover, thrown back over its hinges on the north edge: it lies upside down on the ground behind the
+  // box, so that the box shows its water (propped half open, from the south it stood up like the screen of a laptop)
+  const m = C.boxLidMargin;
+  const lidL = BOX_LID_L;
+  const lidW = BOX_LID_W;
   const hinge = new THREE.Group();
   hinge.name = 'box-lid-hinge';
-  const m = C.boxLidMargin;
   hinge.position.set(0, BOX_RIM_Y + C.boxLidThickness / 2, -BOX_OHW - m);
   const lid = new THREE.Group();
-  const lidL = 2 * (BOX_OHL + m);
-  const lidW = 2 * (BOX_OHW + m);
-  // galvanised checker plate: duller than polished zinc, or it mirrors the sky
-  const zinc = new THREE.MeshStandardMaterial({ color: 0x6b7178, metalness: 0.15, roughness: 0.7 });
+  // galvanised checker plate in a frame of steel flats: light grey, spangled, matt enough not to mirror the sky
+  const zinc = new THREE.MeshStandardMaterial({
+    color: 0xa4abb0,
+    metalness: 0.35,
+    roughness: 0.55,
+    map: checkerPlate(),
+  });
   const steel = MAT.steel();
+  const frameD = C.boxLidFrameDepth;
   lid.add(mesh(new THREE.BoxGeometry(lidL, C.boxLidThickness, lidW), zinc, [0, 0, lidW / 2]));
-  for (const z of [0.02, lidW - 0.02]) lid.add(mesh(new THREE.BoxGeometry(lidL, 0.03, 0.04), steel, [0, -0.012, z]));
-  for (const x of [-lidL / 2 + 0.02, lidL / 2 - 0.02])
-    lid.add(mesh(new THREE.BoxGeometry(0.04, 0.03, lidW), steel, [x, -0.012, lidW / 2]));
-  lid.add(mesh(new THREE.BoxGeometry(0.22, 0.02, 0.03), steel, [0, 0.018, lidW * 0.82]));
+  const flatY = -(C.boxLidThickness + frameD) / 2;
+  for (const z of [0.02, lidW - 0.02]) lid.add(mesh(new THREE.BoxGeometry(lidL, frameD, 0.04), zinc, [0, flatY, z]));
+  for (const x of [-lidL / 2 + 0.02, 0, lidL / 2 - 0.02])
+    lid.add(mesh(new THREE.BoxGeometry(0.04, frameD, lidW), zinc, [x, flatY, lidW / 2]));
+  // lifting handle on the top face, near the front edge
+  const hh = BOX_LID_HANDLE.height;
+  lid.add(mesh(new THREE.BoxGeometry(0.22, hh, 0.03), steel, [0, C.boxLidThickness / 2 + hh / 2, BOX_LID_HANDLE.z]));
   hinge.add(lid);
-  hinge.rotation.x = -C.boxLidOpenDeg * DEG;
+  hinge.rotation.x = -boxLidOpenAngle();
   g.add(hinge);
-  // two hinge knuckles on the rim
+  // two hinges: a leaf on the rim, a leaf on the cover, the knuckles on the pin between them
+  const knuckleR = C.boxLidHingeDiameter / 2;
   for (const x of [-0.5, 0.5]) {
-    const k = mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.12, 10), steel, [x, BOX_RIM_Y + 0.01, -BOX_OHW - m]);
+    g.add(boxBetween(x - 0.07, BOX_RIM_Y, -BOX_OHW, x + 0.07, BOX_RIM_Y + 0.006, -BOX_OHW + 0.07, steel));
+    g.add(boxBetween(x - 0.07, BOX_RIM_Y, -BOX_OHW - m, x + 0.07, BOX_RIM_Y + 0.006, -BOX_OHW, steel));
+    const k = mesh(new THREE.CylinderGeometry(knuckleR, knuckleR, 0.14, 12), steel, [
+      x,
+      BOX_RIM_Y + C.boxLidThickness / 2,
+      -BOX_OHW - m,
+    ]);
     k.rotation.z = Math.PI / 2;
     g.add(k);
+    lid.add(mesh(new THREE.BoxGeometry(0.14, 0.006, 0.08), steel, [x, C.boxLidThickness / 2 + 0.003, 0.05]));
   }
-  // prop rod from the cover down to a peg in the ground behind the box
-  const leafDir = v3(0, Math.sin(C.boxLidOpenDeg * DEG), Math.cos(C.boxLidOpenDeg * DEG));
-  const leafPoint = hinge.position.clone().addScaledVector(leafDir, 0.9);
-  leafPoint.x = 0.45;
-  g.add(rodBetweenPoints(leafPoint, v3(0.45, SHELF_Y - 0.05, hinge.position.z - 0.85), steel));
   // overflow stub through the south wall, just above the working level and well below the top of the bed (nothing can back up
   // into the gravel), with a flap against animals; a washout plug on its chain in the floor
   const ov = C.boxOverflowDiameter / 2;
   const ovY = BOX_FLOOR_Y + C.boxOverflowHeight;
   const pvcO = MAT.pvcGrey();
   const ovStub = mesh(new THREE.CylinderGeometry(ov, ov, BOX_T + 0.22, lowRes(detail, 16, 10)), pvcO, [
-    -0.3,
+    BOX_OVERFLOW_X,
     ovY,
     BOX_HW + (BOX_T + 0.22) / 2 - 0.04,
   ]);
   ovStub.rotation.x = Math.PI / 2;
   g.add(ovStub);
   const flap = mesh(new THREE.CylinderGeometry(ov * 1.12, ov * 1.12, 0.006, 16), MAT.rubber(), [
-    -0.3,
+    BOX_OVERFLOW_X,
     ovY - 0.012,
     BOX_OHW + 0.185,
   ]);
@@ -164,12 +219,71 @@ export function buildSpringBox(detail: Detail): SpringBox {
   return { group: g, anchor };
 }
 
-function rodBetweenPoints(a: THREE.Vector3, b: THREE.Vector3, material: THREE.Material): THREE.Mesh {
-  const d = b.clone().sub(a);
-  const m = mesh(new THREE.CylinderGeometry(0.007, 0.007, d.length(), 8), material);
-  m.position.copy(a).addScaledVector(d, 0.5);
-  m.quaternion.setFromUnitVectors(v3(0, 1, 0), d.normalize());
-  return m;
+/**
+ * The runnel under the overflow of the box (SPRING frame): a damp strip of earth between two rows of small stones, laid on the
+ * ground from `z0` southwards. It is damp and glossy, not running (the overflow only runs above the working level of the box).
+ */
+function buildRunnel(detail: Detail, x: number, z0: number): THREE.Group {
+  const r = group('box-runnel');
+  const L = C.boxRunnelLength;
+  const W = C.boxRunnelWidth;
+  const ground = (xx: number, zz: number) => groundY(xx + SPRING_X, zz);
+  // the damp bed, a strip that follows the ground (a little sunk between its stones)
+  const n = 8;
+  const pos: number[] = [];
+  const idx: number[] = [];
+  for (let i = 0; i <= n; i++) {
+    const z = z0 + (L * i) / n;
+    const w = (W / 2) * (0.8 + 0.2 * Math.sin(i * 1.7));
+    pos.push(x - w, ground(x - w, z) + 0.004, z, x + w, ground(x + w, z) + 0.004, z);
+    if (i < n) idx.push(i * 2, i * 2 + 2, i * 2 + 1, i * 2 + 1, i * 2 + 2, i * 2 + 3);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  // a film of water on dark earth: it shines with the sky (the worlds' environment is dim, hence the strong reflection)
+  const damp = new THREE.MeshStandardMaterial({
+    color: 0x5d7c8c,
+    roughness: 0.06,
+    envMapIntensity: 2.5,
+    polygonOffset: true,
+    polygonOffsetFactor: -2,
+    polygonOffsetUnits: -2,
+  });
+  const strip = new THREE.Mesh(geo, damp);
+  strip.name = 'runnel-bed';
+  strip.castShadow = false;
+  strip.receiveShadow = true;
+  r.add(strip);
+  // the stones along both sides
+  const R = rng(13);
+  const count = detail === 'full' ? 24 : 14;
+  const stones = new THREE.InstancedMesh(
+    stoneGeometry(),
+    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, flatShading: true }),
+    count,
+  );
+  const m4 = new THREE.Matrix4();
+  const q = new THREE.Quaternion();
+  const e = new THREE.Euler();
+  const tint = new THREE.Color();
+  for (let k = 0; k < count; k++) {
+    const side = k % 2 === 0 ? -1 : 1;
+    const t = (Math.floor(k / 2) + 0.5) / Math.ceil(count / 2);
+    const z = z0 + t * L;
+    const s = 0.06 + 0.04 * R();
+    const xx = x + side * (W / 2 + s * 0.4);
+    e.set(R() * 0.6, R() * 6.28, R() * 0.6);
+    q.setFromEuler(e);
+    m4.compose(v3(xx, ground(xx, z) + s * 0.2, z), q, v3(s, s * 0.6, s * 1.2));
+    stones.setMatrixAt(k, m4);
+    stones.setColorAt(k, tint.setHex(0x7c776d).multiplyScalar(0.8 + R() * 0.35));
+  }
+  stones.castShadow = detail === 'full';
+  stones.receiveShadow = true;
+  r.add(stones);
+  return r;
 }
 
 // ------------------------------------------------------------------------------------------------ gravel bed
@@ -310,9 +424,11 @@ export function buildGravelBed(detail: Detail): GravelBed {
   kerb.receiveShadow = true;
   g.add(kerb);
   // wet gravel on top (a slightly darker, glossy film): its opacity follows the flow of the spring
+  // glossy: from a low view it shines with the sky, the way a wet surface does
   const wetMat = new THREE.MeshStandardMaterial({
     color: 0x2f3d44,
-    roughness: 0.3,
+    roughness: 0.1,
+    envMapIntensity: 2,
     transparent: true,
     opacity: 0,
     depthWrite: false,
@@ -405,7 +521,10 @@ export interface Outcrop {
 /** Colours of the rocks, picked per rock. */
 const ROCK_COLOURS = [0x8a857b, 0x77736b, 0x9a9488, 0x6d6a64, 0x857f72];
 
-/** The rocks of the outcrop behind the gravel bed and of the scarp between the shelf and the bench, merged into one mesh. */
+/**
+ * The rocks of the outcrop behind the gravel bed and of the scarp between the shelf and the bench, merged into one mesh, and the
+ * runnel under the overflow of the box.
+ */
 export function buildOutcrop(detail: Detail): Outcrop {
   const g = group('outcrop');
   const R = rng(11);
@@ -429,10 +548,11 @@ export function buildOutcrop(detail: Detail): Outcrop {
   };
   // the outcrop: tall boulders on both sides of the fissure (a gap of a hand's width), rocks above and around, a dark core behind
   const xFace = BED_X0 - 0.12; // the face, on the bed side
+  // (wet: the water seeps down it; set back from the face, so that the trickle falls in front of it)
   const core = rock(
     31,
-    new THREE.MeshStandardMaterial({ color: 0x2b2924, roughness: 1, flatShading: true }),
-    xFace - 0.3,
+    new THREE.MeshStandardMaterial({ color: 0x2b2924, roughness: 0.35, envMapIntensity: 1.5, flatShading: true }),
+    xFace - 0.55,
     SHELF_Y + 0.35,
     0.12,
     0.55,
@@ -441,11 +561,12 @@ export function buildOutcrop(detail: Detail): Outcrop {
     0.3,
     1,
   );
+  core.name = 'fissure-core';
   g.add(core);
   // depth behind the face, height above the shelf, z, half size in plan, half height
   const rows: [number, number, number, number, number][] = [
     [0.0, 0.5, -0.5, 0.5, 0.55],
-    [0.0, 0.5, 0.74, 0.5, 0.55],
+    [0.15, 0.5, 0.9, 0.5, 0.55], // set back from the fissure: the trickle shows from the south
     [0.0, 1.45, -0.45, 0.55, 0.6],
     [0.0, 1.4, 0.7, 0.55, 0.6],
     [0.02, 1.1, 0.12, 0.62, 0.4],
@@ -494,31 +615,24 @@ export function buildOutcrop(detail: Detail): Outcrop {
   rocks.receiveShadow = true;
   rocks.name = 'rocks';
   g.add(rocks);
-  // the fissure: a dark slit in the face with a wet streak under it
+  // the fissure: the dark wet recess of the core, and the flat stone the water leaves the rock from
   const fissure = v3(xFace - 0.005, SHELF_Y + C.seepHeight, 0.12);
-  const dark = new THREE.MeshStandardMaterial({ color: 0x14130f, roughness: 1 });
-  const slit = mesh(new THREE.BoxGeometry(0.03, 0.5, 0.05), dark, [fissure.x - 0.01, fissure.y + 0.1, fissure.z]);
-  slit.castShadow = false;
-  g.add(slit);
+  // (its front edge stops short of the trickle, which falls from it onto the gravel)
   const lip = rock(
     8,
     new THREE.MeshStandardMaterial({ color: 0x6d6a64, roughness: 1, flatShading: true }),
-    xFace + 0.05,
+    xFace - 0.04,
     SHELF_Y + C.seepHeight - 0.03,
     fissure.z,
-    0.16,
+    0.14,
     0.05,
     0.14,
-    0.3,
+    0,
     0,
   );
+  lip.name = 'fissure-lip';
   g.add(lip);
-  const streak = mesh(
-    new THREE.BoxGeometry(0.004, C.seepHeight - 0.1, 0.1),
-    new THREE.MeshStandardMaterial({ color: 0x4a4a45, roughness: 0.6 }),
-    [xFace + 0.001, SHELF_Y + (C.seepHeight - 0.1) / 2 + 0.05, fissure.z],
-  );
-  streak.castShadow = false;
-  g.add(streak);
+  // the runnel under the overflow of the box (ground, like the rocks: it stays when the box is lifted out)
+  g.add(buildRunnel(detail, BOX_OVERFLOW_X, BOX_OHW + 0.14));
   return { group: g, fissure };
 }

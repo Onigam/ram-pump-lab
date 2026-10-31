@@ -5,11 +5,13 @@ import { partIds } from '../part-ids';
 import { RamSim } from '../sim/engine';
 import type { RamState } from '../sim/types';
 import {
+  BED_TOP_Y,
   BED_X0,
   BED_X1,
   BENCH_Y,
   BOX_FLOOR_Y,
   BOX_OHL,
+  BOX_RIM_Y,
   FEED_X0,
   H_FULL,
   H_LID,
@@ -20,13 +22,14 @@ import {
   SHELF_Y,
   SLAB_R,
   SPRING_X,
+  boxLidOpenAngle,
   feedY,
   groundY,
 } from './catchment/layout';
 import { BLOCK, surfaceY } from './catchment/ground';
 import { EXPLODE, createCatchmentScene, type CatchmentScene } from './catchment/scene';
 import { TANK_APRON } from './catchment/vegetation';
-import { bedZones } from './catchment/spring';
+import { bedZones, buildGravelBed, buildOutcrop, buildSpringBox } from './catchment/spring';
 import { PLATE_Y } from './catchment/tank';
 import * as DIMS from './dims';
 import { runningState, sceneBoxes, stalledState, touches, view } from './test-utils';
@@ -480,6 +483,72 @@ describe('catchment world', () => {
       }
       step(run, { cutaway: false });
       for (const m of plants) expect(planes(m).length, m.name).toBe(0);
+    });
+  });
+
+  describe('the spring reads as a spring', () => {
+    // the film saw the box from 30 m: no water, and a thin dark lid propped half open that stood up like a laptop
+    const box = buildSpringBox('full');
+    const outcrop = buildOutcrop('full');
+    box.group.position.x = SPRING_X;
+    outcrop.group.position.x = SPRING_X;
+    box.group.updateMatrixWorld(true);
+    outcrop.group.updateMatrixWorld(true);
+    const worldVertices = (root: THREE.Object3D): THREE.Vector3[] => {
+      const out: THREE.Vector3[] = [];
+      root.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (!m.isMesh || (m as THREE.InstancedMesh).isInstancedMesh) return;
+        const pos = m.geometry.attributes.position;
+        for (let i = 0; i < pos.count; i++)
+          out.push(new THREE.Vector3().fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld));
+      });
+      return out;
+    };
+
+    it('throws the lid of the box back onto the ground behind it: it rests there, upside down, clear of the box', () => {
+      const hinge = box.group.getObjectByName('box-lid-hinge')!;
+      expect(boxLidOpenAngle()).toBeGreaterThan(Math.PI * 0.95);
+      const v = worldVertices(hinge);
+      expect(v.length).toBeGreaterThan(50);
+      const gaps = v.map((p) => p.y - groundY(p.x, p.z));
+      // nothing of it in the ground, and it touches it (within 5 mm)
+      expect(Math.min(...gaps)).toBeGreaterThan(-0.003);
+      expect(Math.min(...gaps)).toBeLessThan(0.005);
+      // lying low (never higher than the rim and its frame), all of it north of the box
+      expect(Math.max(...v.map((p) => p.y))).toBeLessThan(BOX_RIM_Y + 0.08);
+      expect(Math.max(...v.map((p) => p.z))).toBeLessThan(-DIMS.SPRING.basinWidth / 2 - DIMS.SPRING.basinWall + 0.01);
+    });
+
+    it('lets the trickle fall free from the lip of the fissure onto the gravel: no rock in its way', () => {
+      const rocks: THREE.Mesh[] = [];
+      outcrop.group.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (!m.isMesh || o.name === 'runnel-bed') return;
+        (m.material as THREE.Material).side = THREE.DoubleSide;
+        rocks.push(m);
+      });
+      const bed = buildGravelBed('full');
+      const top = SHELF_Y + DIMS.CATCHMENT.seepHeight - 0.06; // under the lip stone the water leaves from
+      const ray = new THREE.Raycaster();
+      for (const [dx, dz] of [
+        [0, 0],
+        [0.012, 0],
+        [-0.012, 0],
+        [0, 0.012],
+        [0, -0.012],
+      ]) {
+        const from = new THREE.Vector3(SPRING_X + bed.drop.x + dx, top, bed.drop.z + dz);
+        ray.set(from, new THREE.Vector3(0, -1, 0));
+        ray.far = top - BED_TOP_Y;
+        expect(ray.intersectObjects(rocks, false).map((h) => h.object.name)).toEqual([]);
+      }
+    });
+
+    it('drains its overflow into a stone-lined runnel that lies on the ground', () => {
+      const runnel = outcrop.group.getObjectByName('runnel-bed') as THREE.Mesh;
+      expect(runnel).toBeDefined();
+      for (const p of worldVertices(runnel)) expect(Math.abs(p.y - groundY(p.x, p.z) - 0.004)).toBeLessThan(0.002);
     });
   });
 

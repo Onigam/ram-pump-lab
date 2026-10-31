@@ -34,6 +34,7 @@ import {
   groundY,
 } from './layout';
 import { Splash } from './splash';
+import { minWidthStream } from '../site/pipes';
 import {
   PLATE_Y,
   SCREEN_X0,
@@ -144,6 +145,9 @@ export interface CatchmentModel {
   clip(obj: THREE.Object3D): void;
 }
 
+/** The trickle of the spring is drawn at least this many pixels wide (at a view 800 px high). */
+const TRICKLE_MIN_PIXELS = 4;
+
 const unit = (): THREE.CylinderGeometry => new THREE.CylinderGeometry(1, 1, 1, 10, 1, true);
 
 /** A rectangle of `bar` with gaps (holes of a wall) cut out of it along one axis; returns the rectangles left. */
@@ -236,16 +240,25 @@ export function createCatchmentModel(opts: ModelOptions): CatchmentModel {
     waterMaterial(0.5, 0x4a9bd0),
   );
   boxBody.renderOrder = 1;
+  // the surface of the water in the box: a clear blue that shines with the sky, so that it reads as water from afar too
+  const boxSurfaceMat = waterMaterial(0.72, 0x6db9e6);
+  boxSurfaceMat.roughness = 0.12;
+  boxSurfaceMat.envMapIntensity = 0.9;
   const boxSurface = new THREE.Mesh(
     new THREE.PlaneGeometry(2 * BOX_HL - 0.004, SPRING.basinWidth - 0.004),
-    waterMaterial(0.6, 0x8cc9f0),
+    boxSurfaceMat,
   );
   boxSurface.rotation.x = -Math.PI / 2;
   boxSurface.renderOrder = 1;
   waterS.add(boxBody, boxSurface);
   const streamMat = () => waterMaterial(0.75, 0x9bd0f0);
   const fallIn = new THREE.Mesh(unit(), streamMat());
-  const trickle = new THREE.Mesh(unit(), streamMat());
+  // the trickle of the spring ("a trickle of water, nothing more"): clear water, a little brighter than the others, and never
+  // thinner than a few pixels, so that the spring reads as a spring from across the hillside
+  const trickleMat = waterMaterial(0.92, 0xd2ecfc);
+  trickleMat.envMapIntensity = 0.9;
+  const trickleWidth = minWidthStream(trickleMat, TRICKLE_MIN_PIXELS);
+  const trickle = new THREE.Mesh(unit(), trickleMat);
   const overJet = new THREE.Mesh(unit(), streamMat());
   const drainJet = new THREE.Mesh(unit(), streamMat());
   fallIn.name = 'jet-feed';
@@ -542,8 +555,9 @@ export function createCatchmentModel(opts: ModelOptions): CatchmentModel {
     splashIn.update(dt, wet && src > 0.05 ? 18 * fall : 0, wet && src > 0.05);
     const dropTop = SHELF_Y + C.seepHeight;
     placeStream(trickle, bed.drop.x, dropTop, BED_TOP_Y, bed.drop.z, 0.008 * fall, src > 0.05);
+    trickleWidth.uniforms.uRadius.value = trickle.scale.x;
     splashSeep.update(dt, wet && src > 0.05 ? 10 * fall : 0, wet && src > 0.05);
-    (bed.wet.material as THREE.MeshStandardMaterial).opacity = wet ? 0.4 * clamp(src / SITE.sourceFlowLpm, 0, 1) : 0;
+    (bed.wet.material as THREE.MeshStandardMaterial).opacity = wet ? 0.55 * clamp(src / SITE.sourceFlowLpm, 0, 1) : 0;
 
     // overflow and drain pour into the head of the ditch
     const gFloor = gutterFloor();

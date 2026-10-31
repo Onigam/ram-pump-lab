@@ -3,10 +3,10 @@ import { l } from '@onigam/lab-kit/i18n';
 import { MAT, PartRegistry, clamp, group, roundedPath } from '@onigam/lab-kit/three';
 import type { Hotspot, SceneModule, ViewOpts } from '@onigam/lab-kit/three';
 import type { RamState } from '../../sim/types';
-import { HOUSE, SITE, TANK, TOWER } from '../dims';
+import { CATCHMENT, HOUSE, SITE, TANK, TOWER } from '../dims';
 import { FlowDots } from '../common';
 import { applyPipeKind, pipeKindOf, type PipeKind } from '../catchment/geo';
-import { BOX_RIM_Y, CORNER, H_LID, SPRING_X } from '../catchment/layout';
+import { BED_X0, BED_X1, BOX_HL, BOX_HW, BOX_RIM_Y, CORNER, H_LID, SPRING_X } from '../catchment/layout';
 import { createCatchmentModel, type CatchmentModel, type Hold } from '../catchment/model';
 import { farCopy } from '../lod';
 import { mergeStatic } from '../merge';
@@ -20,7 +20,7 @@ import { deliveryPolyline, spaced } from './routes';
 import { createShadowAim } from './shadow';
 import { minWidthMaterial, pickAlong, swapGeometry, tubeAlong } from './pipes';
 import { createSky } from './sky';
-import { buildTerrain } from './terrain';
+import { buildTerrain, type Terrain } from './terrain';
 import { buildVegetation } from './vegetation';
 import { buildWasteDrain, type WasteDrain } from './waste';
 
@@ -48,6 +48,8 @@ export interface SiteScene extends SceneModule<RamState>, Warmable {
   deliveryLength(): number;
   /** Height of the rendered ground at (x, z). */
   surfaceY(x: number, z: number): number;
+  /** The ground of the site (the tests read its openings). */
+  readonly terrain: Terrain;
   /** The catchment model of the tank and the spring (the same as the `catchment` world), and the waste-water drain. */
   readonly catchment: CatchmentModel;
   readonly waste: WasteDrain;
@@ -173,6 +175,13 @@ export function createSiteScene(): SiteScene {
     const tankFloor = p.fall - TANK.outletAboveFloor;
     relocate('buffer-tank', tank, tx, tankFloor, 0);
     relocate('spring', spring, tx + SPRING_X, tankFloor, 0);
+    // the ground is not drawn inside the spring box and over the gravel bed: they are dug into it, and the grass would cover
+    // the water of the box and the stones of the bed
+    const sx = tx + SPRING_X;
+    terrain.setOpenings([
+      [sx - BOX_HL, -BOX_HW, sx + BOX_HL, BOX_HW],
+      [sx + BED_X0, -CATCHMENT.filterWidth / 2, sx + BED_X1, CATCHMENT.filterWidth / 2],
+    ]);
     relocate('water-tower', tower.group, TOWER.planX, p.head - TOWER.groundBelowInlet, TOWER.planZ);
     relocate('house', house, HOUSE.planX, HOUSE.terraceFraction * p.head, HOUSE.planZ);
     // the overflow ditch lies on the ground, in the frame of the tank
@@ -356,6 +365,7 @@ export function createSiteScene(): SiteScene {
     waste,
     deliveryLength: () => lengthDelivery,
     surfaceY: (x, z) => terrain.surfaceY(x, z),
+    terrain,
     follow: (s) => void follow(s),
     update,
   };
