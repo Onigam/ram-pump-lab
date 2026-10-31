@@ -40,6 +40,54 @@ same, `SPRING.distanceToTank` = 4.2 m west). `layout.ts` derives every coordinat
 
 Nothing flows while a part is exploded, hidden or a wire (`Hold`): the water of a hidden container goes, not the others'.
 
+## The spring box, the trickle, the runnel (fixes after the film, 31/10/2026)
+
+The film saw the catchment from 30 m (O02): no water, and a thin dark lid propped half open that stood up like a laptop. Same
+build in both worlds (`catchment/spring.ts`):
+
+- **The lid** (galvanised checker plate on a frame of 30 mm flats, `boxLidFrameDepth`, light grey with a procedural tread) is
+  thrown back over its two hinges (`boxLidHingeDiameter`, a leaf on the rim and one on the lid) and lies upside down on the ground
+  behind the box. Its angle is derived from the ground (`layout.ts` `boxLidOpenAngle`: a little more than half a turn, until a
+  far corner or the handle touches); the prop rod is gone.
+- **The water**: the surface of the box is a clearer, glossier blue. In the site the ground is no longer drawn over the box and
+  the gravel bed (`terrain.ts` `setOpenings`: two rectangles in plan, cut in the fragment shader, that follow the sliders): the
+  grass covered the gravel and came within 2.5 cm of the water.
+- **The trickle** ("un filet d'eau, rien de plus") is drawn at least 4 px wide (`site/pipes.ts` `minWidthStream`: the shader
+  widens the stream with the distance, like the pipes), clear and bright. The dark core of the outcrop is set back 0.25 m and the
+  boulder south of the fissure 0.15 m, the lip stone stops short of the stream: it falls free in front of the rock and shows from
+  the south (it went through the core rock, and the boulder hid it from O02). The slit and the streak, a black stick in front of
+  the rock, are gone; the core is a wet, glossy dark rock.
+- **The runnel** under the overflow stub of the box: a damp strip between two rows of stones, 1.6 x 0.2 m (`boxRunnelLength`,
+  `boxRunnelWidth`), part of the ground decoration (it stays when the box is exploded). **Decoration**: the model's box never
+  overflows (its working level is under the overflow invert), so the runnel is damp and glossy, not running.
+- **The grass of the catchment world** grows only on the grass of the top (off the gravel apron of the tank, `TANK_APRON`), and the
+  section clips the tufts and the trees like the ground they stand on (tufts of the front half stood on the paper floor and in
+  front of the cut faces).
+- Tests (`catchment.test.ts`): the lid rests on the ground (nothing in it, touching it within 5 mm), the trickle meets no rock
+  (five vertical rays), the runnel lies on the ground, the tufts are inside the block and on grass, the section clips the plants.
+  (`site.test.ts`): the openings of the ground follow the box and the bed for three settings of the sliders.
+
+## The pipes reach the pit (fixes after the film, 31/10/2026)
+
+- **Drive pipe.** The pad of the pit was graded over the corridor of the pipe: the pipe hung up to 1.6 m over the ground on the
+  last 10 m, saddles in the air, then dived into the pad 4 m before the wall. The corridor is now applied after the pads: the
+  ground stays 0.23 m under the pipe all the way down (`driveBedY`), the slope comes down to the pad, and from there the pipe goes on
+  down to its elbow in a trench (`TRENCH`: 0.5 m floor, banks of 2:1, three forced grid lines along z = 0) to the west wall of the
+  pit, which it enters through a mortar collar. Saddles every 3 m down to the trench, now tilted with the slope (they were tilted
+  the other way, a corner 18 cm in the ground). The flow dots run on the curve of the tube itself (a spline through the four
+  corners strayed 0.1 to 0.3 m off it, and on into the grass).
+- **Delivery pipe.** It was buried over its first 9 m: from afar its blue line stopped 50 to 60 px short of the pit. It now runs
+  from the stub of the ram along the pit to the east wall, up the wall, out through the curb just above the ground (a collar),
+  and lies on the ground all the way (its axis a pipe radius over it, for every diameter). The tube is three tubes in one mesh
+  (the pit with short runs and tight bends, the route sampled every 0.6 m, the riser and gooseneck sampled every 0.1 m), and the
+  dot path follows the same three curves, its points close where it bends. The foot of the riser is a short round bend (the spline
+  through a square corner dipped 5 cm under the ground and swung 8 cm past the riser).
+- The drawings read the same polyline: D12's table moves by at most 0.2 m, the length now reads 300 m (it read 299).
+- Tests (`site.test.ts`, three settings of the sliders): the drive pipe is never under the ground and never more than its saddle
+  over it from the bench to the wall, ends past the wall on the axis, the trench floor is at the wall; every saddle rests on the
+  ground; the delivery pipe starts at the stub, leaves above the ground and under the top of the curb, lies on the ground for 40 m;
+  every flow dot is within 1 cm of the surface of its tube.
+
 ## Site changes
 
 Waste-water drain (`waste-drain`, `site/waste.ts`): pit drain Ø 100 → buried pipe (2 % fall, two inspection chambers) → headwall where the
@@ -70,6 +118,34 @@ What the site draws at its home view (1280 x 800, shadow pass included; see `doc
 - Left as they are: the drive and delivery pipes (one tube each, reshaped when the sliders move), the sky, the water.
 
 The sun's shadow map is still 2,048 x 2,048 (a smaller one is a lever with a visible cost); a pixel ratio cap on small screens belongs to the kit.
+
+After the fixes of 31/10/2026 (same method, Metal): site 261 -> 266 draw calls, 245,266 -> 247,694 triangles (the two collars, the
+runnel and its stones, the finer delivery tube at the tower); catchment 188 -> 189, 66,969 -> 68,057. The shadow fit costs about
+0.04 ms a call on an M3 Pro (75 rays of about 100 steps on the grid of the ground; one call per draw and one per update).
+
+## The sun's shadow box (fix after the film, 31/10/2026)
+
+The film found the shadows of a whole hillside changing sharpness from one frame to the next in slow camera moves (O01 at 0:16.40,
+S04 at 1:00.13, S25 at 3:11.63): the box took sizes by steps of 30 % (and 112 m whenever the view axis met no ground), at a
+distance found by a march in steps of 7 %. `shadow-fit.ts` makes the box a continuous function of the camera, and of the camera
+alone:
+
+- the distance to what the camera looks at is the harmonic mean of 15 rays over the middle of the picture (rows at 0, ±4, ±8
+  degrees, columns at 0, ±10), each a thin vertical fan of five rays (±1 degree); each ray is followed in steps of 6 % and lets
+  through the share of a step that lies above the ground (linear between its ends), so that a crest the view comes down over is
+  passed gradually, not in one frame; a ray that meets nothing counts for 600 m;
+- the half size is 0.55 times that distance, 10 to 320 m, continuous (no steps); the focus is snapped to the texels of the map,
+  so that a pan or an orbit at a constant size does not shimmer;
+- the box is aimed in `scene.onBeforeRender`, with the camera of the draw that is starting (it used the camera of the previous
+  draw): the first frame after a cut has its own shadows. The catchment world aims its box the same way, at the plane of the work
+  (y = 1, or 0.5 m under a lower camera), continuously, between 2.2 and 10.6 m (its old smallest and largest steps).
+
+Measured by rendering the film's moves frame by frame (headless Chrome, Metal, 960 x 540, the frame-to-frame mean change of the
+pixels, 0 to 255): O01, the worst frame was 2.84 times the median of its 16 neighbours before (frame 492: 1.94 against 0.68), 1.06
+after; S04 11.2 before (frame 138: 2.03 against 0.18), 1.12 after; S25 10.7 before, 1.15 after. Near the ram the box is 10 m (the
+old smallest step was 10.6 m). `shadow.test.ts` follows the film's moves, an orbit and a tilt step by step (at most 3 % of size per
+frame, against steps of 30 %), checks that the same camera gives the same box whatever came before, and that the draw aims the
+box before the shadow pass.
 
 ## To wire in `src/lab.ts` (lead)
 
