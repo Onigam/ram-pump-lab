@@ -1,329 +1,353 @@
-# QA review: the fixes after the film (shadow box, grass, spring, pipes)
+# QA review: kit 0.5.0, the warm picture, and the second pass on the spring
 
 Independent review against `lab-kit/docs/lab-quality.md`, written by a reviewer who did not build these changes.
 
-- **Date**: 2026-10-31.
-- **Commit**: `7460d22`. These are five local commits on top of `0f05e30`, not pushed: `ee75dfe` shadow box, `7550756` grass,
-  `c6c90e0` spring, `f75ea77` pipes, `7460d22` docs.
-- **Setup**: dev server on port 5863. The pre-fix tree (`0f05e30`) was served on 5864 from a scratch copy for before/after comparisons.
-  Headless Chrome 155. The kit walks use SwiftShader; the frame-by-frame captures, the close-ups and the spoken guide use Metal
-  (Apple M3 Pro).
+- **Date**: 2026-11-01.
+- **Commit**: `c227dca`, five local commits on top of `04c7db8`, not pushed:
+  - `fc1e832`, `4e9ebc0`, `c69220a`: the previous review's D1, D3, D4 and D5, the z-fight beside the box, and D6 sent to the kit;
+  - `f1ad669`: kit v0.5.0 (MSAA, a look per world, device quality) and the lab's near detail;
+  - `c227dca`: the catchment's grass tufts melt into the ground from afar.
+- **Kit**: `@onigam/lab-kit` 0.5.0, from the `dist/` already in `node_modules` (`~/Dev/lab-kit` `main` b7b2e7d, tag `v0.5.0`, not
+  pushed). I did not run `npm install`.
+- **Setup**:
+  - Dev server on port 5863.
+  - For before/after comparisons, the previous commit (`04c7db8`) was served on port 5864 from a scratch copy, with kit 0.4.0
+    extracted from the kit's `v0.4.0` tag. Every "before" figure below comes from that copy.
+  - Headless Chrome 155. The kit walks use SwiftShader; everything else uses Metal (Apple M3 Pro).
+  - Another agent was rendering a film on the same machine during the review. This slowed the SwiftShader walks; it does not
+    change any figure.
 - **Walked**:
   - 1280 px in French and English with every part: 189 + 189 shots.
   - 768 and 390 px in French and English, worlds and modes: 4 × 57 shots.
-  - The intro and the site segment of the spoken guide in both languages: 85 shots.
-  - 12 frame-by-frame camera moves on the new build and 5 on the old build: 4,000 frames.
-  - About 150 hand-set close-ups: lid, trickle, runnel, collars, trench, saddles and riser at 4 slider settings; D11 to D13 in both
-    languages.
-  - In all, 5,523 PNG files.
-- **Folder**: `~/.cache/lab-review/ram-pump-lab/2026-10-31-7460d22/`. Each walk has its own `index.md`. The scripts are in
+  - The kit's `flicker.mjs` on both builds in all four worlds, plus the same moves with a still camera and with the simulation
+    paused.
+  - My 10 slow moves of the previous review, again: 2,440 frames.
+  - Close-ups:
+    - the spring in both worlds at 3 slider settings;
+    - the 32 stones at 3 distances;
+    - the pipes at 4 settings;
+    - the section of the spring box at 4 distances.
+  - The spoken guide (intro and site segment) in both languages.
+  - A 2 GB phone and a CPU-throttled phone.
+  - In all, about 4,300 image files.
+- **Folder**: `~/.cache/lab-review/ram-pump-lab/2026-11-01-c227dca/`. Each walk has its own `index.md`. The scripts are in
   `~/.cache/lab-review/ram-pump-lab/scripts/`.
-- **Console**: 0 errors and 0 failed requests in the 6 walks, the 2 guide runs and every script.
+- **Console**: 0 errors and 0 failed requests in the six walks, the two guide runs and every script.
 
 ## Gates
 
-| Gate                   | Result                                                                                                                                          |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run typecheck`    | pass (0.7 s)                                                                                                                                    |
-| `npm run format:check` | pass                                                                                                                                            |
-| `npm test`             | pass: 801 tests in 31 files (8.9 s)                                                                                                             |
-| `npm run build`        | pass: JS 1,532.0 kB (465.2 kB gzip), CSS 37.2 kB. The "chunk larger than 1500 kB" warning was already there at `0f05e30` (1,525.6 kB); +6.4 kB. |
+| Gate                   | Result                                                                                                                |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `npm run typecheck`    | pass                                                                                                                  |
+| `npm run format:check` | pass                                                                                                                  |
+| `npm test`             | pass: 818 tests in 32 files (8.6 s); 801 in 31 at `7460d22`                                                           |
+| `npm run build`        | pass: JS 1,594.6 kB (482.2 kB gzip), 62.6 kB more than at `7460d22`; CSS 37.2 kB. The size warning was already there. |
 
-**The standard's shortfalls**: none are printed. This lab predates `src/standard.ts` and `src/standard.test.ts`, so `npm test` has
-nothing to report. Counted by hand, the lab meets the bar:
+**The standard's shortfalls**: none printed. This lab has no `src/standard.ts`, so `npm test` has nothing to report. Counted by
+hand, it still meets the bar:
 
 - 4 worlds;
 - 44 part sheets;
 - assembly guide 24 steps, installation guide 12;
-- 6 lessons with 12 quiz questions;
+- 6 lessons, 12 quiz questions;
 - 13 drawings;
 - spoken guide of 49 segments in French and in English;
-- README in English first, then `## Français`;
-- `lab.json` tagline and tags filled.
+- README in English first, then French.
 
-`public/lab.json` has no `"status"` field (D9).
+`public/lab.json` still has no `"status"` (D10).
+
+## The previous review's defects
+
+| Previous                             | Now                                                                                                                                                                                                                                               |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1 runnel read as running water      | **Fixed.** Dark wet earth with moss, matte (`catchclose/cmp-catch-runnel-close.png`).                                                                                                                                                             |
+| D2 warm and full picture             | **Addressed** by kit 0.5.0 and the near detail. Remarks on the look: D2 to D4 below.                                                                                                                                                              |
+| D3 lid and box at long drive lengths | **Fixed.** At 16 settings (fall 2 to 24 m × drive length 20 to 60 m), the box rim stands 0.07 to 0.12 m above the site ground; the lid touches the ground; its far corner is within 35 mm of it, its handle within 26 mm (`close/sheet-lid.png`). |
+| D4 trickle like a white rod          | **Fixed.** Close up it wavers, has streaks and drops, and a foam ring where it lands (`catchclose/cmp-catch-trickle-1m5.png`).                                                                                                                    |
+| D5 sheet did not describe the lid    | **Fixed** in both languages: the lid shown thrown back, its make-up, and the runnel with its size (`cmp-springbox-sheet.png`).                                                                                                                    |
+| D6 pivot on the tank shell           | **Fixed** by kit 0.5.0. With the intake screen selected, after the same drag it stays centred (0.06, −0.04) at 2.1 m (before: 3.1, −2.7, out of view).                                                                                            |
+| D7 label overlaps                    | Open; now D8.                                                                                                                                                                                                                                     |
+| D8 banding on the far hills          | **Mostly fixed.** One faint band is left (`cmp-far-slopes.png`, top: before, bottom: after).                                                                                                                                                      |
+| D9 `lab.json` status                 | Open; now D10.                                                                                                                                                                                                                                    |
+| Z-fight beside the box (film S17)    | **Fixed.** The earth sliver that flickered in the bed's caps is gone (`cmp-zfight-heat.png`, left: before, right: after). Another one remains at the box floor: D1.                                                                               |
 
 ## Rule by rule (`lab-quality.md`)
 
 **§1 Mechanics you can believe**
 
-- Every moving part attached to what drives it: ✓. The lid has two hinges, each with a leaf on the rim, a leaf on the lid and a
-  knuckle (`catchclose/catch-lid-hinge-new.png`). Both pipes enter the pit walls through collars (`pipes/sheet-collars.png`).
-- Nothing floats, nothing sinks: **D3**. Otherwise ✓:
-  - In the site, at the default settings, the lid rests on a far corner (−4 mm) and on its handle (+22 mm).
-  - Saddles, delivery pipe and runnel lie on the ground at 4 slider settings.
-  - The catchment lid passes the builder's test.
-- Things turn the right way, at a readable speed: ✓. These commits change no motion; the dots run on the tubes.
+- Moving parts attached: ✓ (lid hinges, pipe collars, valve stack).
+- Nothing floats, nothing sinks: ✓.
+  - The lid and the box at 16 settings (table above).
+  - The stones at 7 settings: every foot is under the ground (the highest 0.097 m under it), and every top stands out by at least
+    0.36 × its size.
+- Direction and speed: ✓. Unchanged; the flow dots now fade in and out at the ends of their paths instead of popping.
 - A part sits where it acts: ✓.
-- The maker's dimensions before the model: ✓. The new dimensions (`boxRunnel*`, `boxLidFrameDepth`, `boxLidHingeDiameter`) are in
-  `dims.ts`, tagged estimate.
+- Dimensions from `dims.ts`: ✓.
 
 **§2 One machine, the same everywhere**
 
-- Same machine in two worlds: ✓. The spring box is the same `catchment/spring.ts` build in `site` and `catchment`. The lid angle,
-  though, is derived from the catchment world's ground (D3).
-- Every system has a place to look at it: ✓ (4 worlds).
-- A tool that teaches nothing is left out: ✓.
+- Same machine in both worlds: ✓. The lid now rests on each world's own ground.
+- Every system has a place: ✓ (4 worlds).
+- No useless tool: ✓.
 
 **§3 Scenery and water**
 
-- Every prop reads as what it is: ✓ for the lid, which now reads as a galvanised lid lying flat (`dist3/cmp-site-spring-12m.png`;
-  this fixes the film's M2). **D4** for the trickle seen from close up.
-- Polish pass: ✓ (unchanged).
-- Water follows the physics: **D1** (the runnel).
-- Device found in its setting: ✓. Both pipes reach the pit in sight from 30 m, with their dots on them, at 4 settings
-  (`pipes/sheet-flows-pit-30m.png`); this fixes the film's m-b.
+- Every prop reads as what it is: ✓, except D2 (the anchor block) and D3 (the valve plinth).
+  - The stones read as stones at 2 m and 8 m, and as small grey stones from 30 m (`stones/sheet-*.png`).
+- Polish pass: ✓.
+  - Near detail on the site (grass patches, crown shading, stones) and contact shadows under the studio devices.
+  - The far slopes have mostly lost their stripes.
+- Water follows the physics: ✓. The runnel is damp; the trickle falls free.
+- Device found in its setting: ✓ at 1280 and 390 px; D9 at 768 px. Both pipes reach the pit at 4 settings
+  (`pipes/sheet-flows-pit-30m.png`).
 - A warm, full, stable picture:
-  - Stable: ✓. No shadow jump in 17 slow moves (table below), and no added shimmer (live box against frozen box).
-  - Warm and full: **D2**, still open.
+  - Warm and full: **✓, with D2 to D4**.
+  - Stable: **D1** (a flicker in the section of the spring box) and D5 (the ram); otherwise ✓, see the measurements.
 
 **§4 Camera, layout, way in**
 
-- The camera turns around what you look at: ✓ for `water-tower` and `house` in the site and for `spring-box` in the catchment: the
-  part stays at the centre and the distance is unchanged after an orbit. **D6** when the part is behind the tank shell.
-- Nothing crushed at any width: ✓. Nothing new is clipped at 1280, 768 or 390 px. The phone layout is the same as before these
-  commits.
-- The spoken guide is the way in: ✓. The first-visit invitation shows (`1280-fr/000-first-visit.png`).
+- The camera turns around what you look at: ✓ (the previous D6 is fixed).
+- Nothing crushed: ✓ at 1280, 768 and 390 px in both languages. Labels: D8. The phone layout is the same as before these commits.
+- The spoken guide is the way in: ✓.
 
-**§5 Depth and clarity**
+**§5 Depth and clarity**: ✓ (no change).
 
-- As much detail per device as Pelton: ✓.
-- Title and description in both languages: ✓ («Labo du bélier hydraulique» / «Hydraulic Ram Lab»).
-- README in English first, French at the end: ✓.
+**§6 Honest numbers**: ✓ (no change to the simulation or the texts, apart from the spring-box sheet).
 
-**§6 Honest numbers, said once**
+**§7 The spoken guide**: ✓ in both languages, for the intro and the site segment.
 
-- Nothing tuned to the source's figures: ✓ (no change to the simulation).
-- Warnings once; no research references: ✓. `(K…)` and `(S…)` appear in code comments only.
-
-**§7 The spoken guide**
-
-- The 3D follows the voice: ✓ in both languages, for the intro and the site segment (details below).
-- Subtitles on by default: ✓.
-- «Voix de synthèse» / «Synthetic voice» shown: ✓.
-- No failed request: ✓.
-- Whisper back-check: not re-run; no audio changed.
+- Same cue timings as before.
+- «Voix de synthèse» / «Synthetic voice» shown.
+- Subtitles present.
+- No failed request.
+- Whisper was not re-run: no audio changed.
 
 **§8 The review**: this report.
 
 ## Defects
 
-**0 blockers, 2 major, 7 minor.**
-
-- D1, D3, D4 and D5 come from these five commits.
-- D2 and D6 to D9 were there before them.
+**0 blockers, 1 major, 9 minor.** D1, D8, D9 and D10 were there before these commits; D2 to D7 came with them or with kit 0.5.0.
 
 ### Major
 
-**D1 · The runnel reads as running water, but the model says the box never overflows.** _New, `c6c90e0`._
+**D1 · In the section, the floor of the spring box flickers under its water.** _Pre-existing; not touched by these commits._
 
-- **Where**: catchment world, and the site's spring, close up. It shows in the app's own close framing of `spring-box`, at the lower
-  left.
-- **What is wrong**: the strip under the overflow stub is a light, sky-blue, glossy ribbon between two rows of stones. It reads as a
-  little stream leaving the overflow, yet no water comes out of the stub. `docs/3d-site.md` says the runnel should be "damp and glossy,
-  not running", because the box's working level is below the overflow invert.
-- **Rule**: §3, "the water follows the physics … overflow in proportion to the model's numbers".
-- **Likely fix**: in `buildRunnel` (`src/three/catchment/spring.ts`), the material is `color 0x5d7c8c, roughness 0.06,
-envMapIntensity 2.5`. Dark wet earth with less sky reflection would read as damp. Alternatively, list it in a `docs/water.md` and make
-  it read as damp.
+- **Where**: `catchment` world, «Coupe» on, the spring box seen from 3 to 8 m, as in the film's catchment shots.
+- **What is wrong**: the floor of the box under the water shows grey and blue stripes that change at every frame.
+- **Measured**: an orbit of 0.1° a frame, 60 frames. Pixels that flicker in more than a quarter of the frames:
+
+| Distance | Pixels |
+| -------: | -----: |
+|    3.2 m | 16,661 |
+|      6 m |  4,803 |
+|      8 m |  2,631 |
+
+The same stripes are in the build before (`zfight-old-heat.png`).
+
+- **Likely cause**: two coplanar faces. The top of the silt (`spring.ts`, the `silt` box, at `BOX_FLOOR_Y + boxSediment`) is in the
+  plane of the bottom of the water body (`model.ts` lines 571 and 572: `boxBody` starts at `BOX_FLOOR_Y + C.boxSediment`).
+- **Rule**: §3, "coplanar faces".
 - **Shots**:
-  - `catchclose/cmp-trickle.png` (bottom row: before on the left, after on the right);
-  - `catchclose/catch-runnel-close-new.png`;
-  - `1280-fr/041-catchment-spring-box-close.png`.
-
-**D2 · The "warm, full" half of §3 is still open.** _Not a regression; open since the film (31/10)._
-
-- **What is wrong**: the owner's words were « la 3D un peu froide … des shaders à rajouter … moins vide ». These commits address
-  stability only.
-- **What the renderer has**:
-  - render passes: `RenderPass`, two outline passes, `OutputPass`;
-  - ACES tone mapping and PCF shadows;
-  - no ambient occlusion pass;
-  - few textures (the new checker plate is the only new one).
-- **Scope**: whether the lab gets a warmth pass is for the owner to decide.
+  - `zfight-new-waterbottom.png` (three consecutive frames);
+  - `zf-sheet.png` (frame and flicker map at 3, 6 and 8 m);
+  - `cmp-zfight-heat.png`.
 
 ### Minor
 
-**D3 · In the site, at long drive lengths, the spring box stands out of the ground and the new lid hangs in the air.**
-_The lid is new (`c6c90e0`); the ground under it is older._
+**D2 · The ram's concrete anchor block now reads as pale wood or paper.** _New with the paper studio (`f1ad669`)._
 
-- **Where**: `site` world, `spring`, after the Simulation sliders are moved.
-- **Measured** (lid corner and box rim height above the ground, in metres):
+- The block was a light concrete grey (#dcd9d3). Under Neutral tone mapping at 1.2 it is cream (#f7e9d2), almost the colour of the
+  paper floor it stands on (#fdf0db).
+- It reads like a light wooden board under the machine.
+- **Shots**: `look-ram.png` (left: before, right: after), `1280-fr/082-ram-foundation-close.png`.
+- **Likely file**: `src/three/ram/foundation.ts` (`MAT.concrete()` × 0.8).
 
-| Fall | Drive length | Far corner of the lid | Box rim |
-| ---: | -----------: | --------------------: | ------: |
-|    2 |           52 |                  1.12 |    0.97 |
-|   12 |           60 |                  1.16 |    1.04 |
-|  7.5 |           56 |                  0.92 |    0.79 |
-|   24 |           60 |                  0.85 |    0.81 |
+**D3 · The valve's "pale beech" plinth reads as a peach slab.** _New (`f1ad669`); the owner judges._
 
-- **Pre-existing part**: the box rim heights are identical at `0f05e30`.
-- **New part**: `boxLidOpenAngle()` takes the catchment world's ground by default, so in the site the lid no longer rests on anything.
-- **Test gap**: `site.test.ts` checks the ground openings at 3 settings, but not the lid or the box against the site ground.
-- **Likely cause**: `createGround` in `src/three/site/layout.ts`, where the catchment blend does not hold at long drive lengths, and
-  `hinge.rotation.x = -boxLidOpenAngle()` in `spring.ts`.
-- **Shots**: `close/lid-f12-L60-ne-3m.png`, `close/lid-f12-L60-south-6m.png`, `close/sheet-lid.png`. The default setting is fine:
-  `close/lid-f7.5-L20-south-6m.png`.
+- The new colour `#cdb594` is drawn as #fbddba, more orange than before (#eedcbc).
+- It sits on a cream floor with little contrast, and shows no grain at 1 to 2 m.
+- **Shot**: `look-valve.png`. **File**: `src/three/valve/bench.ts`.
 
-**D4 · From 1 to 4 m, the trickle looks like a white rod.** _Restyled in `c6c90e0`._
+**D4 · The catchment's grass has turned lime.** _New with the paper studio; the owner judges._
 
-- **What is wrong**: it is an opaque-looking, perfectly straight white cylinder of constant width, from the lip stone to the gravel,
-  with no visible splash. From 12 m and 30 m it now reads as water and shows from the south, which is the fix the film asked for.
-- **Where**: the catchment's close framings (`gravel-filter`, `spring-box`).
-- **Likely fix**: `trickleMat = waterMaterial(0.92, 0xd2ecfc)` in `src/three/catchment/model.ts` could be more transparent near the
-  camera, or the minimum width could apply only from afar.
-- **Shots**: `catchclose/catch-trickle-1m5-new.png`, `catchclose/cmp-trickle.png` (top row).
+- Close-up grass: #c3d088 before, #d5f076 now. The mean saturation of the world's overview went from 0.15 to 0.27.
+- The earth layers and the copper section caps turn a strong orange.
+- The same hillside in the site is a dark olive (#2f4011): the two worlds no longer look like the same meadow.
+- **Shots**: `cmp-041-catchment-spring-box-close.png`, `look-catchment.png`, `catchclose/cmp-catch-cut-front-low.png`.
 
-**D5 · The `spring-box` part sheet does not describe the lid that is now drawn.** _New in the 3D (`c6c90e0`); the sheet is unchanged._
+**D5 · The ram world shimmers a little more than before.** _New (`f1ad669`)._
 
-- **What the sheet says**: the box is « une chambre fermée … à l'abri des feuilles et des animaux » and the lid spec is « acier
-  galvanisé, 4 mm ».
-- **What the 3D shows**: a checker plate on a frame of 30 mm flats, with two gate hinges, thrown open onto the ground.
-- **Missing**: no sheet says the lid is shown open so that the water can be seen, and no visitor-facing text mentions the runnel.
-- **D13**: draws the lid closed. That is correct for a design drawing.
+- The kit's measure:
 
-**D6 · The orbit pivots on the tank shell instead of the selected part.** _Kit behaviour, pre-existing._
+| Move  |  Before |   After |
+| ----- | ------: | ------: |
+| Orbit | 0.070 % | 0.089 % |
+| Dolly | 0.478 % | 0.521 % |
 
-- **Where**: `catchment` world, `intake-screen` selected from its label (camera 2.2 m away), then an orbit.
-- **What is wrong**: the pivot lands on the translucent tank shell in front of the part. After a 250 px drag the screen is out of view
-  (normalised position 3.1, −2.7) and the camera is 1.1 m from it.
-- **Shot**: `pivot/sheet-pivot.png`, bottom row.
+- My slow orbit, simulation paused:
+  - shimmer 0.127 % before, 0.195 % after;
+  - pixels flickering in more than a quarter of the frames: 3 before, 324 after.
+- The flicker sits along the foot of the anchor block on the floor and on the feet of the two pedestals (probably the new contact
+  shadow or the wear pattern).
+- It is small in absolute terms, but the ram is the only world whose picture got less stable.
+- **Shots**: `cmp-ramheat.png`, `ramheat-zoom.png`.
 
-**D7 · Label overlaps.** _Pre-existing (Q-05 of the wave 4 report); the lead had already noted the catchment one._
+**D6 · Kit: a device slower than 4 frames a second never lowers its pixel ratio.**
 
+- **Measured**: a 390 px phone with 2 GB of memory (emulated, `navigator.webdriver` hidden), SwiftShader, CPU throttled 4×.
+  - Frames took 200 to 717 ms.
+  - The ratio stayed at 1.5 for the 24 s measured.
+- **Cause**: `FrameGovernor.push` (`look-policy.js`) ignores every interval over 250 ms, so the slowest devices are never judged.
+- **The rest works**:
+  - The 2 GB phone gets FXAA at a pixel ratio of 1.5.
+  - An 8 GB device with the CPU throttled 6× (Metal) stepped from 2 to 1.75 and then held 60 frames a second.
+  - Unthrottled, it stayed at 2.
+  - The FXAA picture is clean (`weak/sheet-weak.png`).
+
+**D7 · Kit tool: `flicker.mjs` reports the valve as a "pop" because the valve moves.**
+
+- Spike 10.6 (orbit) and 4.7 (dolly), against 3.9 and 3.3 with kit 0.4.0.
+- With the camera still, the same measure gives a spike of 31 in both builds: the valve's head and weight move during the measure.
+- It is the valve beating, not a defect of the picture. MSAA lowers the median frame difference, which raises the ratio.
+- The tool should hold the simulation. Its shimmer figure for the valve is unchanged (0.137 %).
+
+**D8 · Label overlaps.** _Pre-existing (the previous D7, wave 4 Q-05)._
+
+- Site: «Captage de la source» over «Fosse du bélier» (`1280-fr/002-site-spring-setting.png`).
 - Catchment, exploded: «Filtre à gravier» over «Regard de captage» (`1280-fr/067-catchment-exploded.png`).
-- Site:
-  - «Captage de la source» over «Fosse du bélier» (`1280-fr/002-site-spring-setting.png`);
-  - «Conduite motrice» over «Fosse du bélier» (`1280-fr/009-site-drive-pipe-close.png`).
-- 390 px, site with every label: «Captage de la source» over «Évacuation des eaux de rejet» (`390-fr/005-site-labels.png`).
+- With every label: the catchment's and the valve's labels stack (`768-fr/019-catchment-labels.png`, `768-fr/047-valve-labels.png`).
 
-**D8 · Faint vertical banding on the far hills.** _Pre-existing (the film's m-a); not addressed by these commits._
+**D9 · At 768 px the site and the catchment are seen through heavy fog.** _Pre-existing._
 
-- **Shot**: `framediff/site-tilt-up/0200.png`, the hill faces at the top of the picture.
+- For a 3D view 380 px wide, the camera stands far back and the haze covers most of the picture.
+- The catchment block is also cut by the left edge of the view.
+- The site's new haze is a little flatter.
+- **Shots**: `cmp-768-site.png`, `cmp-768-catchment.png` (left: before, right: after).
 
-**D9 · `public/lab.json` has no `"status"` field, and there is no `src/standard.ts` test.** _Process._
-
-- The lead calls the lab released, but neither `npm test` nor the showcase can see that state, as `lab-standard.md` requires.
+**D10 · `public/lab.json` has no `"status"`, and there is no `src/standard.ts` test.** _Pre-existing; process._
 
 ## Measurements
 
-### Shadows (§3 "stable")
+### Picture stability: the kit's `flicker.mjs`
 
-**Method**: the camera is set by hand every frame and stays put while the frame renders; the moves are in
-`scripts/framediff*.mjs`. The difference is the mean change of the grey level (0 to 255) of the 3D view (842 × 678) from one frame
-to the next. "Worst" is the largest ratio of a frame's difference to the median of its 16 neighbours. The box size is read from the
-sun's shadow camera.
+1280 × 720, 150 frames a move, clocks pinned, Metal. "Before" is `04c7db8` with kit 0.4.0; "after" is `c227dca` with kit 0.5.0.
 
-| Move (new build)               | Frames | Median difference | Worst frame / median | Box half size (m) | Largest box step per frame |
-| ------------------------------ | -----: | ----------------: | -------------------: | ----------------: | -------------------------: |
-| site, orbit at the ram 14 m    |    240 |              1.61 |                 1.06 |      10.0 (fixed) |                          0 |
-| site, dolly 6 m to 119 m       |    300 |              2.94 |                 1.25 |       10.0 – 62.9 |                     1.09 % |
-| site, orbit at the tank        |    240 |              1.65 |                 1.01 |       11.3 – 11.8 |                     0.28 % |
-| site, overview orbit           |    240 |              2.13 |             1.93 (a) |     141.7 – 144.7 |                     0.03 % |
-| site, tilt up to the sky       |    240 |              4.01 |                 1.17 |       24.0 – 87.2 |                     1.06 % |
-| site, slow dolly               |    300 |              1.39 |                 1.29 |       10.3 – 26.0 |                     0.33 % |
-| site, slow tilt                |    240 |              2.25 |             1.57 (a) |       24.0 – 37.0 |                     0.24 % |
-| catchment, orbit               |    240 |              1.58 |                 1.13 |        10.6 (cap) |                          0 |
-| catchment, dolly 2.5 m to 27 m |    240 |              3.40 |                 1.03 |       2.98 – 10.6 |                     0.92 % |
-| catchment, tilt up             |    200 |              6.00 |                 1.02 |       2.96 – 10.6 |                     2.11 % |
+| World     | Move  | Shimmer before | Shimmer after | Spike before | Spike after |
+| --------- | ----- | -------------: | ------------: | -----------: | ----------: |
+| site      | orbit |         1.69 % |       0.755 % |         1.37 |        1.36 |
+| site      | dolly |        3.847 % |       2.543 % |         1.30 |        1.27 |
+| catchment | orbit |        0.672 % |       0.669 % |         1.42 |        1.41 |
+| catchment | dolly |        2.525 % |       2.362 % |         1.37 |        1.40 |
+| ram       | orbit |        0.070 % |       0.089 % |         1.78 |        2.00 |
+| ram       | dolly |        0.478 % |       0.521 % |         1.55 |        1.58 |
+| valve     | orbit |        0.137 % |       0.137 % |    3.88 (D7) |  10.59 (D7) |
+| valve     | dolly |        0.397 % |       0.328 % |    3.28 (D7) |   4.71 (D7) |
 
-(a) These two peaks are whole-image motion edges, with the box size continuous across them. The capture caught two camera steps in
-one frame (masks: `framediff/site-overview-orbit-69-mask.png`, `framediff-slow-new_site-slow-tilt-170-mask.png`). They are not shadow
-changes.
+- These match the builder's figures for the site and the catchment.
+- The site is the clear gain: its shimmer is halved in an orbit and down by a third in a dolly.
+- The catchment is level with kit 0.4.0, thanks to `c227dca`.
+- The ram is a little worse (D5).
 
-**The old build (`0f05e30`) on the same moves**: the box jumped by 30 % within a frame in every move that crossed a size step.
+### My slow moves, against the previous review
 
-| Move       | Old: worst / median | New: worst / median | Old: box step at         |
-| ---------- | ------------------: | ------------------: | ------------------------ |
-| slow dolly |                1.62 |                1.29 | frame 135, 13.8 → 17.9 m |
-| slow tilt  |                2.14 |                1.57 | frame 176                |
+The worst frame against the median of its 16 neighbours, Metal, 1280 × 800.
 
-**Shimmer**: each move ran twice, once with the live box and once with the box frozen at its first frame (60 frames of a 0.2 %
-dolly or a 0.1° orbit). The frame-to-frame change is the same both ways:
+| Move                        |    31/10 | 01/11 |
+| --------------------------- | -------: | ----: |
+| site, ram orbit at 14 m     |     1.06 |  1.05 |
+| site, dolly from 6 to 119 m |     1.25 |  1.31 |
+| site, tank orbit            |     1.01 |  1.05 |
+| site, overview orbit        | 1.93 (a) |  1.05 |
+| site, tilt up to the sky    |     1.17 |  1.14 |
+| site, slow dolly            |     1.29 |  1.06 |
+| site, slow tilt             | 1.57 (a) |  1.01 |
+| catchment, orbit            |     1.13 |  1.13 |
+| catchment, dolly            |     1.03 |  1.03 |
+| catchment, tilt             |     1.02 |  1.02 |
 
-| Move             | Live box | Frozen box |
-| ---------------- | -------: | ---------: |
-| site, far dolly  |    1.380 |      1.379 |
-| catchment, dolly |    1.397 |      1.393 |
-| catchment, orbit |    1.023 |      1.022 |
+(a) A capture-timing artefact on 31/10, not the picture.
 
-The continuous box adds no shimmer. Files: `shimmer/`.
+- No shadow jump and no pop: the shadow box steps by at most 2.1 % a frame, as before.
+- One catchment orbit gave 2.62 once; the labels jumped in the same frame, so the capture caught the camera between two poses. A
+  rerun gave 1.13.
 
-**Shadows near the machine and from afar**: shadowed pixels in fixed views (shadows on against off, `shadowmask/`) are the same,
-old against new:
+### The look (§3, warm and full)
 
-| View                |    Old |    New |
-| ------------------- | -----: | -----: |
-| catchment home      | 11,363 | 12,303 |
-| catchment, 25 m     |  3,164 |  3,214 |
-| site home           | 57,219 | 57,384 |
-| site, ram from 25 m | 36,130 | 30,457 |
+**What reads well**
 
-The edge shifts at the ram are the sun moving with the lab's clock between the two runs. In the catchment, from 35 m and more,
-neither build draws shadows on the block; this is not a regression.
+- The studio floor is warm paper (#fdf0db; it was a grey #f2f0ed), the colour of the interface around it.
+- Brass, the red handles and the blue air chamber read warmer.
+- Soft contact shadows sit under the devices.
+- In the site:
+  - the sky is deeper and the haze warmer;
+  - the trees have shaded crowns;
+  - the far slopes are almost free of stripes (`cmp-far-slopes.png`).
+- The site's mean saturation went from 0.48 to 0.57; its brightness is about the same, and its shadows are less black.
 
-**Cost**: aiming the box costs 0.06 ms a frame with nothing selected and 0.16 ms with a part selected (3 draws, Metal, M3 Pro).
+**What reads wrong**: the concrete block (D2), the valve plinth (D3), the catchment's lime grass and orange section (D4).
 
-**Not reproduced**: the first frame after a camera cut. Puppeteer's screenshot renders a later frame, so the old build looked clean
-too. This rests on the builder's `shadow.test.ts`.
+### The stones
 
-### The pipes at 4 slider settings
+- **Count**: 32 stones in 9 groups, laid the same at every load.
+- **In the ground**: at 7 slider settings (from fall 2 m / drive length 5 m up to fall 30 m / drive length 60 m), every foot is under
+  the ground and every top above it.
+- **Smallest clearance from each part over the 7 settings**:
 
-The settings are default (7.5 / 20 / 65 / 27), low (3 / 12 / 40 / 20), high (15 / 40 / 100 / 54) and maximum (30 / 60 / 150 / 54).
-At each one:
+| Part          | Clearance |
+| ------------- | --------: |
+| delivery pipe |    1.95 m |
+| spring        |    2.19 m |
+| waste drain   |     3.1 m |
+| buffer tank   |     6.1 m |
+| drive pipe    |    7.26 m |
+| pit           |    8.25 m |
+| house         |    9.45 m |
+| water tower   |   10.05 m |
 
-- **Drive pipe** (`pipes/sheet-trench.png`, `pipes/sheet-collars.png`): it comes down the slope on saddles. The saddles are tilted
-  with the slope and rest on the ground (`pipes/sheet-saddles-side.png`). Near the pit the pipe runs in a trench to the west wall and
-  goes through it in a collar.
-- **Delivery pipe** (`pipes/sheet-flows-pit-above.png`, `pipes/sheet-collars.png`): it runs along the pit, up the east wall and out
-  under the curb through a collar, then lies on the ground.
-- **Riser foot**: a short round bend at the tower (`pipes/sheet-riser.png`).
-- **Flow dots**: on both tubes, from 30 m (`pipes/sheet-flows-pit-30m.png`).
+- **Shots**: each group at 2, 8 and 30 m (`stones/sheet-2m.png`, `stones/sheet-8m.png`, `stones/sheet-30m.png`).
 
-### The drawings D11 to D13 (French and English, `drawings/`)
+### Weak devices (390 px)
 
-- D11: no regression.
-- D12:
-  - the table reads 300 m with the pipe at 65.8 m;
-  - the pipe level every 50 m is 0.2 / 5.0 / 20.6 / 26.4 / 41.7 / 53.4 / 65.8 m.
-- D13: draws the lid closed on the rim. That is the design state; see D5.
-- No overlap is new.
+- **2 GB phone**: FXAA, pixel ratio 1.5, adaptive. No error; the site, the catchment and the ram are clean (`weak/`). D6 covers very
+  slow devices.
+- **Automated browsers and `?quality=full`**: they always get the fixed full picture (MSAA 4, pixel ratio 2). This is why every walk
+  here shows the best case.
+- **Pipe line on the phone**: the delivery line in the overview is as visible as before (`phone/cmp-zoom.png`).
 
-### The spoken guide (`narration/`, `--autoplay-policy=no-user-gesture-required`)
+### The spring, the drawings and the sheets
 
-- **Durations**: intro 113.7 s (French) and 116.2 s (English); site segment 33.8 s and 39.0 s.
-- **The 3D follows the voice**, in both languages: catchment at 19.6 s, site, ram at 29.5 s, valve at 48.8 s, then the modes
-  Simulation, Lessons, Assembly, Installation, Drawings, Explore.
-- **Site cues**: flows on at 3.3 s, then each `frame:` cue in turn, then flows off at 30.5 s.
-  - `frame:spring` shows the outcrop, the box and the lid lying flat (`narration/cues/fr-site-at-5s.png`).
-  - `frame:drive-pipe` and `frame:ram-pit` show both pipes with their dots reaching the pit (`narration/cues/fr-site-at-10.5s.png`,
-    `narration/cues/fr-site-at-14.5s.png`).
-- **Subtitles**: present in every sample taken while the guide played. The one exception is a single English sample at position 0.
-  The longest caption is 109 characters.
-- **Requests**: none failed.
+- **Spring**: see the table of the previous defects.
+- **Drawings**: D11, D12 and D13 are byte for byte the SVGs of the previous review, in both languages.
+- **Sheets**: the spring-box sheet adds the lid shown thrown back, the lid's make-up and the runnel, in both languages. No other
+  sheet changed.
+
+### The spoken guide
+
+- **Durations**: intro 113.7 s (French) and 116.2 s (English); site segment 33.8 s and 39.0 s, as before.
+- **Cues**: the changes of world and mode come at the same positions as on 31/10.
+- **Site segment**: the framings match the previous review's at the same positions (`narration/cmp-cues.png`). The spring cue shows
+  the new lid lying flat.
 
 ## The owner's past finds, as a test set
 
-| Past find                                     | In this lab                                                                                                        |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| A spring in the void                          | ✓ The lid is on its hinges; the pipes go into the walls through collars.                                           |
-| A wheel turning backwards                     | ✓ No motion changed. Dot direction not re-measured.                                                                |
-| Specs crushed under a long text               | ✓ No change; sheets readable at 3 widths.                                                                          |
-| An untranslated title                         | ✓                                                                                                                  |
-| A fixed camera pivot                          | ✓ with one case: D6.                                                                                               |
-| A missing equipment room                      | ✓ Every system has its world.                                                                                      |
-| A chain not attached                          | ✓ Lid hinges, pipe collars.                                                                                        |
-| The jellyfish tree (a prop nobody recognises) | The lid no longer reads as a laptop. Close up, the trickle reads as a rod (D4); the runnel reads as a stream (D1). |
-| The sunk generator (floating or sunk)         | ✓ at the default settings. At long drive lengths the lid floats and the box stands proud (D3).                     |
-| A lab called finished with two worlds         | ✓ 4 worlds. `lab.json` does not record the state (D9).                                                             |
+| Past find                                   | In this lab                                                                     |
+| ------------------------------------------- | ------------------------------------------------------------------------------- |
+| A spring in the void                        | ✓ The lid is on its hinges and on the ground, in both worlds, at every setting. |
+| A wheel turning backwards                   | ✓ No motion changed.                                                            |
+| Specs crushed under a long text             | ✓                                                                               |
+| An untranslated title                       | ✓                                                                               |
+| A fixed camera pivot                        | ✓ Fixed by kit 0.5.0 (the previous D6).                                         |
+| A missing equipment room                    | ✓                                                                               |
+| A chain not attached                        | ✓                                                                               |
+| The jellyfish tree (an unrecognisable prop) | ✓ for the stones, the runnel and the trickle; D2 and D3 for two colours.        |
+| The sunk generator (floating or sunk)       | ✓ The lid, the box and the stones were measured.                                |
+| A lab called finished with two worlds       | ✓ 4 worlds; D10 for the status field.                                           |
 
 ## Not checked
 
-- Real phones, Safari and Firefox.
-- The voice itself: the owner listens. No Whisper pass either, since no audio changed.
-- The film's moves re-rendered through `onigam-video`. The builder measured those (O01, S04, S25); I ran moves of my own.
-- The first frame after a camera cut (see above).
-- Every part at three distances in exploded, x-ray and isolated views for the `ram` and `valve` worlds. Those worlds are untouched by
-  these commits and were only walked at the kit's default framings.
-- The direction of the flow dots.
-- The site at every combination of the sliders: 16 combinations of fall and drive length were measured for D3.
+- Real phones (the adaptive quality on a real weak GPU), Safari and Firefox.
+- The voice itself.
+- The film re-rendered through `onigam-video` with the new look and supersampling.
+- Every part at three distances in exploded, x-ray and isolated views for `ram` and `valve`. These worlds were walked at the kit's
+  framings only.
+- GPU frame times. The builder gives +0.2 to +1.4 ms a frame on an M3 Pro; I did not re-measure them.
