@@ -112,14 +112,18 @@ export interface ChamberGeometry {
 }
 
 export function buildChamber(ctx: RamCtx): ChamberGeometry {
+  // a clean painted vessel, its inside bare steel: wear at a fifth (review of film v5, n6: the steel above the water was marbled)
   const blue = MAT.pvcBlue();
+  blue.userData.wear = { amount: 0.2 };
   const steel = MAT.steel();
   const { outerRuns, innerRuns, poly, innerUp, yTop } = vesselProfiles();
   const g = group('air-chamber');
   g.position.set(RAM.xDelivery, CHAMBER.shellBottom, 0);
   const shell = mesh(lathe(outerRuns, 64), blue);
   // the inside of the vessel is bare steel: air and water read against it in the section
-  const lining = mesh(lathe(innerRuns, 64), MAT.zinc());
+  const liningMat = MAT.zinc();
+  liningMat.userData.wear = { amount: 0.2 };
+  const lining = mesh(lathe(innerRuns, 64), liningMat);
   g.add(shell, lining);
   // weld seam rings at the shell / dome joints
   const seam = MAT.steelBlack();

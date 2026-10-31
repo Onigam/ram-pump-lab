@@ -58,6 +58,7 @@ export function materialSignature(m: THREE.Material): string | undefined {
     s.opacity,
     s.map?.uuid,
     s.normalMap?.uuid,
+    JSON.stringify(s.userData.wear ?? null),
     s.roughnessMap?.uuid,
     s.metalnessMap?.uuid,
     s.emissiveMap?.uuid,
@@ -72,6 +73,8 @@ export function materialSignature(m: THREE.Material): string | undefined {
     s.depthTest,
     s.clippingPlanes?.length ?? 0,
     s.clipShadows,
+    // the wear a part asks for (detail.ts, applyWear) is kept: parts that ask for different wear never share a material
+    JSON.stringify(s.userData.wear ?? null),
   ].join('|');
 }
 
@@ -113,7 +116,7 @@ export function colourMaterial(key: string, like: THREE.Material): THREE.MeshSta
     m = (like as THREE.MeshStandardMaterial).clone();
     m.color.set(0xffffff);
     m.vertexColors = true;
-    m.userData = { baked: true };
+    m.userData = { baked: true, wear: (like as THREE.MeshStandardMaterial).userData.wear };
     m.name = 'baked';
     coloured.set(key, m);
   }

@@ -224,6 +224,21 @@ describe('the look of the worlds (kit 0.5)', () => {
     expect(vertexShader).toContain('smoothstep( 1.5, 3.0');
   });
 
+  it('the air bell is a clean painted vessel: its paint and its steel lining are worn at a fifth only, after merging too', () => {
+    const amounts = new Set<number>();
+    for (const mesh of ram.registry.get('air-chamber')!.meshes) {
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const mat of mats) {
+        const wear = mat.userData.wear as { amount?: number } | undefined;
+        if (wear?.amount !== undefined) {
+          amounts.add(wear.amount);
+          expect(mat.customProgramCacheKey()).toContain('-0.2');
+        }
+      }
+    }
+    expect([...amounts]).toEqual([0.2]);
+  });
+
   it('contact shadows darken around a footprint, never inside it (the foot of the body is never darkened)', () => {
     const c = contactShadow(1, 1, 0.1);
     const mat = c.material as THREE.MeshBasicMaterial;
