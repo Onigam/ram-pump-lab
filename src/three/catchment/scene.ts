@@ -108,8 +108,11 @@ export function createCatchmentScene(): CatchmentScene {
   const block = buildBlock();
   const model = createCatchmentModel({ detail: 'full', driveStub: true, section: true, xEnd: BLOCK.x1 });
   model.springFrame.position.x = SPRING_X;
-  root.add(block.group, model.springFrame, model.tankFrame, buildVegetation());
+  const vegetation = buildVegetation();
+  root.add(block.group, model.springFrame, model.tankFrame, vegetation);
   for (const m of block.clipped) model.clip(m);
+  // the grass and the trees go with the ground they stand on: the section removes those of the front half with it
+  model.clip(vegetation);
 
   // ---- parts, explode offsets, hotspots
   const registry = new PartRegistry();

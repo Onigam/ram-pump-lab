@@ -5,7 +5,9 @@ import { CATCHMENT as C } from '../dims';
 import { BEND_X, OUT_X, SLAB_R, SPRING_X, groundY } from './layout';
 import { surfaceY } from './ground';
 
-// A little vegetation on the block: tufts of grass and a few young conifers at the back (north side), instanced.
+// A little vegetation on the block: tufts of grass and a few young conifers at the back (north side), instanced. Tufts grow on
+// the grass of the top only: inside the block (a tuft is never on the paper floor), off the gravel apron of the tank, the rocks,
+// the excavations and the pipes. The scene clips them with the section, like the ground they stand on.
 
 const flat = (g: THREE.BufferGeometry): THREE.BufferGeometry => (g.index ? g.toNonIndexed() : g);
 
@@ -47,6 +49,11 @@ function conifer(): THREE.BufferGeometry {
   return mergeGeometries(parts.map(flat))!;
 }
 
+/** Distance a tuft keeps from the edges of the block, metres (a tuft is at most 0.4 m wide). */
+export const TUFT_MARGIN = 0.3;
+/** Width of the gravel apron round the slab of the tank that has no grass, metres (the ground is gravel there, ground.ts). */
+export const TANK_APRON = 1.2;
+
 export function buildVegetation(): THREE.Group {
   const group = new THREE.Group();
   group.name = 'vegetation';
@@ -55,7 +62,7 @@ export function buildVegetation(): THREE.Group {
   const keep = (x: number, z: number): boolean => {
     if (Math.hypot(x - SPRING_X, z * 0.7) < 2.1 && Math.abs(x - SPRING_X) < 2.6) return false; // spring box and bed
     if (x > -2.5 && x < -1.4) return false; // the scarp: rocks
-    if (Math.hypot(x, z) < SLAB_R + 0.4) return false; // the tank
+    if (Math.hypot(x, z * 0.8) < SLAB_R + TANK_APRON) return false; // the tank and the gravel round it
     if (x > OUT_X - 0.2 && Math.abs(z) < 0.7) return false; // drive pipe and its saddles
     if (x > -0.5 && Math.abs(z - C.gutterZ) < 0.6 && x < C.blockEast) return false; // the ditch and the pipes to it
     if (x < SPRING_X - 2 && Math.abs(z) < 3.8) return false; // the outcrop
@@ -64,8 +71,8 @@ export function buildVegetation(): THREE.Group {
   };
   const tufts: { x: number; z: number; s: number; r: number }[] = [];
   for (let k = 0; k < 4000 && tufts.length < 190; k++) {
-    const x = -C.blockWest + 0.3 + R() * (C.blockWest + C.blockEast - 0.6);
-    const z = (R() - 0.5) * 2 * (C.blockHalfWidth - 0.3);
+    const x = -C.blockWest + TUFT_MARGIN + R() * (C.blockWest + C.blockEast - 2 * TUFT_MARGIN);
+    const z = (R() - 0.5) * 2 * (C.blockHalfWidth - TUFT_MARGIN);
     if (keep(x, z)) tufts.push({ x, z, s: 0.1 + R() * 0.14, r: R() * 6.28 });
   }
   const inst = new THREE.InstancedMesh(
@@ -87,6 +94,7 @@ export function buildVegetation(): THREE.Group {
     inst.setMatrixAt(i, m4);
     inst.setColorAt(i, pal[Math.floor(R() * pal.length)]);
   });
+  inst.name = 'tufts';
   inst.receiveShadow = true;
   inst.castShadow = false;
   inst.userData.noShadow = true;

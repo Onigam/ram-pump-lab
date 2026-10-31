@@ -18,11 +18,14 @@ import {
   OUT_Y,
   R,
   SHELF_Y,
+  SLAB_R,
   SPRING_X,
   feedY,
   groundY,
 } from './catchment/layout';
+import { BLOCK, surfaceY } from './catchment/ground';
 import { EXPLODE, createCatchmentScene, type CatchmentScene } from './catchment/scene';
+import { TANK_APRON } from './catchment/vegetation';
 import { bedZones } from './catchment/spring';
 import { PLATE_Y } from './catchment/tank';
 import * as DIMS from './dims';
@@ -458,6 +461,74 @@ describe('catchment world', () => {
       expect(shellCaps.every((c) => !c.visible)).toBe(true);
       reg.setDisplay('tank-shell', 'solid');
       step(run, { cutaway: false });
+    });
+
+    it('takes the grass and the trees of the front half away with the ground (no tuft is left in the air or on the floor)', () => {
+      const run = runningState();
+      const plants: THREE.InstancedMesh[] = [];
+      mod.scene.getObjectByName('vegetation')!.traverse((o) => {
+        if ((o as THREE.InstancedMesh).isInstancedMesh) plants.push(o as THREE.InstancedMesh);
+      });
+      expect(plants.length).toBe(3);
+      const planes = (m: THREE.Mesh) => (m.material as THREE.Material).clippingPlanes ?? [];
+      step(run, { cutaway: true });
+      for (const m of plants) {
+        expect(planes(m).length, m.name).toBe(1);
+        // the plane keeps z <= 0 (the back half), as for the ground
+        expect(planes(m)[0].distanceToPoint(new THREE.Vector3(0, 0, 1)), m.name).toBeLessThan(0);
+        expect(planes(m)[0].distanceToPoint(new THREE.Vector3(0, 0, -1)), m.name).toBeGreaterThan(0);
+      }
+      step(run, { cutaway: false });
+      for (const m of plants) expect(planes(m).length, m.name).toBe(0);
+    });
+  });
+
+  describe('grass', () => {
+    const tufts = mod.scene.getObjectByName('tufts') as THREE.InstancedMesh;
+    const m4 = new THREE.Matrix4();
+    const p = new THREE.Vector3();
+    const q = new THREE.Quaternion();
+    const s = new THREE.Vector3();
+    const each = (fn: (p: THREE.Vector3, size: number) => void) => {
+      for (let i = 0; i < tufts.count; i++) {
+        tufts.getMatrixAt(i, m4);
+        m4.decompose(p, q, s);
+        fn(p, s.x);
+      }
+    };
+
+    it('grows tufts only on the top of the block, inside its footprint (none on the paper floor)', () => {
+      expect(tufts.count).toBeGreaterThan(100);
+      tufts.geometry.computeBoundingBox();
+      // the widest a tuft reaches from its foot, at its scale
+      const reach = Math.max(
+        ...[tufts.geometry.boundingBox!.min, tufts.geometry.boundingBox!.max].flatMap((v) => [
+          Math.abs(v.x),
+          Math.abs(v.z),
+        ]),
+      );
+      each((pos, size) => {
+        const r = reach * size;
+        expect(pos.x - r).toBeGreaterThan(BLOCK.x0);
+        expect(pos.x + r).toBeLessThan(BLOCK.x1);
+        expect(pos.z - r).toBeGreaterThan(BLOCK.z0);
+        expect(pos.z + r).toBeLessThan(BLOCK.z1);
+        // standing on the surface of the top
+        expect(Math.abs(pos.y - surfaceY(pos.x, pos.z))).toBeLessThan(0.02);
+      });
+    });
+
+    it('keeps them on the grass: off the excavations, the rocks of the scarp, the gravel round the tank and the bare slope', () => {
+      each((pos) => {
+        const xs = pos.x - SPRING_X;
+        expect(Math.abs(xs) < BOX_OHL + 0.05 && Math.abs(pos.z) < DIMS.SPRING.basinWidth / 2 + 0.2).toBe(false);
+        expect(xs > BED_X0 - 0.3 && xs < BED_X1 && Math.abs(pos.z) < DIMS.CATCHMENT.filterWidth / 2 + 0.3).toBe(false);
+        expect(pos.x > -DIMS.CATCHMENT.scarpLip - 0.2 && pos.x < -DIMS.CATCHMENT.scarpFoot + 0.15).toBe(false);
+        expect(Math.hypot(pos.x, pos.z * 0.8)).toBeGreaterThan(SLAB_R + TANK_APRON - 1e-6);
+        // the ground under a tuft is never steep (rock is drawn on the steep ground, ground.ts)
+        const slope = Math.abs(surfaceY(pos.x + 0.15, pos.z) - surfaceY(pos.x - 0.15, pos.z)) / 0.3;
+        expect(slope).toBeLessThan(0.35);
+      });
     });
   });
 
