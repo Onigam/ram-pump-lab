@@ -20,7 +20,7 @@ export function buildFoundation(ctx: RamCtx): void {
   // poured concrete: a neutral grey, clearly darker than the paper floor it stands on. Under the paper studio's Neutral curve the
   // kit's warm concrete at 0.8 came out cream, as the floor (review D2); its stains are grey, not the warm ones of the metal parts
   const concrete = MAT.concrete();
-  concrete.color.set(0x9ea4aa).multiplyScalar(0.36);
+  concrete.color.set(0x9ea4aa).multiplyScalar(0.44);
   concrete.userData.wearTint = [0.94, 0.95, 0.97];
   // the pit of the site world also has a plinth with the same top: this pad wins the tie, so nothing flickers
   concrete.polygonOffset = true;

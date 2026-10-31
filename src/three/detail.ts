@@ -195,10 +195,18 @@ export function crownShading(mat: THREE.MeshStandardMaterial, y0: number, y1: nu
 
 /**
  * The darker border on a floor around what stands on it (the ambient light the floor does not get next to a body): a footprint
- * of `w` by `d` metres, centred, fading over `falloff`. Multiplied over the floor; lay it on the floor, polygon offset keeps it
- * in front of it. Not a part: no shadow, no picking.
+ * of `w` by `d` metres, centred, fading over `falloff`. Multiplied over the floor. Lay it between the floor and the body's
+ * underside: in front of the floor by depth alone, behind the body's foot, so the body always covers it. Inside the footprint
+ * it darkens nothing, so a pixel of the body's foot that it might reach is never darkened. `polygonOffset` only for a floor seen
+ * from far, where depth alone cannot tell it from the floor. Not a part: no shadow, no picking.
  */
-export function contactShadow(w: number, d: number, falloff: number, strength = 0.45): THREE.Mesh {
+export function contactShadow(
+  w: number,
+  d: number,
+  falloff: number,
+  strength = 0.45,
+  polygonOffset = false,
+): THREE.Mesh {
   const N = 128;
   const W = w + 2 * falloff;
   const D = d + 2 * falloff;
@@ -207,8 +215,12 @@ export function contactShadow(w: number, d: number, falloff: number, strength = 
     for (let i = 0; i < N; i++) {
       const dx = Math.max(0, Math.abs(((i + 0.5) / N - 0.5) * W) - w / 2);
       const dz = Math.max(0, Math.abs(((j + 0.5) / N - 0.5) * D) - d / 2);
-      const a = Math.max(0, 1 - Math.hypot(dx, dz) / falloff);
-      const v = strength * a * a * (3 - 2 * a);
+      // 0 inside the footprint, rising over the first fifth of the falloff, then fading: no hard dark line at the body's foot,
+      // which drew a strong edge that crawled as the camera moved (review D5)
+      const t = dx > 0 || dz > 0 ? Math.hypot(dx, dz) / falloff : 0;
+      const rise = Math.min(1, t / 0.2);
+      const a = t > 0 ? rise * rise * (3 - 2 * rise) * Math.max(0, 1 - t) : 0;
+      const v = strength * a;
       const k = (j * N + i) * 4;
       // a warm darkening, as the ink of the shadows (not a grey)
       data[k] = Math.round(255 * (1 - v));
@@ -230,9 +242,9 @@ export function contactShadow(w: number, d: number, falloff: number, strength = 
     premultipliedAlpha: true,
     depthWrite: false,
     toneMapped: false,
-    polygonOffset: true,
-    polygonOffsetFactor: -2,
-    polygonOffsetUnits: -4,
+    polygonOffset,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -1,
   });
   const m = new THREE.Mesh(new THREE.PlaneGeometry(W, D), mat);
   m.rotation.x = -Math.PI / 2;

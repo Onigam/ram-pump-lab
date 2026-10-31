@@ -105,8 +105,9 @@ export function createCatchmentScene(): CatchmentScene {
   scene.add(rim);
   scene.add(paperFloor(36, 8, BASE_Y - PLINTH_H - 0.001));
   // the floor a little darker along the foot of the plinth
-  const contact = contactShadow(BLOCK.x1 - BLOCK.x0 + 0.08, BLOCK.z1 - BLOCK.z0 + 0.08, 0.6, 0.45);
-  contact.position.set((BLOCK.x0 + BLOCK.x1) / 2, BASE_Y - PLINTH_H + 0.002, 0);
+  // seen from 10 to 20 m: between the floor (1 mm below the plinth) and the plinth's underside, with a polygon offset
+  const contact = contactShadow(BLOCK.x1 - BLOCK.x0 + 0.08, BLOCK.z1 - BLOCK.z0 + 0.08, 0.6, 0.45, true);
+  contact.position.set((BLOCK.x0 + BLOCK.x1) / 2, BASE_Y - PLINTH_H - 0.0004, 0);
   scene.add(contact);
   // the trickle of the spring keeps its minimum width at any height of the view
   trackViewHeight(scene);

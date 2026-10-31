@@ -79,7 +79,8 @@ export function createRamScene(): RamScene {
   // wear on the parts, and the floor a little darker along the foot of the anchor block
   applyWear(model.root, 60);
   const contact = contactShadow(FOUNDATION.length, FOUNDATION.width, 0.07, 0.5);
-  contact.position.set(RAM.bodyLength / 2, FOUNDATION_BOTTOM + 0.0002, 0);
+  // between the floor (0.5 mm below the block) and the block's underside
+  contact.position.set(RAM.bodyLength / 2, FOUNDATION_BOTTOM - 0.0002, 0);
   scene.add(contact);
 
   const hotspots: Hotspot[] = HOTSPOTS.map((h) => ({

@@ -182,8 +182,9 @@ describe('the look of the worlds (kit 0.5)', () => {
   it('the contact shadow lies on the paper floor of the ram world, under the anchor block, and is not a part', () => {
     const c = ram.scene.getObjectByName('contact-shadow') as THREE.Mesh;
     expect(c).toBeTruthy();
+    // between the floor and the block's underside: in front of the floor, behind the block's foot
     expect(c.position.y).toBeGreaterThan(FOUNDATION_BOTTOM - 0.0005);
-    expect(c.position.y).toBeLessThan(FOUNDATION_BOTTOM + 0.001);
+    expect(c.position.y).toBeLessThan(FOUNDATION_BOTTOM);
     expect(c.castShadow).toBe(false);
     expect(ram.registry.partOf(c)).toBeFalsy();
     for (const w of [valve, catchment]) expect(w.scene.getObjectByName('contact-shadow')).toBeTruthy();
@@ -223,10 +224,18 @@ describe('the look of the worlds (kit 0.5)', () => {
     expect(vertexShader).toContain('smoothstep( 1.5, 3.0');
   });
 
-  it('contact shadows are drawn whatever the floor (no fight for the depth)', () => {
+  it('contact shadows darken around a footprint, never inside it (the foot of the body is never darkened)', () => {
     const c = contactShadow(1, 1, 0.1);
     const mat = c.material as THREE.MeshBasicMaterial;
-    expect(mat.polygonOffset).toBe(true);
     expect(mat.depthWrite).toBe(false);
+    expect(mat.polygonOffset).toBe(false);
+    expect((contactShadow(1, 1, 0.1, 0.45, true).material as THREE.MeshBasicMaterial).polygonOffset).toBe(true);
+    const img = mat.map!.image as { data: Uint8Array; width: number };
+    const at = (i: number, j: number) => img.data[(j * img.width + i) * 4];
+    const N = img.width;
+    expect(at(N / 2, N / 2)).toBe(255); // the centre, under the body
+    // a few centimetres outside the footprint (1 m + 2 × 0.1 m across, 128 texels): dark, after a soft rise from the edge
+    const edge = Math.round((0.53 / 1.2 + 0.5) * N);
+    expect(at(edge, N / 2)).toBeLessThan(200);
   });
 });

@@ -90,7 +90,8 @@ export function createValveScene(): ValveScene {
   applyWear(model.root, 140);
   applyWear(bench.group, 25);
   const contact = contactShadow(BENCH.plinthLength, BENCH.plinthDepth, 0.06, 0.45);
-  contact.position.set(0, FLOOR_Y + 0.0002, 0);
+  // between the floor (0.5 mm below the plinth) and the plinth's underside
+  contact.position.set(0, FLOOR_Y - 0.0002, 0);
   scene.add(contact);
   for (const id of VALVE_PART_IDS) registry.add(id, model.parts[id], new THREE.Vector3(0, EXPLODE_Y[id], 0));
 
