@@ -171,7 +171,8 @@ The same stripes are in the build before (`zfight-old-heat.png`).
 **D4 · The catchment's grass has turned lime.** _New with the paper studio; the owner judges._
 
 - Close-up grass: #c3d088 before, #d5f076 now. The mean saturation of the world's overview went from 0.15 to 0.27.
-- The earth layers and the copper section caps turn a strong orange.
+- The earth layers and the copper section caps turn a strong orange. _Owner, 01/11/2026: the section faces keep the strong
+  orange (#f19148 in the film) rather than the earlier pale peach; it is no longer a defect._
 - The same hillside in the site is a dark olive (#2f4011): the two worlds no longer look like the same meadow.
 - **Shots**: `cmp-041-catchment-spring-box-close.png`, `look-catchment.png`, `catchclose/cmp-catch-cut-front-low.png`.
 
