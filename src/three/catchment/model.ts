@@ -420,6 +420,8 @@ export function createCatchmentModel(opts: ModelOptions): CatchmentModel {
     for (const id of CATCHMENT_PART_IDS) if (id !== 'drive-gate-valve') clipMesh(parts[id]);
     for (const o of [body, surface, boxBody, boxSurface, fallIn, trickle, foam, overJet, drainJet, ribbon]) clipMesh(o);
     clipMesh(outcrop.group);
+    // the drops too (clip keeps them 3 mm behind the plane): the overflow's, thrown up in the gutter in front of the section, were drawn over the earth
+    for (const sp of [splashIn, splashOver, splashDrain, splashSeep]) cut.clip(sp.object);
     addCaps();
   }
   function addCaps(): void {
