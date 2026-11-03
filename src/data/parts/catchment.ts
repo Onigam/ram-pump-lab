@@ -475,10 +475,10 @@ export const CATCHMENT_PARTS: PartInfo[] = [
     description: lf(
       'La crépine de départ est le premier organe de la conduite motrice, dans la cuve. Elle retient les feuilles, les brindilles et le gravier qui iraient se coincer sous le clapet de choc, dont la course n’est que de ≈ {stroke1} mm dans le modèle. Posée à ' +
         mm(TANK.outletAboveFloor).fr +
-        ' mm du fond (estimation), assez haut pour ne pas aspirer la boue, elle reste sous l’eau tant que la cuve n’est pas vide : c’est cette immersion, aidée d’une plaque anti-tourbillon, et non la grille, qui garde l’air hors de la conduite motrice.\n\nLa vidéo ne montre pas la crépine ; Practical Action note seulement que l’eau descend dans la conduite motrice à travers une crépine, et le bélier a son propre filtre en Y, juste avant son corps (vue du bélier).',
+        ' mm du fond (estimation), assez haut pour ne pas aspirer la boue, elle reste sous l’eau tant que la cuve n’est pas presque vide : c’est cette immersion, aidée d’une plaque anti-tourbillon, et non la grille, qui garde l’air hors de la conduite motrice.\n\nLa vidéo ne montre pas la crépine ; Practical Action note seulement que l’eau descend dans la conduite motrice à travers une crépine, et le bélier a son propre filtre en Y, juste avant son corps (vue du bélier).',
       'The intake screen is the first component of the drive pipe, in the tank. It holds back the leaves, twigs and grit that would jam under the waste valve, whose stroke is only ≈ {stroke1} mm in the model. Set ' +
         mm(TANK.outletAboveFloor).en +
-        ' mm above the floor (estimate), high enough not to draw the mud, it stays under water as long as the tank is not empty: it is that immersion, helped by an anti-vortex plate, and not the mesh, that keeps air out of the drive pipe.\n\nThe video does not show the screen; Practical Action only notes that the water goes down the drive pipe through a strainer, and the ram has its own Y-strainer, just before its body (the ram view).',
+        ' mm above the floor (estimate), high enough not to draw the mud, it stays under water until the tank is nearly empty: it is that immersion, helped by an anti-vortex plate, and not the mesh, that keeps air out of the drive pipe.\n\nThe video does not show the screen; Practical Action only notes that the water goes down the drive pipe through a strainer, and the ram has its own Y-strainer, just before its body (the ram view).',
     ),
     material: l(
       'Panier en inox perforé et plaque anti-tourbillon (hypothèse du laboratoire)',

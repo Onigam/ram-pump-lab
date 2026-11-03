@@ -113,10 +113,10 @@ export const INSTALL: GuideStep[] = [
     text: lf(
       'Au bas de la cuve, fixez la **crépine de départ** sur l’entrée de la conduite motrice, au-dessus du fond pour ne pas aspirer la boue (' +
         mm(TANK.outletAboveFloor).fr +
-        ' mm, estimation), puis la **vanne de départ**, à opercule, de passage 1″. Toujours immergée, la crépine retient les débris qui se coinceraient sous le clapet de choc et garde l’air hors de la conduite. La vanne permet d’arrêter le bélier sans vider la cuve. Pratique courante, absente de la vidéo.',
+        ' mm, estimation), puis la **vanne de départ**, à opercule, de passage 1″. Immergée, la crépine retient les débris qui se coinceraient sous le clapet de choc et garde l’air hors de la conduite. La vanne permet d’arrêter le bélier sans vider la cuve. Pratique courante, absente de la vidéo.',
       'At the bottom of the tank, fix the **intake screen** on the inlet of the drive pipe, above the floor so as not to draw the mud (' +
         mm(TANK.outletAboveFloor).en +
-        ' mm, estimate), then the drive-pipe **gate valve** (1″ bore). Always under water, the screen holds back the debris that would jam under the waste valve and keeps air out of the pipe. The valve lets you stop the ram without emptying the tank. Common practice, not shown in the video.',
+        ' mm, estimate), then the drive-pipe **gate valve** (1″ bore). Under water, the screen holds back the debris that would jam under the waste valve and keeps air out of the pipe. The valve lets you stop the ram without emptying the tank. Common practice, not shown in the video.',
     ),
     parts: ['intake-screen', 'drive-gate-valve'],
     tools: [
@@ -128,8 +128,8 @@ export const INSTALL: GuideStep[] = [
       'Keep the valve closed until the drive pipe is laid and anchored, then open it slowly. When running it stays fully open: the flow is not adjusted with it.',
     ),
     warning: l(
-      'De l’air dans la conduite motrice peut arrêter un bélier (pratique courante, ni montrée dans la vidéo ni simulée) : la crépine doit rester sous l’eau, même cuve presque vide.',
-      'Air in the drive pipe can stop a ram (common practice, neither shown in the video nor simulated): the screen must stay under water, even with the tank nearly empty.',
+      'De l’air dans la conduite motrice peut arrêter un bélier (pratique courante, ni montrée dans la vidéo ni simulée) : la crépine doit rester sous l’eau : une cuve presque vide la découvre.',
+      'Air in the drive pipe can stop a ram (common practice, neither shown in the video nor simulated): the screen must stay under water: a nearly empty tank uncovers it.',
     ),
     duration: '≈ 2 h (est.)',
   },
