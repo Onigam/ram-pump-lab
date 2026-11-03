@@ -213,9 +213,9 @@ export function buildIntakeScreen(detail: Detail): Screen {
   body.castShadow = false;
   g.add(body);
   const inox = MAT.inox();
-  g.add(
-    mesh(new THREE.CylinderGeometry(r, r, 0.01, lowRes(detail, 28, 18)), inox, [SCREEN_X0 - 0.002, OUT_Y, 0]),
-  ).rotation.z = Math.PI / 2;
+  const cap = mesh(new THREE.CylinderGeometry(r, r, 0.01, lowRes(detail, 28, 18)), inox, [SCREEN_X0 - 0.002, OUT_Y, 0]);
+  cap.rotation.z = Math.PI / 2;
+  g.add(cap);
   for (const x of [SCREEN_X0 + 0.012, SCREEN_X1 - 0.012]) {
     const band = mesh(new THREE.CylinderGeometry(r + 0.003, r + 0.003, 0.014, lowRes(detail, 28, 18), 1, true), inox, [
       x,

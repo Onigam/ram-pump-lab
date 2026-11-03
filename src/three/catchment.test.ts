@@ -221,8 +221,11 @@ describe('catchment world', () => {
     it('takes the drive water low (0.18 m) behind a strainer, away from the silt, with a vortex plate above it', () => {
       const b = reg.bounds('intake-screen');
       expect(OUT_Y).toBe(DIMS.TANK.outletAboveFloor);
-      expect(b.min.y).toBeGreaterThan(DIMS.CATCHMENT.sludgeDepth * 3); // basket bottom well above the silt
+      // the basket's bottom well above the silt; the plate's legs stand in it, on the floor (the group lies as it was modelled, not turned)
+      expect(OUT_Y - DIMS.CATCHMENT.screenDiameter / 2).toBeGreaterThan(DIMS.CATCHMENT.sludgeDepth * 3);
+      expect(b.min.y).toBeLessThan(DIMS.CATCHMENT.sludgeDepth);
       expect(b.max.y).toBeGreaterThan(PLATE_Y);
+      expect(b.max.y).toBeLessThan(PLATE_Y + 0.02);
       expect(PLATE_Y).toBeGreaterThan(OUT_Y + DIMS.CATCHMENT.screenDiameter / 2);
       // the basket is inside the tank, its stub reaches the wall, the gate valve is outside, then the drive pipe starts at x = OUT_X
       expect(b.max.x).toBeLessThanOrEqual(R + 0.01);
