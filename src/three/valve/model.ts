@@ -170,7 +170,7 @@ export function createWasteValveModel(opts: WasteValveOpts): WasteValveModel {
     water.group.visible = !frozen;
     water.stream.visible = jet > 0.3 && visW > 0.05;
     water.streamMaterial.opacity = 0.2 + 0.5 * clamp(jet / 20, 0, 1);
-    spray.update(dt, jet, !frozen && visW > 0.1);
+    spray.update(dt, jet, !frozen && visW > 0.1, frozen);
   }
 
   return {

@@ -122,10 +122,10 @@ export class Spray {
     this.object.castShadow = false;
   }
 
-  /** `flow` in L/min; `active` false stops the emission and clears the drops. */
-  update(dt: number, flow: number, active: boolean): void {
+  /** `flow` in L/min; `active` false stops the emission, drops in the air fall on; `clear` empties the air, for a frozen view. */
+  update(dt: number, flow: number, active: boolean, clear = false): void {
     const step = Math.min(dt, 0.05);
-    if (!active) this.live = 0;
+    if (clear) this.live = 0;
     if (active && flow > 0.2) {
       this.carry += step * Math.min(1800, 120 + flow * 70);
       while (this.carry >= 1 && this.live < this.max) {
