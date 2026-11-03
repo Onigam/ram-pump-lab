@@ -453,6 +453,8 @@ export function createCatchmentModel(opts: ModelOptions): CatchmentModel {
         [BOX_FLOOR_Y + C.boxOutletHeight, SPRING.feedPipeDiameter / 2 + 0.001],
       ]),
     ]);
+    const sludgeCap = cut.cap('tank-shell', shell.group, [rect(-R, 0, R, C.sludgeDepth)]);
+    sludgeCap.material = new THREE.MeshStandardMaterial({ color: 0x5a4b36, roughness: 1, side: THREE.DoubleSide });
     const silt = cut.cap('spring-box', box.group, [rect(-BOX_HL, BOX_FLOOR_Y, BOX_HL, BOX_FLOOR_Y + C.boxSediment)]);
     silt.material = new THREE.MeshStandardMaterial({ color: 0x6b5a40, roughness: 1, side: THREE.DoubleSide });
     // gravel bed: the three zones in their own colours, the slab, the stone end against the rock
@@ -562,11 +564,14 @@ export function createCatchmentModel(opts: ModelOptions): CatchmentModel {
     waterS.visible = !hold.box;
     jetsT.visible = wet;
     jetsS.visible = wet;
-    const showTank = level > 0.002;
+    // the tank's water starts in the silt, as the box's does: its bottom on the floor, and a section of it over the silt's, fought for the depth
+    // along the foot of the tank (the shimmer of review M1). Under the silt's top there is no water to draw
+    const showTank = waterY > C.sludgeDepth;
+    const waterFrom = C.sludgeDepth - WATER_IN_SILT;
     body.visible = showTank;
     surface.visible = showTank;
-    body.scale.y = Math.max(waterY, 1e-4);
-    body.position.y = waterY / 2;
+    body.scale.y = Math.max(waterY - waterFrom, 1e-4);
+    body.position.y = waterFrom + (waterY - waterFrom) / 2;
     surface.position.y = waterY;
     const boxY = C.boxWaterLevel - 0.012 * (1 - clamp(src / SITE.sourceFlowLpm, 0, 1));
     // the water body starts 4 mm down in the silt: its bottom in the plane of the silt's top fought it for the depth (the floor
@@ -654,8 +659,8 @@ export function createCatchmentModel(opts: ModelOptions): CatchmentModel {
       for (const c of waterCaps) {
         if (c.parent === 'tank') {
           c.mesh.visible = on && showTank && !hold.tank;
-          c.mesh.scale.set(2 * (R - 0.012), Math.max(waterY, 1e-4), 1);
-          c.mesh.position.set(0, waterY / 2, 0);
+          c.mesh.scale.set(2 * (R - 0.012), Math.max(waterY - C.sludgeDepth, 1e-4), 1);
+          c.mesh.position.set(0, C.sludgeDepth + (waterY - C.sludgeDepth) / 2, 0);
         } else {
           c.mesh.visible = on && !hold.box;
           c.mesh.scale.set(2 * BOX_HL - 0.004, boxY - C.boxSediment, 1);
