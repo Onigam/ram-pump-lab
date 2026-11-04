@@ -64,8 +64,8 @@ function about(ctx: AppContext<RamSim>): HTMLElement[] {
         '« Création clapet de choc pour que notre bélier hydraulique ne s’arrête plus »',
       ),
       fr
-        ? ' — L’énergie partout (2024), qui remercie Didier Nebreda pour ses conseils sur les béliers. Aucune image de la vidéo n’est reprise.'
-        : ' — L’énergie partout (2024), who thanks Didier Nebreda for his advice on rams. No footage from the video is reused.',
+        ? ' — L’énergie partout (première publication en 2022, remise en ligne en 2024), qui remercie Didier Nebreda pour ses conseils sur les béliers. Aucune image de la vidéo n’est reprise.'
+        : ' — L’énergie partout (first published in 2022, re-uploaded in 2024), who thanks Didier Nebreda for his advice on rams. No footage from the video is reused.',
     ),
     h('h3', { class: 'section-title' }, t('chapters')),
     h(

@@ -25,8 +25,9 @@ electricity), built on the same frame, [lab-kit](https://github.com/Onigam/lab-k
 - This is an **independent educational reconstruction**: not an official drawing, not a product, no footage or image of the
   video is reused.
 - The main source is the video _Création clapet de choc pour que notre bélier hydraulique ne s'arrête plus_ by
-  [L'énergie partout](https://www.youtube.com/watch?v=mc0gq5rObcM) (2024). Its figures (7.5 m of fall, 65 m of lift, about
-  500 L a day, 100–110 strokes a minute with the new valve) are retrieved by the simulation and pinned by unit tests.
+  [L'énergie partout](https://www.youtube.com/watch?v=mc0gq5rObcM) (first published in 2022, re-uploaded in 2024). Its
+  figures (7.5 m of fall, 65 m of lift, about 500 L a day, 100–110 strokes a minute with the new valve) are retrieved by the
+  simulation and pinned by unit tests.
 - The ram shown is a **generic 1″ ram**, not the Walton n°3 of the video (no maker data was found); only the waste valve
   follows the video. Every figure is tagged _reported_, _derived_, _model result_, _calibrated_, _assumption_ or
   _estimate_; the sources and the reasoning are in [`docs/research.md`](docs/research.md) and
@@ -85,9 +86,9 @@ construit sur le même cadre, [lab-kit](https://github.com/Onigam/lab-kit).
 - C'est une **reconstitution pédagogique indépendante** : pas un plan officiel, pas un produit, aucune image de la vidéo
   n'est reprise.
 - La source principale est la vidéo _Création clapet de choc pour que notre bélier hydraulique ne s'arrête plus_ de
-  [L'énergie partout](https://www.youtube.com/watch?v=mc0gq5rObcM) (2024). Ses chiffres (7,5 m de chute, 65 m de dénivelé,
-  environ 500 L par jour, 100 à 110 coups par minute avec le nouveau clapet) sont retrouvés par la simulation et vérifiés
-  par des tests.
+  [L'énergie partout](https://www.youtube.com/watch?v=mc0gq5rObcM) (première publication en 2022, remise en ligne en 2024).
+  Ses chiffres (7,5 m de chute, 65 m de dénivelé, environ 500 L par jour, 100 à 110 coups par minute avec le nouveau clapet)
+  sont retrouvés par la simulation et vérifiés par des tests.
 - Le bélier montré est un **bélier générique de 1″**, pas le Walton n°3 de la vidéo (aucune fiche du constructeur n'a été
   trouvée) ; seul le clapet de choc suit la vidéo. Chaque chiffre est étiqueté _relevé_, _dérivé_, _résultat du modèle_,
   _calibré_, _hypothèse_ ou _estimation_ ; les sources et le raisonnement sont dans [`docs/research.md`](docs/research.md)
