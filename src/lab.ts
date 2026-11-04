@@ -129,7 +129,6 @@ export const lab: LabDefinition<RamSim> = {
   brand: {
     title: { fr: 'LABO DU BÉLIER HYDRAULIQUE', en: 'HYDRAULIC RAM LAB' },
     tagline: strL('tagline'),
-    icon: './favicon.svg',
   },
   sim: new RamSim(),
   defaultScene: 'site',
